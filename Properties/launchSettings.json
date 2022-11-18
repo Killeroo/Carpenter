@@ -1,8 +1,7 @@
 {
   "profiles": {
     "PhotoWebpageGenerator": {
-      "commandName": "Project",
-      "workingDirectory": "C:\\Projects\\Website\\photos\\Feb-2021"
+      "commandName": "Project"
     }
   }
 }
