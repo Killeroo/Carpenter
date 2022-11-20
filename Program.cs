@@ -81,6 +81,7 @@ namespace PhotoWebpageGenerator
             {"%MONTH", SchemaTokens.Month},
             {"%YEAR", SchemaTokens.Year},
             {"%CAMERA", SchemaTokens.Camera},
+            {"%AUTHOR", SchemaTokens.Author},
             {"image_grid", SchemaTokens.ClassIdImageGrid},
             {"image_column", SchemaTokens.ClassIdImageColumn},
             {"image_element", SchemaTokens.ClassIdImageElement}
@@ -438,55 +439,111 @@ namespace PhotoWebpageGenerator
                 return;
             }
 
+            // TODO: More logs
+
             // Parse first to understand the template using the schema 
             // We need to do this before we can generate the file
             Parse(schema);
 
             // Ok next we need to modify the template and remove the sections we have just passed
             // TODO: Don't assume sections are nested and that photo grid is first...
-            string[] templateCopy = _fileContents.RemoveSection(_imageGridSection.StartIndex, _imageGridSection.EndIndex);
+            List<string> templateCopy = _fileContents.RemoveSection(_imageGridSection.StartIndex, _imageGridSection.EndIndex).ToList();
 
             // Next lets build our photo grid
-            string[] photoGridElements = GeneratePhotoGrid(schema);
+            string[] photoGridContents = GeneratePhotoGrid(schema);
+
+            // Ok add it to the template copy where the image grid was in the template
+            templateCopy.InsertRange(_imageGridSection.StartIndex, photoGridContents);
+
+            // We are almost there, go through the copy and replace all tokens with values from the schema
+            for (int i = 0; i < templateCopy.Count; i++)
+            {
+                string line = templateCopy[i];
+
+                if (string.IsNullOrEmpty(line))
+                    continue;
+
+                foreach (var token in schema.TokenTable)
+                {
+                    line = line.Replace(token.Key, schema.TokenValues[token.Value]);
+                }
+
+                templateCopy[i] = line;
+            }
+
+            // Great now save the file out
+            try
+            {
+                // TODO: Add file name to schema
+                File.WriteAllLines("index.html", templateCopy);
+            }
+            catch (Exception e)
+            {
+                Logger.DebugError($"[{e.GetType()}] Could not create generated file - {e.Message}");
+            }
 
         }
 
+        // TODO: Tab consistently for nested elements
         private string[] GeneratePhotoGrid(Schema schema)
         {
             List<string> photoGridContents = new List<string>();
 
-            photoGridContents.Add(_imageColumnSection.StartLine);
-
+            photoGridContents.Add(_imageGridSection.StartLine);
             foreach (ImageSection section in schema.ImageSections)
             {
                 if (section.GetType() == typeof(StandaloneImageSection))
                 {
                     CreateImageElement(schema, section as StandaloneImageSection, ref photoGridContents);
+                } 
+                else if (section.GetType() == typeof(ColumnImageSection))
+                {
+                    ColumnImageSection columnSection = section as ColumnImageSection;
+
+                    photoGridContents.Add(_imageColumnSection.StartLine);
+
+                    foreach (StandaloneImageSection imageSection in columnSection.Sections)
+                    {
+                        CreateImageElement(schema, imageSection, ref photoGridContents);
+                    }
+
+                    photoGridContents.Add(_imageColumnSection.EndLine);
                 }
             }
-
             photoGridContents.Add(_imageGridSection.EndLine);
+
             return photoGridContents.ToArray();
 
         }
 
-        private void CreateImageElement(Schema schema, StandaloneImageSection section, ref List<string> contents)
+        private void CreateImageElement(Schema schema, StandaloneImageSection section, ref List<string> outputContent)
         {
-            //string[] imageElement = _imageSection.Contents;
-            //for (int i = 0; i < imageElement.Length; i++)
-            //{
-            //    string valueToInsert = string.Empty;
-            //    foreach (var imageTokenEntry in schema.ImageTokenTable)
-            //    {
-            //        switch (imageTokenEntry.Value)
-            //        {
-            //            case SchemaTokens.Image:
+            // Load the template html we are using for the image
+            string[] imageTemplate = _imageSection.Contents;
 
-            //                break;
-            //        }
-            //    }
-            //    imageElement[i] = imageElement[i].Replace(schema.tok)
-            //}
+            // Iterate through it and replace it with the contents of the StandaloneImageSection
+            for (int i = 0; i < imageTemplate.Length; i++)
+            {
+                string line = imageTemplate[i];
+
+                // Replace all image tokens with the values in the StandaloneImageSection
+                foreach (var imageTokenEntry in schema.ImageTokenTable)
+                {
+                    switch (imageTokenEntry.Value)
+                    {
+                        case SchemaTokens.Image:
+                            line = line.Replace(imageTokenEntry.Key, section.Image);
+                            break;
+
+                        case SchemaTokens.DetailedImage:
+                            line = line.Replace(imageTokenEntry.Key, section.DetailedImage);
+                            break;
+                    }
+                }
+
+                // Add the modified line into the 
+                outputContent.Add(line);
+            }
         }
 
         /// <summary>

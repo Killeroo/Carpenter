@@ -13,6 +13,11 @@ image_grid=photos
 image_column=column
 image_element=image
 
+// TODO:
+[OPTIONS]
+optimise_images=true
+output_file=index.html
+
 [IMAGE_LAYOUT]
 
 [IMAGES_STANDALONE]
