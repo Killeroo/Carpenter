@@ -12,6 +12,9 @@ using System.Threading.Tasks;
 using System.Drawing;
 using System.Drawing.Imaging;
 
+using Encoder = System.Drawing.Imaging.Encoder;
+using InterpolationMode = System.Drawing.Drawing2D.InterpolationMode;
+
 namespace PhotoWebpageGenerator
 {
     static class Logger
@@ -28,6 +31,13 @@ namespace PhotoWebpageGenerator
             Console.WriteLine($"[{DateTime.Now.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'ffff")}] {message}");
             Console.ResetColor();
         }
+    }
+
+    public enum SchemaOptions
+    {
+        CompressPreviewImage,
+        CompressDetailedImage,
+        OutputFilename,
     }
 
     public enum SchemaTokens
@@ -93,6 +103,13 @@ namespace PhotoWebpageGenerator
             { "%DETAILED_IMAGE_URL", SchemaTokens.DetailedImage },
         };
 
+        private readonly Dictionary<string, SchemaOptions> _optionsTable = new()
+        {
+            { "compress_preview_image", SchemaOptions.CompressPreviewImage },
+            { "compress_detailed_image", SchemaOptions.CompressDetailedImage },
+            { "output_file", SchemaOptions.OutputFilename },
+        };
+
         private readonly Dictionary<string, SchemaImageTags> _tagTable = new()
         {
             {"[IMAGE_LAYOUT]", SchemaImageTags.Grid},
@@ -101,6 +118,7 @@ namespace PhotoWebpageGenerator
         };
 
         public Dictionary<SchemaTokens, string> TokenValues = new();
+        public Dictionary<SchemaOptions, string> OptionValues = new();
         public List<ImageSection> ImageSections = new();
 
         public void Load(string path)
@@ -128,6 +146,22 @@ namespace PhotoWebpageGenerator
                     {
                         TokenValues[TokenTable[token]] = line.Split('=').Last();
                         Logger.DebugLog($"Schema token {TokenTable[token]}={TokenValues[TokenTable[token]]}");
+                        break;
+                    }
+                }
+            }
+
+            // Parse options in file
+            for (int i = 0; i < schemaFileContents.Length; i++)
+            {
+                string line = schemaFileContents[i];
+
+                foreach (string option in _optionsTable.Keys)
+                {
+                    if (line.Contains(option))
+                    {
+                        OptionValues[_optionsTable[option]] = line.Split('=').Last();
+                        Logger.DebugLog($"Schema option {_optionsTable[option]}={OptionValues[_optionsTable[option]]}");
                         break;
                     }
                 }
@@ -451,6 +485,7 @@ namespace PhotoWebpageGenerator
 
             // Next lets build our photo grid
             string[] photoGridContents = GeneratePhotoGrid(schema);
+            Logger.DebugLog($"PhotoGrid generated");
 
             // Ok add it to the template copy where the image grid was in the template
             templateCopy.InsertRange(_imageGridSection.StartIndex, photoGridContents);
@@ -470,12 +505,15 @@ namespace PhotoWebpageGenerator
 
                 templateCopy[i] = line;
             }
+            Logger.DebugLog($"All tokens in template file replaced");
 
             // Great now save the file out
             try
             {
-                // TODO: Add file name to schema
-                File.WriteAllLines("index.html", templateCopy);
+                // TODO: Add file name to schema and working directory
+                string generatedPath = "index.html";
+                File.WriteAllLines(generatedPath, templateCopy);
+                Logger.DebugLog($"File generated: {generatedPath}");
             }
             catch (Exception e)
             {
@@ -541,7 +579,7 @@ namespace PhotoWebpageGenerator
                     }
                 }
 
-                // Add the modified line into the 
+                // Add the modified line into the outputted html
                 outputContent.Add(line);
             }
         }
@@ -568,22 +606,29 @@ namespace PhotoWebpageGenerator
                 {
                     // First we need to find of the template that corresponds to our photo grid
                     _imageGridSection = new TemplateSection(this, i);
+                    Logger.DebugLog($"Found ImageGrid element (id={schema.TokenValues[SchemaTokens.ClassIdImageGrid]})");
                 } 
                 else if (line.Contains($"class=\"{schema.TokenValues[SchemaTokens.ClassIdImageElement]}\""))
                 {
                     // Next we need to find the second of the template that makes up the element for our image
                     _imageSection = new TemplateSection(this, i);
+                    Logger.DebugLog($"Found ImageSection element (id={schema.TokenValues[SchemaTokens.ClassIdImageGrid]})");
                 }
                 else if (line.Contains($"class=\"{schema.TokenValues[SchemaTokens.ClassIdImageColumn]}\""))
                 {
                     // Next we need to know what what our column sections are
                     _imageColumnSection = new TemplateSection(this, i);
+                    Logger.DebugLog($"Found ImageColumn element (id={schema.TokenValues[SchemaTokens.ClassIdImageGrid]})");
                 }
             }
 
             if (_imageSection == null || _imageColumnSection == null || _imageGridSection == null)
             {
                 Logger.DebugError("Did not parse all sections of template file");
+            }
+            else
+            {
+                Logger.DebugLog($"Template file parsed using Schema, all elements found");
             }
         }
 
@@ -690,20 +735,151 @@ namespace PhotoWebpageGenerator
         }
     }
 
-
     class Program
     {
+
+        /// <summary>
+        /// Compresses an image with the specified quality (resizes image if scalePercent is specified)
+        /// </summary>
+        /// <param name="filename">The path to the image that will be compressed</param>
+        /// <param name="quality">The quality of the new image, between 0 - 100% of the original image</param>
+        /// <param name="scalePercent">The percentage to scale down the image size</param>
+        /// <returns></returns>
+        /// Based off: https://stackoverflow.com/a/24651073
+        private static Image CompressImage(string filename, int quality, float scalePercent = 1.0f)
+        {
+            using (Image image = Image.FromFile(filename))
+            {
+                float newWidth = image.Width * scalePercent;
+                float newHeight = image.Height * scalePercent;
+
+                using (Image originalImageData = new Bitmap(image, (int) newWidth, (int) newHeight))
+                {
+                    // Setup the new image properties and set the quality encoder 
+                    // (we could set other properties here)
+                    ImageCodecInfo imageCodecInfo = GetEncoderInfo("image/jpeg");
+                    Encoder qualityEncoder = Encoder.Quality;
+                    EncoderParameter newImageQualityParameter = new EncoderParameter(qualityEncoder, quality);
+                    EncoderParameters newImageParameters = new EncoderParameters(1);
+                    newImageParameters.Param[0] = newImageQualityParameter;
+
+                    // Time to construct the new image
+                    using (MemoryStream newImageData = new MemoryStream())
+                    {
+                        originalImageData.Save(newImageData, imageCodecInfo, newImageParameters);
+                        Image newImage = Image.FromStream(newImageData);
+                        ImageAttributes newImageAttributes = new ImageAttributes();
+                        using (Graphics g = Graphics.FromImage(newImage))
+                        {
+                            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+
+                            // Doesn't seem to make much difference
+                            //g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+                            //g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                            //g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                            //g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                            //g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+
+                            g.DrawImage(
+                                newImage,
+                                new Rectangle(Point.Empty, newImage.Size),
+                                0,
+                                0,
+                                newImage.Width,
+                                newImage.Height,
+                                GraphicsUnit.Pixel,
+                                newImageAttributes);
+                        }
+
+                        return newImage;
+                    }
+                }
+            }
+        }
+
+        private static Image compressImage(string fileName, int newWidth, int newHeight,
+                            int newQuality)   // set quality to 1-100, eg 50
+        {
+            using (Image image = Image.FromFile(fileName))
+            using (Image memImage = new Bitmap(image, image.Width/2, image.Height/2))// newWidth, newHeight))
+            {
+                ImageCodecInfo myImageCodecInfo;
+                Encoder myEncoder;
+                EncoderParameter myEncoderParameter;
+                EncoderParameters myEncoderParameters;
+                myImageCodecInfo = GetEncoderInfo("image/jpeg");
+                myEncoder = System.Drawing.Imaging.Encoder.Quality;
+                myEncoderParameters = new EncoderParameters(1);
+                myEncoderParameter = new EncoderParameter(myEncoder, newQuality);
+                myEncoderParameters.Param[0] = myEncoderParameter;
+
+                MemoryStream memStream = new MemoryStream();
+                memImage.Save(memStream, myImageCodecInfo, myEncoderParameters);
+                Image newImage = Image.FromStream(memStream);
+                ImageAttributes imageAttributes = new ImageAttributes();
+                using (Graphics g = Graphics.FromImage( newImage))
+                {
+                    g.InterpolationMode =
+                      System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;  //**
+
+                    // Doesn't seem to make much difference
+                    //g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+                    //g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                    //g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    //g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                    //g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+
+                    g.DrawImage(newImage, new Rectangle(Point.Empty, newImage.Size), 0, 0,
+                      newImage.Width, newImage.Height, GraphicsUnit.Pixel, imageAttributes);
+                }
+                return newImage;
+            }
+        }
+
+        private static ImageCodecInfo? GetEncoderInfo(String mimeType)
+        {
+            ImageCodecInfo[] encoders;
+            encoders = ImageCodecInfo.GetImageEncoders();
+            foreach (ImageCodecInfo ici in encoders)
+                if (ici.MimeType == mimeType) return ici;
+
+            return null;
+        }
+
         static void Main(string[] args)
         {
+            string workingDirectory = string.Empty;
+            if (args.Length != 0)
+            {
+                workingDirectory = args[0];
+            }
+            else
+            {
+                workingDirectory = Environment.CurrentDirectory;
+            }
+
             // Load the schema file
             string pathToSchemaFile = "SCHEMA";
             Schema schema = new Schema();
             schema.Load(pathToSchemaFile);
 
+            // Process images
+            if (schema.OptionValues[SchemaOptions.CompressPreviewImage] == "true" 
+                || schema.OptionValues[SchemaOptions.CompressDetailedImage] == "true")
+            {
+                // TODO:
+            }
+
             string pathToTemplateFile = "template.html";
             Template template = new Template();
             template.Load(pathToTemplateFile);
             template.Generate(schema);
+
+            Image newImage = compressImage("IMG_2590.jpg", 0, 0, 100);
+            newImage.Save("IMG_2590_new_1.jpg");
+            Image newerImage = CompressImage("IMG_2590.jpg", 100, 0.5f);
+            newerImage.Save("IMG_2590_new_2.jpg");
+
         }
 
 

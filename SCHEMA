@@ -13,9 +13,10 @@ image_grid=photos
 image_column=column
 image_element=image
 
-// TODO:
+// TODO: Implement
 [OPTIONS]
-optimise_images=true
+compress_preview_image=true
+compress_detailed_image=true
 output_file=index.html
 
 [IMAGE_LAYOUT]
