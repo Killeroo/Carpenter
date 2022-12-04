@@ -1,7 +1,8 @@
 {
   "profiles": {
     "PhotoWebpageGenerator": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": "C:\\Projects\\Website_new\\photos\\"
     }
   }
 }
