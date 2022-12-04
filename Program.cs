@@ -29,7 +29,7 @@ namespace PhotoWebpageGenerator
         private const float CompressedPreviewImageScale = 0.5f;
         private const float CompressedDetailedImageScale = 1.0f;
 
-        // Possible arguments:
+        // TODO: Possible arguments:
         // --schema = Specify one schema to process
         // --template = Specify a template file
         // --force-compress = force compress files even if they exist
