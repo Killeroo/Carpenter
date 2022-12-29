@@ -8,8 +8,7 @@ The tool is designed to read a template file, which is then used to generate sub
 
 # Usage
 
-Run `carpenter` in whatever directory contains `template.html` (please look at the `template.html` file in the repo to see how this needs to be laid out), carpenter will then loop through each folder in that directory looking for a SCHEMA file and a collection of images.
-
+Run `carpenter` in whatever directory contains `template.html` (please look at the `template.html` file in the repo to see how this needs to be laid out), carpenter will then loop through each folder in that directory looking for a SCHEMA file and a collection of images and will combine them all into a html file. It can also compress images on the fly if that option is enabled in the SCHEMA file. Have a look at the example schema to see what options can be used. Please note the order of image sections in the schema is the order they will be inserted in the generated html file. At the moment carpenter lays out images in a grid made of 2 columns.
 # Motivation
 
 I wanted to host my photos as simple static html files. Instead of having to constantly tinker with the HTML code of each page manually, I wrote this tool to generate the contents of each page for me.
