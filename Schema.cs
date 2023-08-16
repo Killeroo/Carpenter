@@ -28,15 +28,18 @@ namespace PhotoWebpageGenerator
         ClassIdImageGrid,
         ClassIdImageColumn,
         ClassIdImageElement,
+        ClassIdImageTitle,
         Image,
-        DetailedImage
+        DetailedImage,
+        ImageTitle
     };
 
     public enum SchemaImageTags
     {
         Grid,
         Standalone,
-        Column
+        Column,
+        Title
     }
 
     public class Schema
@@ -53,13 +56,15 @@ namespace PhotoWebpageGenerator
             { "%AUTHOR", SchemaTokens.Author },
             { "image_grid", SchemaTokens.ClassIdImageGrid },
             { "image_column", SchemaTokens.ClassIdImageColumn },
-            { "image_element", SchemaTokens.ClassIdImageElement }
+            { "image_element", SchemaTokens.ClassIdImageElement },
+            { "image_title",  SchemaTokens.ClassIdImageTitle }
         };
 
         public readonly Dictionary<string, SchemaTokens> ImageTokenTable = new()
         {
             { "%IMAGE_URL", SchemaTokens.Image },
             { "%DETAILED_IMAGE_URL", SchemaTokens.DetailedImage },
+            { "%IMAGE_TITLE", SchemaTokens.ImageTitle },
         };
 
         private readonly Dictionary<string, SchemaOptions> _optionsTable = new()
@@ -74,6 +79,7 @@ namespace PhotoWebpageGenerator
             { "[IMAGE_LAYOUT]", SchemaImageTags.Grid },
             { "[IMAGES_STANDALONE]", SchemaImageTags.Standalone },
             { "[IMAGES_COLUMN]", SchemaImageTags.Column },
+            { "[IMAGE_TITLE]", SchemaImageTags.Title },
         };
 
         public Dictionary<SchemaTokens, string> TokenValues = new();
@@ -149,6 +155,7 @@ namespace PhotoWebpageGenerator
             int currentSectionIndex = -1;
             string imageUrl = string.Empty;
             string detailedImageUrl = string.Empty;
+            string imageTitle = string.Empty;
             for (int i = photoSectionStartIndex; i < schemaFileContents.Length; i++)
             {
                 string line = schemaFileContents[i];
@@ -170,6 +177,12 @@ namespace PhotoWebpageGenerator
                                 currentSectionIndex++;
                                 ImageSections.Add(new ColumnImageSection());
                                 Logger.DebugLog("Adding column section to photo grid");
+                                break;
+
+                            case SchemaImageTags.Title:
+                                currentSectionIndex++;
+                                ImageSections.Add(new TitleImageSection());
+                                Logger.DebugLog("Adding title section to photo grid");
                                 break;
 
                             case SchemaImageTags.Grid:
@@ -203,6 +216,10 @@ namespace PhotoWebpageGenerator
                                 detailedImageUrl = tokenValue;
                                 break;
 
+                            case SchemaTokens.ImageTitle:
+                                imageTitle = tokenValue;
+                                break;
+
                             default:
                                 // TODO: Stronger identification for bad formatted tags
                                 Logger.DebugError($"Could not parse token ({token}) in photo grid");
@@ -211,7 +228,7 @@ namespace PhotoWebpageGenerator
 
                         // TODO: Make this check more robust so we definitely have 2 sections before adding to section (Maybe parse ahead in array?)
                         // TODO: Don't assume this will be ordered image_url then detailed_image_url
-                        if (imageUrl != string.Empty && detailedImageUrl != string.Empty)
+                        if (imageTitle != string.Empty || (imageUrl != string.Empty && detailedImageUrl != string.Empty))
                         {
                             if (ImageSections[currentSectionIndex].GetType().Equals(typeof(StandaloneImageSection)))
                             {
@@ -234,10 +251,18 @@ namespace PhotoWebpageGenerator
 
                                 Logger.DebugLog($"Added image to column section (image_url={imageUrl} detailed_image_url={imageUrl})");
                             }
+                            else if (ImageSections[currentSectionIndex].GetType().Equals(typeof(TitleImageSection)))
+                            {
+                                var titleSection = ImageSections[currentSectionIndex] as TitleImageSection;
+                                titleSection.TitleText = imageTitle;
+
+                                Logger.DebugLog($"Added image title section to photo grid (titile={imageTitle})");
+                            }
 
                             // Blank the urls again
                             imageUrl = string.Empty;
                             detailedImageUrl = string.Empty;
+                            imageTitle = string.Empty;
                         }
                     }
                 }

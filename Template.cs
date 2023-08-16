@@ -102,6 +102,7 @@ namespace PhotoWebpageGenerator
         private TemplateSection _imageGridSection;
         private TemplateSection _imageSection;
         private TemplateSection _imageColumnSection;
+        private TemplateSection _imageTitleSection;
         private string[] _fileContents;
         private bool _loaded = false;
 
@@ -207,6 +208,8 @@ namespace PhotoWebpageGenerator
                 if (section.GetType() == typeof(StandaloneImageSection))
                 {
                     CreateImageElement(schema, section as StandaloneImageSection, ref photoGridContents);
+
+                    _processedImages++;
                 }
                 else if (section.GetType() == typeof(ColumnImageSection))
                 {
@@ -220,9 +223,14 @@ namespace PhotoWebpageGenerator
                     }
 
                     photoGridContents.Add(_imageColumnSection.EndLine);
+
+                    _processedImages++;
+                }
+                else if (section.GetType() == typeof(TitleImageSection))
+                {
+                    CreateTitleElement(schema, section as TitleImageSection, ref photoGridContents);
                 }
 
-                _processedImages++;
             }
             photoGridContents.Add(_imageGridSection.EndLine);
 
@@ -269,6 +277,30 @@ namespace PhotoWebpageGenerator
             }
         }
 
+        private void CreateTitleElement(Schema schema, TitleImageSection section, ref List<string> outputContent)
+        {
+            // Load the template html we are using for the title
+            string[] titleTemplate = _imageTitleSection.Contents;
+
+            // Iterate through it and replace it with the contents of the StandaloneImageSection
+            for (int i = 0; i < titleTemplate.Length; i++)
+            {
+                string line = titleTemplate[i];
+
+                // Replace all image tokens with the values in the StandaloneImageSection
+                foreach (var imageTokenEntry in schema.ImageTokenTable)
+                {
+                    if (imageTokenEntry.Value == SchemaTokens.ImageTitle)
+                    {
+                        line = line.Replace(imageTokenEntry.Key, section.TitleText);
+                    }
+                }
+
+                // Add the modified line into the outputted html
+                outputContent.Add(line);
+            }
+        }
+
         /// <summary>
         /// We need to parse the template using the schema to understand some basics about how things
         /// are laid out
@@ -280,6 +312,7 @@ namespace PhotoWebpageGenerator
             _imageSection = null;
             _imageColumnSection = null;
             _imageGridSection = null;
+            _imageTitleSection = null;
 
             // Loop through the file contents to find each relevant section of the template
             // (The schema contains the class identifiers that represent where everything should go)
@@ -297,17 +330,23 @@ namespace PhotoWebpageGenerator
                 {
                     // Next we need to find the second of the template that makes up the element for our image
                     _imageSection = new TemplateSection(this, i);
-                    Logger.DebugLog($"Found ImageSection element (id={schema.TokenValues[SchemaTokens.ClassIdImageGrid]})");
+                    Logger.DebugLog($"Found ImageSection element (id={schema.TokenValues[SchemaTokens.ClassIdImageElement]})");
                 }
                 else if (line.Contains($"class=\"{schema.TokenValues[SchemaTokens.ClassIdImageColumn]}\""))
                 {
                     // Next we need to know what what our column sections are
                     _imageColumnSection = new TemplateSection(this, i);
-                    Logger.DebugLog($"Found ImageColumn element (id={schema.TokenValues[SchemaTokens.ClassIdImageGrid]})");
+                    Logger.DebugLog($"Found ImageColumn element (id={schema.TokenValues[SchemaTokens.ClassIdImageColumn]})");
+                }
+                else if (line.Contains($"class=\"{schema.TokenValues[SchemaTokens.ClassIdImageTitle]}\""))
+                {
+                    // Next we need to know what what our column sections are
+                    _imageTitleSection = new TemplateSection(this, i);
+                    Logger.DebugLog($"Found ImageTitle element (id={schema.TokenValues[SchemaTokens.ClassIdImageTitle]})");
                 }
             }
 
-            if (_imageSection == null || _imageColumnSection == null || _imageGridSection == null)
+            if (_imageSection == null || _imageColumnSection == null || _imageGridSection == null || _imageTitleSection == null)
             {
                 Logger.DebugError("Did not parse all sections of template file");
             }

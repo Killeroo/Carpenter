@@ -63,4 +63,19 @@ namespace PhotoWebpageGenerator
             }
         }
     }
+
+    public class TitleImageSection : ImageSection
+    {
+        public string TitleText = "";
+
+        public override void ReplaceDetailedImage(string oldImageName, string newImageName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void ReplacePreviewImage(string oldImageName, string newImageName)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }
