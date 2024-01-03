@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PhotoWebpageGenerator
+namespace Carpenter
 {
-    internal static class Logger
+    public static class Logger
     {
         public static void DebugLog(string message)
         {

@@ -1,7 +1,6 @@
 ﻿// TODO: Add link previews
 // https://andrejgajdos.com/how-to-create-a-link-preview/
 
-
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -12,7 +11,9 @@ using System.Threading.Tasks;
 using System.Drawing.Imaging;
 using System.Drawing;
 
-namespace PhotoWebpageGenerator
+using Carpenter;
+
+namespace Carpenter.CommandLine
 {
     class Program
     {
@@ -88,7 +89,7 @@ namespace PhotoWebpageGenerator
 
                 // Compress any images (if specified in schema)
                 if (schema.OptionValues[SchemaOptions.CompressPreviewImage] == "true"
-                    || schema.OptionValues[SchemaOptions.CompressDetailedImage] == "true") 
+                    || schema.OptionValues[SchemaOptions.CompressDetailedImage] == "true")
                 {
                     CompressImages(schema, directory);
                 }

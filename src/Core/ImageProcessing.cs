@@ -9,9 +9,9 @@ using System.Drawing.Imaging;
 using Encoder = System.Drawing.Imaging.Encoder;
 using InterpolationMode = System.Drawing.Drawing2D.InterpolationMode;
 
-namespace PhotoWebpageGenerator
+namespace Carpenter
 {
-    internal class ImageProcessing
+    public class ImageProcessing
     {
         /// <summary>
         /// Compresses an image with the specified quality (resizes image if scalePercent is specified)

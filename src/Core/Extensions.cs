@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PhotoWebpageGenerator
+namespace Carpenter
 {
     public static class Extensions
     {
