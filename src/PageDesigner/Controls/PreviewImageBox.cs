@@ -27,8 +27,6 @@ namespace PageDesigner
         {
             InitializeComponent();
 
-
-
             PictureBox.Image = previewImage;
             Label.Text = name;
 

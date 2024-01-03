@@ -88,8 +88,8 @@ namespace Carpenter.CommandLine
                 }
 
                 // Compress any images (if specified in schema)
-                if (schema.OptionValues[SchemaOptions.CompressPreviewImage] == "true"
-                    || schema.OptionValues[SchemaOptions.CompressDetailedImage] == "true")
+                if (schema.OptionValues[Schema.Option.CompressPreviewImage] == "true"
+                    || schema.OptionValues[Schema.Option.CompressDetailedImage] == "true")
                 {
                     CompressImages(schema, directory);
                 }
@@ -124,7 +124,7 @@ namespace Carpenter.CommandLine
                 //    continue;
                 //}
 
-                if (schema.OptionValues[SchemaOptions.CompressPreviewImage] == "true"
+                if (schema.OptionValues[Schema.Option.CompressPreviewImage] == "true"
                     && !originalImageNameWithoutExtension.Contains(CompressDetailedImagePostfix)) // HACK: To make sure we don't generate detailed images for previews when they already exist etc..
                 {
                     // TODO: Allow force compressing new images
@@ -150,7 +150,7 @@ namespace Carpenter.CommandLine
                     }
                 }
 
-                if (schema.OptionValues[SchemaOptions.CompressDetailedImage] == "true"
+                if (schema.OptionValues[Schema.Option.CompressDetailedImage] == "true"
                     && !originalImageNameWithoutExtension.Contains(CompressPreviewImagePostfix))
                 {
                     string detailedImageName = String.Empty;
@@ -177,7 +177,7 @@ namespace Carpenter.CommandLine
             // Now go through the schema and replace the old filenames with the new ones
             foreach (ImageSection section in schema.ImageSections)
             {
-                if (schema.OptionValues[SchemaOptions.CompressPreviewImage] == "true")
+                if (schema.OptionValues[Schema.Option.CompressPreviewImage] == "true")
                 {
                     foreach (var newImageName in newPreviewImageNames)
                     {
@@ -185,7 +185,7 @@ namespace Carpenter.CommandLine
                     }
                 }
 
-                if (schema.OptionValues[SchemaOptions.CompressDetailedImage] == "true")
+                if (schema.OptionValues[Schema.Option.CompressDetailedImage] == "true")
                 {
                     foreach (var newImageName in newDetailedImageNames)
                     {

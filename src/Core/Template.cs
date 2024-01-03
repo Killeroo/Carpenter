@@ -184,7 +184,7 @@ namespace Carpenter
             try
             {
                 // TODO: Add file name to schema and working directory
-                string generatedPath = Path.Combine(outputPath, schema.OptionValues[SchemaOptions.OutputFilename]);
+                string generatedPath = Path.Combine(outputPath, schema.OptionValues[Schema.Option.OutputFilename]);
                 File.WriteAllLines(generatedPath, templateCopy);
                 Logger.DebugLog($"File generated: {generatedPath}");
             }
@@ -253,11 +253,11 @@ namespace Carpenter
                 {
                     switch (imageTokenEntry.Value)
                     {
-                        case SchemaTokens.Image:
+                        case Schema.Token.Image:
                             line = line.Replace(imageTokenEntry.Key, section.PreviewImage);
                             break;
 
-                        case SchemaTokens.DetailedImage:
+                        case Schema.Token.DetailedImage:
                             line = line.Replace(imageTokenEntry.Key, section.DetailedImage);
                             break;
                     }
@@ -290,7 +290,7 @@ namespace Carpenter
                 // Replace all image tokens with the values in the StandaloneImageSection
                 foreach (var imageTokenEntry in schema.ImageTokenTable)
                 {
-                    if (imageTokenEntry.Value == SchemaTokens.ImageTitle)
+                    if (imageTokenEntry.Value == Schema.Token.ImageTitle)
                     {
                         line = line.Replace(imageTokenEntry.Key, section.TitleText);
                     }
@@ -320,29 +320,29 @@ namespace Carpenter
             {
                 string line = _fileContents[i];
 
-                if (line.Contains($"class=\"{schema.TokenValues[SchemaTokens.ClassIdImageGrid]}\""))
+                if (line.Contains($"class=\"{schema.TokenValues[Schema.Token.ClassIdImageGrid]}\""))
                 {
                     // First we need to find of the template that corresponds to our photo grid
                     _imageGridSection = new TemplateSection(this, i);
-                    Logger.DebugLog($"Found ImageGrid element (id={schema.TokenValues[SchemaTokens.ClassIdImageGrid]})");
+                    Logger.DebugLog($"Found ImageGrid element (id={schema.TokenValues[Schema.Token.ClassIdImageGrid]})");
                 }
-                else if (line.Contains($"class=\"{schema.TokenValues[SchemaTokens.ClassIdImageElement]}\""))
+                else if (line.Contains($"class=\"{schema.TokenValues[Schema.Token.ClassIdImageElement]}\""))
                 {
                     // Next we need to find the second of the template that makes up the element for our image
                     _imageSection = new TemplateSection(this, i);
-                    Logger.DebugLog($"Found ImageSection element (id={schema.TokenValues[SchemaTokens.ClassIdImageElement]})");
+                    Logger.DebugLog($"Found ImageSection element (id={schema.TokenValues[Schema.Token.ClassIdImageElement]})");
                 }
-                else if (line.Contains($"class=\"{schema.TokenValues[SchemaTokens.ClassIdImageColumn]}\""))
+                else if (line.Contains($"class=\"{schema.TokenValues[Schema.Token.ClassIdImageColumn]}\""))
                 {
                     // Next we need to know what what our column sections are
                     _imageColumnSection = new TemplateSection(this, i);
-                    Logger.DebugLog($"Found ImageColumn element (id={schema.TokenValues[SchemaTokens.ClassIdImageColumn]})");
+                    Logger.DebugLog($"Found ImageColumn element (id={schema.TokenValues[Schema.Token.ClassIdImageColumn]})");
                 }
-                else if (line.Contains($"class=\"{schema.TokenValues[SchemaTokens.ClassIdImageTitle]}\""))
+                else if (line.Contains($"class=\"{schema.TokenValues[Schema.Token.ClassIdImageTitle]}\""))
                 {
                     // Next we need to know what what our column sections are
                     _imageTitleSection = new TemplateSection(this, i);
-                    Logger.DebugLog($"Found ImageTitle element (id={schema.TokenValues[SchemaTokens.ClassIdImageTitle]})");
+                    Logger.DebugLog($"Found ImageTitle element (id={schema.TokenValues[Schema.Token.ClassIdImageTitle]})");
                 }
             }
 

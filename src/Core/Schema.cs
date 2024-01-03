@@ -8,82 +8,82 @@ using System.Threading.Tasks;
 
 namespace Carpenter
 {
-    public enum SchemaOptions
-    {
-        CompressPreviewImage,
-        CompressDetailedImage,
-        OutputFilename,
-    }
-
-    public enum SchemaTokens
-    {
-        BaseUrl,
-        PageUrl,
-        Location,
-        Title,
-        Month,
-        Year,
-        Author,
-        Camera,
-        ClassIdImageGrid,
-        ClassIdImageColumn,
-        ClassIdImageElement,
-        ClassIdImageTitle,
-        Image,
-        DetailedImage,
-        ImageTitle
-    };
-
-    public enum SchemaImageTags
-    {
-        Grid,
-        Standalone,
-        Column,
-        Title
-    }
-
     public class Schema
     {
-        public readonly Dictionary<string, SchemaTokens> TokenTable = new()
+        public enum Option
         {
-            { "%BASE_URL", SchemaTokens.BaseUrl },
-            { "%PAGE_URL", SchemaTokens.PageUrl },
-            { "%LOCATION", SchemaTokens.Location },
-            { "%TITLE", SchemaTokens.Title },
-            { "%MONTH", SchemaTokens.Month },
-            { "%YEAR", SchemaTokens.Year },
-            { "%CAMERA", SchemaTokens.Camera },
-            { "%AUTHOR", SchemaTokens.Author },
-            { "image_grid", SchemaTokens.ClassIdImageGrid },
-            { "image_column", SchemaTokens.ClassIdImageColumn },
-            { "image_element", SchemaTokens.ClassIdImageElement },
-            { "image_title",  SchemaTokens.ClassIdImageTitle }
+            CompressPreviewImage,
+            CompressDetailedImage,
+            OutputFilename,
+        }
+
+        public enum Token
+        {
+            BaseUrl,
+            PageUrl,
+            Location,
+            Title,
+            Month,
+            Year,
+            Author,
+            Camera,
+            ClassIdImageGrid,
+            ClassIdImageColumn,
+            ClassIdImageElement,
+            ClassIdImageTitle,
+            Image,
+            DetailedImage,
+            ImageTitle
         };
 
-        public readonly Dictionary<string, SchemaTokens> ImageTokenTable = new()
+        public enum ImageTag
         {
-            { "%IMAGE_URL", SchemaTokens.Image },
-            { "%DETAILED_IMAGE_URL", SchemaTokens.DetailedImage },
-            { "%IMAGE_TITLE", SchemaTokens.ImageTitle },
+            Grid,
+            Standalone,
+            Column,
+            Title
+        }
+
+        public readonly Dictionary<string, Token> TokenTable = new()
+        {
+            { "%BASE_URL", Token.BaseUrl },
+            { "%PAGE_URL", Token.PageUrl },
+            { "%LOCATION", Token.Location },
+            { "%TITLE", Token.Title },
+            { "%MONTH", Token.Month },
+            { "%YEAR", Token.Year },
+            { "%CAMERA", Token.Camera },
+            { "%AUTHOR", Token.Author },
+            { "image_grid", Token.ClassIdImageGrid },
+            { "image_column", Token.ClassIdImageColumn },
+            { "image_element", Token.ClassIdImageElement },
+            { "image_title",  Token.ClassIdImageTitle }
         };
 
-        private readonly Dictionary<string, SchemaOptions> _optionsTable = new()
+        public readonly Dictionary<string, Token> ImageTokenTable = new()
         {
-            { "compress_preview_image", SchemaOptions.CompressPreviewImage },
-            { "compress_detailed_image", SchemaOptions.CompressDetailedImage },
-            { "output_file", SchemaOptions.OutputFilename },
+            { "%IMAGE_URL", Token.Image },
+            { "%DETAILED_IMAGE_URL", Token.DetailedImage },
+            { "%IMAGE_TITLE", Token.ImageTitle },
         };
 
-        private readonly Dictionary<string, SchemaImageTags> _tagTable = new()
+        private readonly Dictionary<string, Option> _optionsTable = new()
         {
-            { "[IMAGE_LAYOUT]", SchemaImageTags.Grid },
-            { "[IMAGES_STANDALONE]", SchemaImageTags.Standalone },
-            { "[IMAGES_COLUMN]", SchemaImageTags.Column },
-            { "[IMAGE_TITLE]", SchemaImageTags.Title },
+            { "compress_preview_image", Option.CompressPreviewImage },
+            { "compress_detailed_image", Option.CompressDetailedImage },
+            { "output_file", Option.OutputFilename },
         };
 
-        public Dictionary<SchemaTokens, string> TokenValues = new();
-        public Dictionary<SchemaOptions, string> OptionValues = new();
+        private readonly Dictionary<string, ImageTag> _tagTable = new()
+        {
+            { "[IMAGE_LAYOUT]", ImageTag.Grid },
+            { "[IMAGES_STANDALONE]", ImageTag.Standalone },
+            { "[IMAGES_COLUMN]", ImageTag.Column },
+            { "[IMAGE_TITLE]", ImageTag.Title },
+        };
+
+        public Dictionary<Token, string> TokenValues = new();
+        public Dictionary<Option, string> OptionValues = new();
         public List<ImageSection> ImageSections = new();
 
         public bool Load(string path)
@@ -136,7 +136,7 @@ namespace Carpenter
             string gridTag = string.Empty;
             foreach (var item in _tagTable)
             {
-                if (item.Value == SchemaImageTags.Grid)
+                if (item.Value == ImageTag.Grid)
                 {
                     gridTag = item.Key;
                 }
@@ -167,25 +167,25 @@ namespace Carpenter
                     {
                         switch (_tagTable[tag])
                         {
-                            case SchemaImageTags.Standalone:
+                            case ImageTag.Standalone:
                                 currentSectionIndex++;
                                 ImageSections.Add(new StandaloneImageSection());
                                 Logger.DebugLog("Adding standalone image section to photo grid");
                                 break;
 
-                            case SchemaImageTags.Column:
+                            case ImageTag.Column:
                                 currentSectionIndex++;
                                 ImageSections.Add(new ColumnImageSection());
                                 Logger.DebugLog("Adding column section to photo grid");
                                 break;
 
-                            case SchemaImageTags.Title:
+                            case ImageTag.Title:
                                 currentSectionIndex++;
                                 ImageSections.Add(new TitleImageSection());
                                 Logger.DebugLog("Adding title section to photo grid");
                                 break;
 
-                            case SchemaImageTags.Grid:
+                            case ImageTag.Grid:
                                 // Ignore this as this is probably the start of our photo grid
                                 // TODO: We should worry if we encounter more than one of these
                                 break;
@@ -208,15 +208,15 @@ namespace Carpenter
 
                         switch (ImageTokenTable[token])
                         {
-                            case SchemaTokens.Image:
+                            case Token.Image:
                                 imageUrl = tokenValue;
                                 break;
 
-                            case SchemaTokens.DetailedImage:
+                            case Token.DetailedImage:
                                 detailedImageUrl = tokenValue;
                                 break;
 
-                            case SchemaTokens.ImageTitle:
+                            case Token.ImageTitle:
                                 imageTitle = tokenValue;
                                 break;
 

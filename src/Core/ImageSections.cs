@@ -8,7 +8,6 @@ namespace Carpenter
 {
     public abstract class ImageSection
     {
-
         public abstract void ReplacePreviewImage(string oldImageName, string newImageName);
         public abstract void ReplaceDetailedImage(string oldImageName, string newImageName);
     }
