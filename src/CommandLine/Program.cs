@@ -88,6 +88,8 @@ namespace Carpenter.CommandLine
                 }
 
                 // Compress any images (if specified in schema)
+                // TODO: Remove image patching code from this method, at the moment we always have to enable compression
+                // even when we don't want compression so images are patched properly for later on
                 if (schema.OptionValues[Schema.Option.CompressPreviewImage] == "true"
                     || schema.OptionValues[Schema.Option.CompressDetailedImage] == "true")
                 {
@@ -177,6 +179,12 @@ namespace Carpenter.CommandLine
             // Now go through the schema and replace the old filenames with the new ones
             foreach (ImageSection section in schema.ImageSections)
             {
+                // Avoid setting data in title images (they don't contain any images)
+                if (section.GetType() == typeof(TitleImageSection))
+                {
+                    continue;
+                }
+
                 if (schema.OptionValues[Schema.Option.CompressPreviewImage] == "true")
                 {
                     foreach (var newImageName in newPreviewImageNames)

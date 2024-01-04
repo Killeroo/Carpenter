@@ -338,7 +338,7 @@ namespace Carpenter
                     _imageColumnSection = new TemplateSection(this, i);
                     Logger.DebugLog($"Found ImageColumn element (id={schema.TokenValues[Schema.Token.ClassIdImageColumn]})");
                 }
-                else if (line.Contains($"class=\"{schema.TokenValues[Schema.Token.ClassIdImageTitle]}\""))
+                else if (schema.TokenValues.ContainsKey(Schema.Token.ClassIdImageTitle) && line.Contains($"class=\"{schema.TokenValues[Schema.Token.ClassIdImageTitle]}\""))
                 {
                     // Next we need to know what what our column sections are
                     _imageTitleSection = new TemplateSection(this, i);
