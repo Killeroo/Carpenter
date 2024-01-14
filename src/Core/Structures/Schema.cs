@@ -5,10 +5,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection.PortableExecutable;
 
 namespace Carpenter
 {
-    public class Schema
+    public class Schema : IDisposable
     {
         public const float kSchemaVersion = 2.0f;
 
@@ -86,6 +87,10 @@ namespace Carpenter
 
         private const string kVersionToken = "schema_version";
 
+        public Schema() { }
+        public Schema(string path) => Load(path);
+
+        // TODO: Throw exception
         public bool Load(string path)
         {
             // Read the file
@@ -306,6 +311,26 @@ namespace Carpenter
         private string GetTokenValue(string token)
         {
             return token.Split('=').Last().Split("``").First().StripWhitespaces();
+        }
+
+        private bool _disposed;
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                TokenValues.Clear();
+                OptionValues.Clear();
+                ImageSections.Clear();
+
+                _disposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

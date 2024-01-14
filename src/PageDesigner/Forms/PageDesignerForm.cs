@@ -124,6 +124,7 @@ namespace PageDesigner
 
                                 // Add the picturebox for the other column items
                                 PictureBox pictureBox = new();
+                                pictureBox.SizeMode = PictureBoxSizeMode.AutoSize;
                                 GridFlowLayoutPanel.Controls.Add(pictureBox);
                                 _pictureBoxBuffer.Enqueue(pictureBox);
                             }
@@ -136,7 +137,6 @@ namespace PageDesigner
 
             return true;
         }
-
 
         // TODO: Cache and retrieve (do in another thread
         private void AddLocalImageToGridLayout(string imageName, bool fullSize, PictureBox existingPictureBox = null)
@@ -151,7 +151,6 @@ namespace PageDesigner
             // TODO: Work out size without loading the whole image into memory
             using (Image sourceImage = Image.FromFile(localImagePath))
             {
-
                 AspectRatio ar = ImageUtils.CalculateAspectRatio(sourceImage);
                 textBox1.Text = ar.ToString();
 
@@ -161,7 +160,9 @@ namespace PageDesigner
                 {
                     targetWidth /= 2;
                 }
-                targetWidth -= 20;// 10;
+                // TODO: There is a bug where, when we add an image to a picturebox from the buffer there is some deadspace
+                // causing an overflow, meaning we have to reduce this width for now
+                targetWidth -= 20;// 10; 
                 int targetHeight = ar.CalculateHeight(targetWidth);
 
                 Image resizedImage = ImageUtils.ResizeImage(sourceImage, targetWidth, targetHeight);
@@ -177,7 +178,6 @@ namespace PageDesigner
                 }
                 else
                 {
-                    existingPictureBox.SizeMode = PictureBoxSizeMode.AutoSize;
                     existingPictureBox.Image = resizedImage;
                 }
 
@@ -196,8 +196,6 @@ namespace PageDesigner
 
         private void LoadAvailableImagePreviews()
         {
-            // TODO: Move to model
-
             if (string.IsNullOrEmpty(_workingPath) || Directory.Exists(_workingPath) == false)
             {
                 return;
@@ -237,8 +235,6 @@ namespace PageDesigner
                 }
             }
         }
-
-
 
         private void ImagePreviewFlowLayoutPanel_ControlClicked(object? sender, PreviewImageEventArgs e)
         {
@@ -284,20 +280,22 @@ namespace PageDesigner
             }
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void PreviewButton_Click(object sender, EventArgs e)
         {
-            //if (_lastControlInGrid != null)
+            if (_schema == null)
             {
-                //GridFlowLayoutPanel.SetFlowBreak(_lastControlInGrid, true);
-                //fullSize = !fullSize;
-
-
+                return;
             }
+
+            
         }
 
-        private void button3_Click(object sender, EventArgs e)
+        private void GenerateButton_Click(object sender, EventArgs e)
         {
-
+            if (_schema == null)
+            {
+                return;
+            }
         }
     }
 }

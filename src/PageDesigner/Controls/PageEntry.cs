@@ -2,33 +2,36 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using Carpenter;
+
 namespace PageDesigner.Controls
 {
     public partial class PageEntry : UserControl
     {
+        private Template _template;
         private string _directoryPath;
-        private string _directoryName;
 
         public PageEntry()
         {
             InitializeComponent();
         }
 
-        public PageEntry(string directoryPath, bool createButton)
+        public PageEntry(string directoryPath, bool createButton, Template template)
         {
             InitializeComponent();
 
             // TODO: Check yeah yeah yeah check some stuff...
-            _directoryName = Path.GetFileName(directoryPath);
             _directoryPath = directoryPath;
+            _template = template;
             
-            DirectoryLabel.Text = _directoryName;
+            DirectoryLabel.Text = Path.GetFileName(directoryPath);
 
             if (createButton)
             {
@@ -40,6 +43,39 @@ namespace PageDesigner.Controls
         {
             PageDesignerForm form = new (_directoryPath);
             form.ShowDialog();
+        }
+
+        private void PreviewButton_Click(object sender, EventArgs e)
+        {
+            string schemaPath = Path.Combine(_directoryPath, "SCHEMA");
+            if (File.Exists(schemaPath) == false)
+            {
+                return;
+            }
+
+            if (_template == null)
+            {
+                return;
+            }
+
+            using (Schema pageSchema = new(schemaPath))
+            {
+                if (_template.Generate(pageSchema, _directoryPath, true))
+                {
+                    string originalOutputFile = pageSchema.OptionValues[Schema.Option.OutputFilename];
+                    string previewName = Path.GetFileNameWithoutExtension(originalOutputFile) + "_preview";
+                    string previewPath = Path.Combine(_directoryPath, previewName + Path.GetExtension(originalOutputFile));
+
+                    if (File.Exists(previewPath))
+                    { 
+                        Process.Start(new ProcessStartInfo(previewPath)
+                        {
+                            UseShellExecute = true
+                        });
+                    }
+                }
+
+            }
         }
     }
 }

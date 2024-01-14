@@ -106,6 +106,7 @@ namespace Carpenter
         private string[] _fileContents;
         private bool _loaded = false;
 
+        // TODO: Throw some exceptions here
         public void Load(string path)
         {
             try
@@ -121,13 +122,14 @@ namespace Carpenter
             }
         }
 
+        // TODO: Throw some exceptions
         Dictionary<string, (int height, int width)> _schemaImages = new Dictionary<string, (int height, int width)>();
-        public void Generate(Schema schema, string outputPath)
+        public bool Generate(Schema schema, string outputPath, bool preview = false)
         {
             if (!_loaded)
             {
                 Logger.DebugError("Cannot generate page without template loaded. Call load() first.");
-                return;
+                return false;
             }
 
             // Store a list of image size so we can use those when generating the img tags
@@ -136,6 +138,7 @@ namespace Carpenter
             Logger.DebugLog($"Caching image sizes in {outputPath}...");
             foreach (string imagePath in Directory.GetFiles(outputPath, "*.jpg"))
             {
+                // TODO: Replace this with in place reading of metadata
                 using (System.Drawing.Image image = System.Drawing.Image.FromFile(imagePath))
                 {
                     _schemaImages.Add(Path.GetFileName(imagePath), (image.Height, image.Width));
@@ -180,19 +183,41 @@ namespace Carpenter
             templateCopy.Insert(0, "");
             templateCopy.Insert(0, string.Format(GeneratedComment, DateTime.Now.ToString("yyyy'-'MM'-'dd' 'HH':'mm''")));
 
+            // Remove urls so images on page render correctly in preview mode
+            if (preview)
+            {
+                foreach (string line in templateCopy)
+                {
+                    if (line == null)
+                    {
+                        continue;
+                    }
+
+                    line.Replace(schema.TokenValues[Schema.Token.PageUrl], "");
+                    line.Replace(schema.TokenValues[Schema.Token.BaseUrl], "");
+                }
+            }
+
             // Great now save the file out
             try
             {
-                // TODO: Add file name to schema and working directory
-                string generatedPath = Path.Combine(outputPath, schema.OptionValues[Schema.Option.OutputFilename]);
+                string generatedPath = Path.Combine(outputPath, Path.GetFileNameWithoutExtension(schema.OptionValues[Schema.Option.OutputFilename]));
+                if (preview)
+                {
+                    // TODO: Save this to temp folder
+                    generatedPath += string.Format("_preview{0}", Path.GetExtension(schema.OptionValues[Schema.Option.OutputFilename]));
+                }
+                
                 File.WriteAllLines(generatedPath, templateCopy);
                 Logger.DebugLog($"File generated: {generatedPath}");
             }
             catch (Exception e)
             {
                 Logger.DebugError($"[{e.GetType()}] Could not create generated file - {e.Message}");
+                return false;
             }
 
+            return true;
         }
 
         // TODO: Tab consistently for nested elements

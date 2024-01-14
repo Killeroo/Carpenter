@@ -28,290 +28,352 @@
         /// </summary>
         private void InitializeComponent()
         {
-            components = new System.ComponentModel.Container();
-            ImagePreviewFlowLayoutPanel = new FlowLayoutPanel();
-            textBox1 = new TextBox();
-            groupBox1 = new GroupBox();
-            imageList1 = new ImageList(components);
-            GridFlowLayoutPanel = new FlowLayoutPanel();
-            groupBox2 = new GroupBox();
-            CameraTextBox = new TextBox();
-            label9 = new Label();
-            AuthorTextBox = new TextBox();
-            label8 = new Label();
-            YearTextBox = new TextBox();
-            label7 = new Label();
-            MonthTextBox = new TextBox();
-            label6 = new Label();
-            LocationTextBox = new TextBox();
-            label5 = new Label();
-            TitleTextBox = new TextBox();
-            label4 = new Label();
-            PageUrlTextBox = new TextBox();
-            BaseUrlTextBox = new TextBox();
-            label3 = new Label();
-            label2 = new Label();
-            button2 = new Button();
-            label1 = new Label();
-            button3 = new Button();
-            button4 = new Button();
-            groupBox1.SuspendLayout();
-            groupBox2.SuspendLayout();
-            SuspendLayout();
+            this.components = new System.ComponentModel.Container();
+            this.ImagePreviewFlowLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
+            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
+            this.GridFlowLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.CameraTextBox = new System.Windows.Forms.TextBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.AuthorTextBox = new System.Windows.Forms.TextBox();
+            this.label8 = new System.Windows.Forms.Label();
+            this.YearTextBox = new System.Windows.Forms.TextBox();
+            this.label7 = new System.Windows.Forms.Label();
+            this.MonthTextBox = new System.Windows.Forms.TextBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.LocationTextBox = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.TitleTextBox = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.PageUrlTextBox = new System.Windows.Forms.TextBox();
+            this.BaseUrlTextBox = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.PreviewButton = new System.Windows.Forms.Button();
+            this.GenerateButton = new System.Windows.Forms.Button();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.textBox3 = new System.Windows.Forms.TextBox();
+            this.label10 = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
+            this.groupBox1.SuspendLayout();
+            this.groupBox2.SuspendLayout();
+            this.groupBox3.SuspendLayout();
+            this.SuspendLayout();
             // 
             // ImagePreviewFlowLayoutPanel
             // 
-            ImagePreviewFlowLayoutPanel.AutoScroll = true;
-            ImagePreviewFlowLayoutPanel.Location = new Point(6, 22);
-            ImagePreviewFlowLayoutPanel.Name = "ImagePreviewFlowLayoutPanel";
-            ImagePreviewFlowLayoutPanel.Size = new Size(496, 260);
-            ImagePreviewFlowLayoutPanel.TabIndex = 0;
-            ImagePreviewFlowLayoutPanel.Click += ImagePreviewFlowLayoutPanel_Click;
+            this.ImagePreviewFlowLayoutPanel.AutoScroll = true;
+            this.ImagePreviewFlowLayoutPanel.Location = new System.Drawing.Point(7, 29);
+            this.ImagePreviewFlowLayoutPanel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.ImagePreviewFlowLayoutPanel.Name = "ImagePreviewFlowLayoutPanel";
+            this.ImagePreviewFlowLayoutPanel.Size = new System.Drawing.Size(567, 313);
+            this.ImagePreviewFlowLayoutPanel.TabIndex = 0;
             // 
             // textBox1
             // 
-            textBox1.Location = new Point(633, 544);
-            textBox1.Name = "textBox1";
-            textBox1.Size = new Size(147, 23);
-            textBox1.TabIndex = 3;
+            this.textBox1.Location = new System.Drawing.Point(723, 725);
+            this.textBox1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.textBox1.Name = "textBox1";
+            this.textBox1.Size = new System.Drawing.Size(167, 27);
+            this.textBox1.TabIndex = 3;
             // 
             // groupBox1
             // 
-            groupBox1.Controls.Add(ImagePreviewFlowLayoutPanel);
-            groupBox1.Location = new Point(627, 226);
-            groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(508, 288);
-            groupBox1.TabIndex = 5;
-            groupBox1.TabStop = false;
-            groupBox1.Text = "Available Images";
+            this.groupBox1.Controls.Add(this.ImagePreviewFlowLayoutPanel);
+            this.groupBox1.Location = new System.Drawing.Point(717, 335);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.groupBox1.Size = new System.Drawing.Size(581, 350);
+            this.groupBox1.TabIndex = 5;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Available Images";
             // 
             // imageList1
             // 
-            imageList1.ColorDepth = ColorDepth.Depth8Bit;
-            imageList1.ImageSize = new Size(16, 16);
-            imageList1.TransparentColor = Color.Transparent;
+            this.imageList1.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
+            this.imageList1.ImageSize = new System.Drawing.Size(16, 16);
+            this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
             // 
             // GridFlowLayoutPanel
             // 
-            GridFlowLayoutPanel.AutoScroll = true;
-            GridFlowLayoutPanel.BorderStyle = BorderStyle.FixedSingle;
-            GridFlowLayoutPanel.Location = new Point(12, 28);
-            GridFlowLayoutPanel.Name = "GridFlowLayoutPanel";
-            GridFlowLayoutPanel.Size = new Size(609, 539);
-            GridFlowLayoutPanel.TabIndex = 6;
+            this.GridFlowLayoutPanel.AutoScroll = true;
+            this.GridFlowLayoutPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.GridFlowLayoutPanel.Location = new System.Drawing.Point(14, 37);
+            this.GridFlowLayoutPanel.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.GridFlowLayoutPanel.Name = "GridFlowLayoutPanel";
+            this.GridFlowLayoutPanel.Size = new System.Drawing.Size(696, 718);
+            this.GridFlowLayoutPanel.TabIndex = 6;
             // 
             // groupBox2
             // 
-            groupBox2.Controls.Add(CameraTextBox);
-            groupBox2.Controls.Add(label9);
-            groupBox2.Controls.Add(AuthorTextBox);
-            groupBox2.Controls.Add(label8);
-            groupBox2.Controls.Add(YearTextBox);
-            groupBox2.Controls.Add(label7);
-            groupBox2.Controls.Add(MonthTextBox);
-            groupBox2.Controls.Add(label6);
-            groupBox2.Controls.Add(LocationTextBox);
-            groupBox2.Controls.Add(label5);
-            groupBox2.Controls.Add(TitleTextBox);
-            groupBox2.Controls.Add(label4);
-            groupBox2.Controls.Add(PageUrlTextBox);
-            groupBox2.Controls.Add(BaseUrlTextBox);
-            groupBox2.Controls.Add(label3);
-            groupBox2.Controls.Add(label2);
-            groupBox2.Location = new Point(627, 12);
-            groupBox2.Name = "groupBox2";
-            groupBox2.Size = new Size(508, 208);
-            groupBox2.TabIndex = 7;
-            groupBox2.TabStop = false;
-            groupBox2.Text = "Page Details";
+            this.groupBox2.Controls.Add(this.CameraTextBox);
+            this.groupBox2.Controls.Add(this.label9);
+            this.groupBox2.Controls.Add(this.AuthorTextBox);
+            this.groupBox2.Controls.Add(this.label8);
+            this.groupBox2.Controls.Add(this.YearTextBox);
+            this.groupBox2.Controls.Add(this.label7);
+            this.groupBox2.Controls.Add(this.MonthTextBox);
+            this.groupBox2.Controls.Add(this.label6);
+            this.groupBox2.Controls.Add(this.LocationTextBox);
+            this.groupBox2.Controls.Add(this.label5);
+            this.groupBox2.Controls.Add(this.TitleTextBox);
+            this.groupBox2.Controls.Add(this.label4);
+            this.groupBox2.Controls.Add(this.PageUrlTextBox);
+            this.groupBox2.Controls.Add(this.BaseUrlTextBox);
+            this.groupBox2.Controls.Add(this.label3);
+            this.groupBox2.Controls.Add(this.label2);
+            this.groupBox2.Location = new System.Drawing.Point(717, 16);
+            this.groupBox2.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Padding = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.groupBox2.Size = new System.Drawing.Size(581, 187);
+            this.groupBox2.TabIndex = 7;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Page Details";
             // 
             // CameraTextBox
             // 
-            CameraTextBox.Location = new Point(327, 54);
-            CameraTextBox.Name = "CameraTextBox";
-            CameraTextBox.Size = new Size(175, 23);
-            CameraTextBox.TabIndex = 15;
+            this.CameraTextBox.Location = new System.Drawing.Point(376, 150);
+            this.CameraTextBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.CameraTextBox.Name = "CameraTextBox";
+            this.CameraTextBox.Size = new System.Drawing.Size(199, 27);
+            this.CameraTextBox.TabIndex = 15;
             // 
             // label9
             // 
-            label9.AutoSize = true;
-            label9.Location = new Point(266, 57);
-            label9.Name = "label9";
-            label9.Size = new Size(48, 15);
-            label9.TabIndex = 14;
-            label9.Text = "Camera";
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(304, 153);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(60, 20);
+            this.label9.TabIndex = 14;
+            this.label9.Text = "Camera";
             // 
             // AuthorTextBox
             // 
-            AuthorTextBox.Location = new Point(327, 25);
-            AuthorTextBox.Name = "AuthorTextBox";
-            AuthorTextBox.Size = new Size(175, 23);
-            AuthorTextBox.TabIndex = 13;
+            this.AuthorTextBox.Location = new System.Drawing.Point(376, 111);
+            this.AuthorTextBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.AuthorTextBox.Name = "AuthorTextBox";
+            this.AuthorTextBox.Size = new System.Drawing.Size(199, 27);
+            this.AuthorTextBox.TabIndex = 13;
             // 
             // label8
             // 
-            label8.AutoSize = true;
-            label8.Location = new Point(266, 28);
-            label8.Name = "label8";
-            label8.Size = new Size(44, 15);
-            label8.TabIndex = 12;
-            label8.Text = "Author";
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(304, 115);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(54, 20);
+            this.label8.TabIndex = 12;
+            this.label8.Text = "Author";
             // 
             // YearTextBox
             // 
-            YearTextBox.Location = new Point(69, 170);
-            YearTextBox.Name = "YearTextBox";
-            YearTextBox.Size = new Size(185, 23);
-            YearTextBox.TabIndex = 11;
+            this.YearTextBox.Location = new System.Drawing.Point(375, 73);
+            this.YearTextBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.YearTextBox.Name = "YearTextBox";
+            this.YearTextBox.Size = new System.Drawing.Size(199, 27);
+            this.YearTextBox.TabIndex = 11;
             // 
             // label7
             // 
-            label7.AutoSize = true;
-            label7.Location = new Point(8, 173);
-            label7.Name = "label7";
-            label7.Size = new Size(29, 15);
-            label7.TabIndex = 10;
-            label7.Text = "Year";
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(304, 76);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(37, 20);
+            this.label7.TabIndex = 10;
+            this.label7.Text = "Year";
             // 
             // MonthTextBox
             // 
-            MonthTextBox.Location = new Point(69, 141);
-            MonthTextBox.Name = "MonthTextBox";
-            MonthTextBox.Size = new Size(185, 23);
-            MonthTextBox.TabIndex = 9;
+            this.MonthTextBox.Location = new System.Drawing.Point(375, 34);
+            this.MonthTextBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.MonthTextBox.Name = "MonthTextBox";
+            this.MonthTextBox.Size = new System.Drawing.Size(199, 27);
+            this.MonthTextBox.TabIndex = 9;
             // 
             // label6
             // 
-            label6.AutoSize = true;
-            label6.Location = new Point(8, 144);
-            label6.Name = "label6";
-            label6.Size = new Size(43, 15);
-            label6.TabIndex = 8;
-            label6.Text = "Month";
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(304, 37);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(52, 20);
+            this.label6.TabIndex = 8;
+            this.label6.Text = "Month";
             // 
             // LocationTextBox
             // 
-            LocationTextBox.Location = new Point(69, 112);
-            LocationTextBox.Name = "LocationTextBox";
-            LocationTextBox.Size = new Size(185, 23);
-            LocationTextBox.TabIndex = 7;
+            this.LocationTextBox.Location = new System.Drawing.Point(79, 149);
+            this.LocationTextBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.LocationTextBox.Name = "LocationTextBox";
+            this.LocationTextBox.Size = new System.Drawing.Size(211, 27);
+            this.LocationTextBox.TabIndex = 7;
             // 
             // label5
             // 
-            label5.AutoSize = true;
-            label5.Location = new Point(8, 115);
-            label5.Name = "label5";
-            label5.Size = new Size(53, 15);
-            label5.TabIndex = 6;
-            label5.Text = "Location";
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(9, 153);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(66, 20);
+            this.label5.TabIndex = 6;
+            this.label5.Text = "Location";
             // 
             // TitleTextBox
             // 
-            TitleTextBox.Location = new Point(69, 83);
-            TitleTextBox.Name = "TitleTextBox";
-            TitleTextBox.Size = new Size(185, 23);
-            TitleTextBox.TabIndex = 5;
+            this.TitleTextBox.Location = new System.Drawing.Point(79, 111);
+            this.TitleTextBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.TitleTextBox.Name = "TitleTextBox";
+            this.TitleTextBox.Size = new System.Drawing.Size(211, 27);
+            this.TitleTextBox.TabIndex = 5;
             // 
             // label4
             // 
-            label4.AutoSize = true;
-            label4.Location = new Point(8, 86);
-            label4.Name = "label4";
-            label4.Size = new Size(29, 15);
-            label4.TabIndex = 4;
-            label4.Text = "Title";
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(9, 115);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(38, 20);
+            this.label4.TabIndex = 4;
+            this.label4.Text = "Title";
             // 
             // PageUrlTextBox
             // 
-            PageUrlTextBox.Location = new Point(69, 54);
-            PageUrlTextBox.Name = "PageUrlTextBox";
-            PageUrlTextBox.Size = new Size(185, 23);
-            PageUrlTextBox.TabIndex = 3;
+            this.PageUrlTextBox.Location = new System.Drawing.Point(79, 72);
+            this.PageUrlTextBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.PageUrlTextBox.Name = "PageUrlTextBox";
+            this.PageUrlTextBox.Size = new System.Drawing.Size(211, 27);
+            this.PageUrlTextBox.TabIndex = 3;
             // 
             // BaseUrlTextBox
             // 
-            BaseUrlTextBox.Location = new Point(69, 25);
-            BaseUrlTextBox.Name = "BaseUrlTextBox";
-            BaseUrlTextBox.Size = new Size(185, 23);
-            BaseUrlTextBox.TabIndex = 2;
+            this.BaseUrlTextBox.Location = new System.Drawing.Point(79, 33);
+            this.BaseUrlTextBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.BaseUrlTextBox.Name = "BaseUrlTextBox";
+            this.BaseUrlTextBox.Size = new System.Drawing.Size(211, 27);
+            this.BaseUrlTextBox.TabIndex = 2;
             // 
             // label3
             // 
-            label3.AutoSize = true;
-            label3.Location = new Point(8, 57);
-            label3.Name = "label3";
-            label3.Size = new Size(57, 15);
-            label3.TabIndex = 1;
-            label3.Text = "Page URL";
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(9, 76);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(71, 20);
+            this.label3.TabIndex = 1;
+            this.label3.Text = "Page URL";
             // 
             // label2
             // 
-            label2.AutoSize = true;
-            label2.Location = new Point(8, 28);
-            label2.Name = "label2";
-            label2.Size = new Size(55, 15);
-            label2.TabIndex = 0;
-            label2.Text = "Base URL";
-            // 
-            // button2
-            // 
-            button2.Location = new Point(806, 544);
-            button2.Name = "button2";
-            button2.Size = new Size(75, 23);
-            button2.TabIndex = 8;
-            button2.Text = "button2";
-            button2.UseVisualStyleBackColor = true;
-            button2.Click += button2_Click;
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(9, 37);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(70, 20);
+            this.label2.TabIndex = 0;
+            this.label2.Text = "Base URL";
             // 
             // label1
             // 
-            label1.AutoSize = true;
-            label1.Location = new Point(12, 10);
-            label1.Name = "label1";
-            label1.Size = new Size(65, 15);
-            label1.TabIndex = 9;
-            label1.Text = "Grid layout";
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(14, 13);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(82, 20);
+            this.label1.TabIndex = 9;
+            this.label1.Text = "Grid layout";
             // 
-            // button3
+            // PreviewButton
             // 
-            button3.Location = new Point(887, 544);
-            button3.Name = "button3";
-            button3.Size = new Size(75, 23);
-            button3.TabIndex = 10;
-            button3.Text = "Preview";
-            button3.UseVisualStyleBackColor = true;
-            button3.Click += button3_Click;
+            this.PreviewButton.Location = new System.Drawing.Point(1120, 723);
+            this.PreviewButton.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.PreviewButton.Name = "PreviewButton";
+            this.PreviewButton.Size = new System.Drawing.Size(86, 31);
+            this.PreviewButton.TabIndex = 10;
+            this.PreviewButton.Text = "Preview";
+            this.PreviewButton.UseVisualStyleBackColor = true;
+            this.PreviewButton.Click += new System.EventHandler(this.PreviewButton_Click);
             // 
-            // button4
+            // GenerateButton
             // 
-            button4.Location = new Point(968, 544);
-            button4.Name = "button4";
-            button4.Size = new Size(75, 23);
-            button4.TabIndex = 11;
-            button4.Text = "Generate";
-            button4.UseVisualStyleBackColor = true;
+            this.GenerateButton.Location = new System.Drawing.Point(1212, 723);
+            this.GenerateButton.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.GenerateButton.Name = "GenerateButton";
+            this.GenerateButton.Size = new System.Drawing.Size(86, 31);
+            this.GenerateButton.TabIndex = 11;
+            this.GenerateButton.Text = "Generate";
+            this.GenerateButton.UseVisualStyleBackColor = true;
+            this.GenerateButton.Click += new System.EventHandler(this.GenerateButton_Click);
+            // 
+            // groupBox3
+            // 
+            this.groupBox3.Controls.Add(this.textBox2);
+            this.groupBox3.Controls.Add(this.textBox3);
+            this.groupBox3.Controls.Add(this.label10);
+            this.groupBox3.Controls.Add(this.label11);
+            this.groupBox3.Location = new System.Drawing.Point(717, 210);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(581, 118);
+            this.groupBox3.TabIndex = 12;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Image Details";
+            // 
+            // textBox2
+            // 
+            this.textBox2.Location = new System.Drawing.Point(79, 73);
+            this.textBox2.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.textBox2.Name = "textBox2";
+            this.textBox2.Size = new System.Drawing.Size(211, 27);
+            this.textBox2.TabIndex = 7;
+            // 
+            // textBox3
+            // 
+            this.textBox3.Location = new System.Drawing.Point(79, 34);
+            this.textBox3.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.textBox3.Name = "textBox3";
+            this.textBox3.Size = new System.Drawing.Size(211, 27);
+            this.textBox3.TabIndex = 6;
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(9, 76);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(66, 20);
+            this.label10.TabIndex = 5;
+            this.label10.Text = "Detailed";
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(9, 37);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(60, 20);
+            this.label11.TabIndex = 4;
+            this.label11.Text = "Preview";
             // 
             // PageDesignerForm
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
-            AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1144, 585);
-            Controls.Add(button4);
-            Controls.Add(button3);
-            Controls.Add(label1);
-            Controls.Add(button2);
-            Controls.Add(groupBox2);
-            Controls.Add(GridFlowLayoutPanel);
-            Controls.Add(groupBox1);
-            Controls.Add(textBox1);
-            Name = "PageDesignerForm";
-            Text = "Carpenter";
-            Load += PageDesignerForm_Load;
-            groupBox1.ResumeLayout(false);
-            groupBox2.ResumeLayout(false);
-            groupBox2.PerformLayout();
-            ResumeLayout(false);
-            PerformLayout();
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(1307, 780);
+            this.Controls.Add(this.groupBox3);
+            this.Controls.Add(this.GenerateButton);
+            this.Controls.Add(this.PreviewButton);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.groupBox2);
+            this.Controls.Add(this.GridFlowLayoutPanel);
+            this.Controls.Add(this.groupBox1);
+            this.Controls.Add(this.textBox1);
+            this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.Name = "PageDesignerForm";
+            this.Text = "Carpenter";
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
+            this.groupBox3.ResumeLayout(false);
+            this.groupBox3.PerformLayout();
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
         }
 
         #endregion
@@ -322,7 +384,6 @@
         private ImageList imageList1;
         private FlowLayoutPanel GridFlowLayoutPanel;
         private GroupBox groupBox2;
-        private Button button2;
         private Label label2;
         private Label label1;
         private TextBox CameraTextBox;
@@ -340,7 +401,12 @@
         private TextBox PageUrlTextBox;
         private TextBox BaseUrlTextBox;
         private Label label3;
-        private Button button3;
-        private Button button4;
+        private Button PreviewButton;
+        private Button GenerateButton;
+        private GroupBox groupBox3;
+        private TextBox textBox2;
+        private TextBox textBox3;
+        private Label label10;
+        private Label label11;
     }
 }
