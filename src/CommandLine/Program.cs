@@ -10,7 +10,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Drawing.Imaging;
 using System.Drawing;
-
 using Carpenter;
 
 namespace Carpenter.CommandLine
@@ -143,7 +142,7 @@ namespace Carpenter.CommandLine
                     {
                         // Generate a compressed preview image
                         previewImageName = originalImageNameWithoutExtension + CompressPreviewImagePostfix + ".jpg";
-                        Image previewImage = ImageProcessing.CompressImage(image, CompressedPreviewImageQuality, CompressedPreviewImageScale);
+                        Image previewImage = ImageUtils.CompressImage(image, CompressedPreviewImageQuality, CompressedPreviewImageScale);
                         previewImage.Save(Path.Combine(currentPath, previewImageName));
                         Logger.DebugLog($"Saved preview image @ {previewImageName}");
 
@@ -166,7 +165,7 @@ namespace Carpenter.CommandLine
                     else
                     {
                         detailedImageName = originalImageNameWithoutExtension + CompressDetailedImagePostfix + ".jpg";
-                        Image detailedImage = ImageProcessing.CompressImage(image, CompressedDetailedImageQuality, CompressedDetailedImageScale);
+                        Image detailedImage = ImageUtils.CompressImage(image, CompressedDetailedImageQuality, CompressedDetailedImageScale);
                         detailedImage.Save(Path.Combine(currentPath, detailedImageName));
                         Logger.DebugLog($"Saved detailed image @ {detailedImageName}");
 

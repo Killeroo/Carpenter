@@ -16,52 +16,17 @@ using System.Windows.Forms;
 namespace PageDesigner
 {
 
-    struct AspectRatio
-    {
-        public readonly int Width;
-        public readonly int Height;
-
-        public AspectRatio(int width, int height)
-        {
-            // TODO: Where is this reversed?????
-            Width = height;
-            Height = width;
-        }
-
-        public int CalculateHeight(int width)
-        {
-            Debug.Assert(Width != 0);
-            Debug.Assert(Height != 0);
-
-            int factor = width / Width;
-            return Height * factor;
-        }
-
-        public int CalculateWidth(int height)
-        {
-            Debug.Assert(Width != 0);
-            Debug.Assert(Height != 0);
-
-            int factor = height / Height;
-            return Width * factor;
-        }
-
-        public override string ToString()
-        {
-            return string.Format("{0}:{1}", Width, Height);
-        }
-    }
 
     public partial class PageDesignerForm : Form
     {
         private string _workingPath;
         private Schema _schema;
 
-
         PreviewImageBox selectedPreviewImageControl; // TODO: Rename _selectedPreviewImageControl
         Control _lastControlInGrid;
         Dictionary<string, Image> _previewImages = new();
 
+        List<PictureBox> _pictureBoxBuffer = new();
 
         public PageDesignerForm(string path)
         {
@@ -167,10 +132,11 @@ namespace PageDesigner
                 return;
             }
 
+            // TODO: Work out size without loading the whole image into memory
             using (Image sourceImage = Image.FromFile(localImagePath))
             {
 
-                AspectRatio ar = CalculateAspectRatio(sourceImage);
+                AspectRatio ar = ImageUtils.CalculateAspectRatio(sourceImage);
                 textBox1.Text = ar.ToString();
 
                 // Find the width that we need to fit into
@@ -182,8 +148,7 @@ namespace PageDesigner
                 targetWidth -= 10;
                 int targetHeight = ar.CalculateHeight(targetWidth);
 
-
-                Image resizedImage = ResizeImage(sourceImage, targetWidth, targetHeight);
+                Image resizedImage = ImageUtils.ResizeImage(sourceImage, targetWidth, targetHeight);
 
                 PictureBox pictureBox = new();
                 pictureBox.Image = resizedImage;
@@ -224,7 +189,7 @@ namespace PageDesigner
             {
                 using (Image originalImage = Image.FromFile(imagePath))
                 {
-                    AspectRatio ar = CalculateAspectRatio(originalImage);
+                    AspectRatio ar = ImageUtils.CalculateAspectRatio(originalImage);
 
                     int desiredWidth = 120;
                     int desiredHeight = ar.CalculateHeight(desiredWidth);
@@ -248,55 +213,7 @@ namespace PageDesigner
             }
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            //pictureBox1.Image = new Bitmap(@"G:\#bearphoto winners\DSC00828.jpg");
-            //using (Image originalImage = Image.FromFile(@"G:\#bearphoto winners\DSC00828.jpg"))
-            //{
-            //    GraphicsUnit unit = GraphicsUnit.Pixel;
-            //    RectangleF imageBounds = originalImage.GetBounds(ref unit);
 
-
-            //    int lowestCommonDemoninator = lcm((int)imageBounds.Size.Width, (int)imageBounds.Size.Height);
-
-            //    textBox1.Text = string.Format("{0}:{1}",
-            //        lowestCommonDemoninator / (int)imageBounds.Size.Width,
-            //        lowestCommonDemoninator / (int)imageBounds.Size.Height);
-
-            //    pictureBox1.Image = originalImage.GetThumbnailImage(120, 120, () => false, IntPtr.Zero);
-            //}
-            //Image image = Image.FromFile(@"G:\#bearphoto winners\DSC00828.jpg");
-            //pictureBox1.Image = image.GetThumbnailImage(120, 120, () => false, IntPtr.Zero);
-            //image.Dispose();
-
-            //string inputtedPath = PathTextBox.Text;
-
-
-
-
-            //ImagePreviewFlowLayoutPanel.VerticalScroll.Visible = true;
-        }
-
-        // Turns out GetThumbnail does caching anyway so this is basically useless
-        private Image FetchOrCatchPreviewImage(string filename, string path)
-        {
-            string rootTempPath = Path.Combine(Path.GetTempPath(), @"Carpenter", Path.GetDirectoryName(path));
-            string cachedFilePath = Path.Combine(rootTempPath, Path.ChangeExtension(filename, "png"));
-
-            if (File.Exists(cachedFilePath))
-            {
-                return Image.FromFile(cachedFilePath);
-            }
-
-            using (Image originalImage = Image.FromFile(Path.Combine(path, filename)))
-            {
-
-
-                Image thumbnail = originalImage.GetThumbnailImage(120, 120, () => false, IntPtr.Zero); // TODO: Fix with aspect ratio
-                thumbnail.Save(cachedFilePath);
-                return thumbnail;
-            }
-        }
 
         private void ImagePreviewFlowLayoutPanel_ControlClicked(object? sender, PreviewImageEventArgs e)
         {
@@ -333,60 +250,6 @@ namespace PageDesigner
             }
         }
 
-        // TODO: Move
-        private AspectRatio CalculateAspectRatio(Image image)
-        {
-            int lowestCommonDemoninator = LowestCommonMultiple(image.Width, image.Height);
-
-            //WidthRatio = lowestCommonDemoninator / image.Width;
-            //HeightRatio = lowestCommonDemoninator / image.Height;
-
-            return new AspectRatio(lowestCommonDemoninator / image.Width, lowestCommonDemoninator / image.Height);
-        }
-
-        // TODO: Move
-        //https://stackoverflow.com/a/24199315
-        private Bitmap ResizeImage(Image sourceImage, int width, int height)
-        {
-            Rectangle destRect = new(0, 0, width, height);
-            Bitmap destImage = new(width, height);
-
-            destImage.SetResolution(sourceImage.HorizontalResolution, sourceImage.VerticalResolution);
-
-            using (Graphics graphics = Graphics.FromImage(destImage))
-            {
-                graphics.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
-                graphics.CompositingQuality = CompositingQuality.HighQuality;
-                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                graphics.SmoothingMode = SmoothingMode.HighQuality;
-                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-
-                using (ImageAttributes attributes = new())
-                {
-                    attributes.SetWrapMode(WrapMode.TileFlipXY);
-                    graphics.DrawImage(sourceImage, destRect, 0, 0, sourceImage.Width, sourceImage.Height, GraphicsUnit.Pixel, attributes);
-                }
-            }
-
-            return destImage;
-        }
-
-        //https://stackoverflow.com/a/20824923
-        static int GreatestCommonFactor(int a, int b)
-        {
-            while (b != 0)
-            {
-                int temp = b;
-                b = a % b;
-                a = temp;
-            }
-            return a;
-        }
-
-        static int LowestCommonMultiple(int a, int b)
-        {
-            return (a / GreatestCommonFactor(a, b)) * b;
-        }
 
         private void ImagePreviewFlowLayoutPanel_Click(object sender, EventArgs e)
         {

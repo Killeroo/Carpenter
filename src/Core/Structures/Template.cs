@@ -60,7 +60,7 @@ namespace Carpenter
                 StartIndex = index;
                 StartLine = line;
 
-                Length = (EndIndex - StartIndex) + 1;
+                Length = EndIndex - StartIndex + 1;
 
                 // Now lets copy over what is between the start and end elements (if we can)
                 if (Length > 1)
@@ -440,7 +440,7 @@ namespace Carpenter
                     count++;
                 }
 
-                if (Char.IsWhiteSpace(@char) || @char.Equals('>'))
+                if (char.IsWhiteSpace(@char) || @char.Equals('>'))
                 {
                     // Remove terminator start cone
                     elementType = elementType.Replace(@"</", "");

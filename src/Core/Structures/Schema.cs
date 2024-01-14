@@ -228,7 +228,7 @@ namespace Carpenter
 
                         // TODO: Make this check more robust so we definitely have 2 sections before adding to section (Maybe parse ahead in array?)
                         // TODO: Don't assume this will be ordered image_url then detailed_image_url
-                        if (imageTitle != string.Empty || (imageUrl != string.Empty && detailedImageUrl != string.Empty))
+                        if (imageTitle != string.Empty || imageUrl != string.Empty && detailedImageUrl != string.Empty)
                         {
                             if (ImageSections[currentSectionIndex].GetType().Equals(typeof(StandaloneImageSection)))
                             {

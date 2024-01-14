@@ -10,16 +10,4 @@
     <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <!-- <None Update="IMG_2590.JPG">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="SCHEMA">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="template.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None> -->
-  </ItemGroup>
-
 </Project>
