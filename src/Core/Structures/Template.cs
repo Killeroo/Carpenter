@@ -434,6 +434,7 @@ namespace Carpenter
                 if (count > maxCount)
                 {
                     Logger.DebugError($"Element too long (50+ characters), bailing. Final element string={elementType}");
+                    break;
                 }
                 else
                 {

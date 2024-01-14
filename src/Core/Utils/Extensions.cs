@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,6 +22,15 @@ namespace Carpenter
             }
 
             return copy;
+        }
+
+        public static string StripWhitespaces(this string str)
+        {
+            //str = str.Replace(" ", string.Empty);
+            str = str.Replace(Environment.NewLine, string.Empty);
+            str = str.Replace("\t", string.Empty);
+
+            return str;
         }
 
         public static int FindClosestKey(this Dictionary<int, string> dict, int value)

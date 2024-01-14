@@ -10,11 +10,11 @@ namespace Carpenter
 {
     public class Schema
     {
+        public const float kSchemaVersion = 2.0f;
+
         public enum Option
         {
-            CompressPreviewImage,
-            CompressDetailedImage,
-            OutputFilename,
+            OutputFilename
         }
 
         public enum Token
@@ -69,12 +69,10 @@ namespace Carpenter
 
         private readonly Dictionary<string, Option> _optionsTable = new()
         {
-            { "compress_preview_image", Option.CompressPreviewImage },
-            { "compress_detailed_image", Option.CompressDetailedImage },
             { "output_file", Option.OutputFilename },
         };
 
-        private readonly Dictionary<string, ImageTag> _tagTable = new()
+        private readonly Dictionary<string, ImageTag> _imageTagTable = new()
         {
             { "[IMAGE_LAYOUT]", ImageTag.Grid },
             { "[IMAGES_STANDALONE]", ImageTag.Standalone },
@@ -85,6 +83,8 @@ namespace Carpenter
         public Dictionary<Token, string> TokenValues = new();
         public Dictionary<Option, string> OptionValues = new();
         public List<ImageSection> ImageSections = new();
+
+        private const string kVersionToken = "schema_version";
 
         public bool Load(string path)
         {
@@ -100,6 +100,36 @@ namespace Carpenter
                 return false;
             }
 
+            // Sanity check size
+            if (schemaFileContents.Length == 0)
+            {
+                Logger.DebugError($"Schema file empty!");
+                return false;
+            }
+
+            // Version check
+            if (schemaFileContents[0].Contains(kVersionToken) == false || schemaFileContents[0].Contains('=') == false)
+            {
+                Logger.DebugError($"Could not read schema file version");
+                return false;
+            }
+            string versionValue = GetTokenValue(schemaFileContents[0]);
+            float version = 0.0f;
+            try
+            {
+                version = float.Parse(versionValue);
+            }
+            catch (Exception e) 
+            {
+                Logger.DebugError($"[{e.GetType()}] Could not parse schema version (\'{versionValue}\') - {e.Message}");
+                return false;
+            }
+            if (version != kSchemaVersion)
+            {
+                Logger.DebugError($"Incompabitable schema version, found v{version} but can only parse v{kSchemaVersion}. Please update.");
+                return false;
+            }
+
             // Parse tokens in file
             for (int i = 0; i < schemaFileContents.Length; i++)
             {
@@ -109,7 +139,7 @@ namespace Carpenter
                 {
                     if (line.Contains(token))
                     {
-                        TokenValues[TokenTable[token]] = line.Split('=').Last();
+                        TokenValues[TokenTable[token]] = GetTokenValue(line);
                         Logger.DebugLog($"Schema token {TokenTable[token]}={TokenValues[TokenTable[token]]}");
                         break;
                     }
@@ -125,7 +155,7 @@ namespace Carpenter
                 {
                     if (line.Contains(option))
                     {
-                        OptionValues[_optionsTable[option]] = line.Split('=').Last();
+                        OptionValues[_optionsTable[option]] = GetTokenValue(line);
                         Logger.DebugLog($"Schema option {_optionsTable[option]}={OptionValues[_optionsTable[option]]}");
                         break;
                     }
@@ -134,7 +164,7 @@ namespace Carpenter
 
             // Parse photo grid layout
             string gridTag = string.Empty;
-            foreach (var item in _tagTable)
+            foreach (var item in _imageTagTable)
             {
                 if (item.Value == ImageTag.Grid)
                 {
@@ -161,11 +191,11 @@ namespace Carpenter
                 string line = schemaFileContents[i];
 
                 // If the line contains a tag
-                foreach (string tag in _tagTable.Keys)
+                foreach (string tag in _imageTagTable.Keys)
                 {
                     if (line.Contains(tag))
                     {
-                        switch (_tagTable[tag])
+                        switch (_imageTagTable[tag])
                         {
                             case ImageTag.Standalone:
                                 currentSectionIndex++;
@@ -270,6 +300,12 @@ namespace Carpenter
 
             Logger.DebugLog($"Schema file parsed (\"{path}\")");
             return true;
+        }
+
+        // Shorthand for parsing a token value from a token
+        private string GetTokenValue(string token)
+        {
+            return token.Split('=').Last().Split("``").First().StripWhitespaces();
         }
     }
 }

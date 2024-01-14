@@ -124,10 +124,6 @@ namespace Carpenter
         public static AspectRatio CalculateAspectRatio(Image image)
         {
             int lowestCommonDemoninator = MathUtils.LowestCommonMultiple(image.Width, image.Height);
-
-            //WidthRatio = lowestCommonDemoninator / image.Width;
-            //HeightRatio = lowestCommonDemoninator / image.Height;
-
             return new AspectRatio(lowestCommonDemoninator / image.Width, lowestCommonDemoninator / image.Height);
         }
 

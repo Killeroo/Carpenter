@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommandLine", "src\CommandL
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PageDesigner", "src\PageDesigner\PageDesigner.csproj", "{CFB62140-4B0B-42AC-A59B-2B6F58B09A15}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageCompressor", "ImageCompressor\ImageCompressor.csproj", "{732FC8D4-78B7-4B81-863A-3D8CA5E802EA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{CFB62140-4B0B-42AC-A59B-2B6F58B09A15}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CFB62140-4B0B-42AC-A59B-2B6F58B09A15}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CFB62140-4B0B-42AC-A59B-2B6F58B09A15}.Release|Any CPU.Build.0 = Release|Any CPU
+		{732FC8D4-78B7-4B81-863A-3D8CA5E802EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{732FC8D4-78B7-4B81-863A-3D8CA5E802EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{732FC8D4-78B7-4B81-863A-3D8CA5E802EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{732FC8D4-78B7-4B81-863A-3D8CA5E802EA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
