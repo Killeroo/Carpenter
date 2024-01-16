@@ -303,6 +303,7 @@ namespace Carpenter
                 }
             }
 
+            // TODO: Check that all tokens are present
             Logger.DebugLog($"Schema file parsed (\"{path}\")");
             return true;
         }

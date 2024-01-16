@@ -124,7 +124,7 @@ namespace Carpenter
 
         // TODO: Throw some exceptions
         Dictionary<string, (int height, int width)> _schemaImages = new Dictionary<string, (int height, int width)>();
-        public bool Generate(Schema schema, string outputPath, bool preview = false)
+        public bool Generate(Schema schema, string outputPath, bool preview = false, string previewPath = "")
         {
             if (!_loaded)
             {
@@ -186,25 +186,35 @@ namespace Carpenter
             // Remove urls so images on page render correctly in preview mode
             if (preview)
             {
-                foreach (string line in templateCopy)
+                for (int index = 0; index < templateCopy.Count; index++)// (string line in templateCopy)
                 {
-                    if (line == null)
+                    string line = templateCopy[index];
+
+                    if (string.IsNullOrEmpty(line))
                     {
                         continue;
                     }
 
-                    line.Replace(schema.TokenValues[Schema.Token.PageUrl], "");
-                    line.Replace(schema.TokenValues[Schema.Token.BaseUrl], "");
+                    // Replace page url
+                    string pageUrl = string.Format("{0}/{1}/", schema.TokenValues[Schema.Token.BaseUrl], schema.TokenValues[Schema.Token.PageUrl]);
+                    line = line.Replace(pageUrl, "");
+
+                    templateCopy[index] = line;
                 }
             }
 
             // Great now save the file out
             try
             {
+                // Overwrite output path if it was set
+                if (preview && previewPath != string.Empty)
+                {
+                    outputPath = previewPath;
+                }
+
                 string generatedPath = Path.Combine(outputPath, Path.GetFileNameWithoutExtension(schema.OptionValues[Schema.Option.OutputFilename]));
                 if (preview)
                 {
-                    // TODO: Save this to temp folder
                     generatedPath += string.Format("_preview{0}", Path.GetExtension(schema.OptionValues[Schema.Option.OutputFilename]));
                 }
                 
@@ -260,7 +270,6 @@ namespace Carpenter
             photoGridContents.Add(_imageGridSection.EndLine);
 
             return photoGridContents.ToArray();
-
         }
 
         private void CreateImageElement(Schema schema, StandaloneImageSection section, ref List<string> outputContent)

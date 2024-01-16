@@ -58,14 +58,17 @@ namespace PageDesigner.Controls
                 return;
             }
 
+            string temp = Path.GetTempPath();
             using (Schema pageSchema = new(schemaPath))
             {
+                // Generate preview page
                 if (_template.Generate(pageSchema, _directoryPath, true))
                 {
                     string originalOutputFile = pageSchema.OptionValues[Schema.Option.OutputFilename];
                     string previewName = Path.GetFileNameWithoutExtension(originalOutputFile) + "_preview";
                     string previewPath = Path.Combine(_directoryPath, previewName + Path.GetExtension(originalOutputFile));
 
+                    // Open it with default app
                     if (File.Exists(previewPath))
                     { 
                         Process.Start(new ProcessStartInfo(previewPath)
