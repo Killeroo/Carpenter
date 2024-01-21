@@ -296,6 +296,8 @@ namespace PageDesigner
             {
                 return;
             }
+
+            _schema.Save(Path.Combine(_workingPath, "test"));
         }
     }
 }

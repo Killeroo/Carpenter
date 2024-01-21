@@ -6,6 +6,8 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reflection.PortableExecutable;
+using System.Reflection.Metadata.Ecma335;
+using System.Linq.Expressions;
 
 namespace Carpenter
 {
@@ -86,6 +88,11 @@ namespace Carpenter
         public List<ImageSection> ImageSections = new();
 
         private const string kVersionToken = "schema_version";
+
+        // Some cosmetic tags used in the schema file 
+        private const string kTokensTag = "[TAGS]";
+        private const string kClassIdentifierTag = "[CLASS_IDENTIFIERS]";
+        private const string kOptionsTag = "[OPTIONS]";
 
         public Schema() { }
         public Schema(string path) => Load(path);
@@ -306,6 +313,148 @@ namespace Carpenter
             // TODO: Check that all tokens are present
             Logger.DebugLog($"Schema file parsed (\"{path}\")");
             return true;
+        }
+
+        // TODO: Handle thrown exceptions
+        // TODO: More logging
+        public void Save(string path)
+        {
+            // TODO: Sanity check that we have everything setup in the values tables 
+            if (!SanityCheckSchema())
+            {
+                return;
+            }
+
+            // Contents of our schema file
+            List<string> schemaFileContents = new List<string>();
+
+            // First add the version
+            schemaFileContents.Add(CreateSchemaPair(kVersionToken, kSchemaVersion.ToString("0.0")));
+            schemaFileContents.Add(Environment.NewLine);
+
+            // Next add the tokens (Except the class ids)
+            schemaFileContents.Add(kTokensTag);
+            foreach (KeyValuePair<Token, string> tokenPair in TokenValues)
+            {
+                if (tokenPair.Key.ToString().Contains("ClassId"))
+                {
+                    // Don't both printing the class ids yet, we will do that after in a different section
+                    continue;
+                }
+
+                // Ok we need to find what the string for the given token type is
+                // use the original TokenTable for that
+                string tokenName = TokenTable.GetKeyOfValue(tokenPair.Key);
+                if (string.IsNullOrEmpty(tokenName))
+                {
+                    // This definitely isn't great to bail on writing a property
+                    Logger.DebugError($"Couldn't find token name for {tokenPair.Key.ToString()}. This isn't great...");
+                    continue;
+                }
+                schemaFileContents.Add(CreateSchemaPair(tokenName, tokenPair.Value));
+            }
+            schemaFileContents.Add(Environment.NewLine);
+
+            // Class identifiers next!
+            schemaFileContents.Add(kClassIdentifierTag);
+            foreach (KeyValuePair<Token, string> tokenPair in TokenValues)
+            {
+                // We only care about class ids this time
+                if (tokenPair.Key.ToString().Contains("ClassId") == false)
+                {
+                    continue;
+                }
+
+                // Same thing again, look up the token name in the TokenTable
+                string tokenName = TokenTable.GetKeyOfValue(tokenPair.Key);
+                if (string.IsNullOrEmpty(tokenName))
+                {
+                    Logger.DebugError($"Couldn't find token name for {tokenPair.Key.ToString()}. This isn't great...");
+                    continue;
+                }
+                schemaFileContents.Add(CreateSchemaPair(tokenName, tokenPair.Value));
+            }
+            schemaFileContents.Add(Environment.NewLine);
+
+            // Then the options section
+            schemaFileContents.Add(kOptionsTag);
+            foreach (KeyValuePair<Option, string> optionPair in OptionValues)
+            {
+                string optionName = _optionsTable.GetKeyOfValue(optionPair.Key);
+                if (string.IsNullOrEmpty(optionName))
+                {
+                    Logger.DebugError($"Couldn't find option name for {optionPair.Key.ToString()}. This isn't great...");
+                    continue;
+                }
+                schemaFileContents.Add(CreateSchemaPair(optionName, optionPair.Value));
+            }
+            schemaFileContents.Add(Environment.NewLine);
+
+            // Finally we print out the photogrid
+            schemaFileContents.Add(_imageTagTable.GetKeyOfValue(ImageTag.Grid));
+            schemaFileContents.Add(Environment.NewLine);
+
+            // Just to save some lookups
+            string imageUrlTokenName = ImageTokenTable.GetKeyOfValue(Token.Image);
+            string detailedImageUrlTokenName = ImageTokenTable.GetKeyOfValue(Token.DetailedImage);
+            string titleTokenName = ImageTokenTable.GetKeyOfValue(Token.Title);
+            string standaloneTag = _imageTagTable.GetKeyOfValue(ImageTag.Standalone);
+            string columnTag = _imageTagTable.GetKeyOfValue(ImageTag.Column);
+            string titleTag = _imageTagTable.GetKeyOfValue(ImageTag.Title);
+
+            foreach (ImageSection section in ImageSections)
+            {
+                if (section == null)
+                {
+                    continue;
+                }
+
+                if (section.GetType() == typeof(StandaloneImageSection))
+                {
+                    StandaloneImageSection standaloneImageSection = (StandaloneImageSection)section;
+
+                    schemaFileContents.Add(standaloneTag);
+                    schemaFileContents.Add(CreateSchemaPair(imageUrlTokenName, standaloneImageSection.PreviewImage));
+                    schemaFileContents.Add(CreateSchemaPair(detailedImageUrlTokenName, standaloneImageSection.DetailedImage));
+                }
+                else if (section.GetType() == typeof(ColumnImageSection))
+                {
+                    ColumnImageSection columnImageSection = (ColumnImageSection) section;
+
+                    schemaFileContents.Add(columnTag);
+                    foreach (StandaloneImageSection columnItem in columnImageSection.Sections)
+                    {
+                        schemaFileContents.Add(CreateSchemaPair(imageUrlTokenName, columnItem.PreviewImage));
+                        schemaFileContents.Add(CreateSchemaPair(detailedImageUrlTokenName, columnItem.DetailedImage));
+                    }
+                }
+                else if (section.GetType() == typeof(TitleImageSection))
+                {
+                    TitleImageSection titleImageSection = (TitleImageSection)section;
+
+                    schemaFileContents.Add(titleTag);
+                    schemaFileContents.Add(CreateSchemaPair(titleTokenName, titleImageSection.TitleText));
+                }
+                schemaFileContents.Add(Environment.NewLine);
+            }
+
+            // Now we try and write it all to a file
+            string schemaPath = Path.Combine(path, "SCHEMA");
+            File.WriteAllLines(schemaPath, schemaFileContents);
+            Logger.DebugLog($"File generated: {schemaPath}");
+        }
+
+        private bool SanityCheckSchema()
+        {
+
+            // TODO: Check table contents etc
+            return true;
+        }
+
+        // Shorthand to create a schema parameter and it's value. Just means that if we need to modify the format of the schema we can do it in one place.
+        private string CreateSchemaPair(string tokenName, string tokenValue)
+        {
+            return string.Format("{0}={1}", tokenName, tokenValue);
         }
 
         // Shorthand for parsing a token value from a token

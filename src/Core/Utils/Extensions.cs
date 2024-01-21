@@ -48,6 +48,26 @@ namespace Carpenter
             return closestKey;
         }
 
+        // Hehehehe... ew
+        // I kind of just did this because I could...
+        public static T? GetKeyOfValue<T, L> (this Dictionary<T, L> dict, L value)
+        {
+            foreach (KeyValuePair<T, L> keyPair in dict)
+            {
+                if (keyPair.Value == null)
+                {
+                    continue;
+                }
+
+                if (keyPair.Value.Equals(value))
+                {
+                    return keyPair.Key;
+                }
+            }
+
+            return default;
+        }
+
         public static string[] RemoveSection(this string[] array, int start, int end)
         {
             string[] result = new string[array.Length - (end - start)];
