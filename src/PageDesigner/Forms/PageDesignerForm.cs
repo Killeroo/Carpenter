@@ -1,4 +1,5 @@
 ﻿using Carpenter;
+using PageDesigner.Controls;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -7,7 +8,9 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography.Pkcs;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,8 +26,9 @@ namespace PageDesigner
         private Schema _schema;
 
         PreviewImageBox _selectedPreviewImageControl; // TODO: Rename _selectedPreviewImageControl
+        GridPictureBox _selectedGridImage;
         Dictionary<string, Image> _previewImages = new();
-        Queue<PictureBox> _pictureBoxBuffer = new();
+        Queue<GridPictureBox> _pictureBoxBuffer = new();
 
         public PageDesignerForm(string path)
         {
@@ -74,6 +78,7 @@ namespace PageDesigner
             CameraTextBox.Text = GetTokenFromSchema(Schema.Token.Camera, "Canon EOS 600D");
 
             // Populate the grid
+            // TODO: Cleanup
             foreach (ImageSection section in _schema.ImageSections)
             {
                 Type sectionType = section.GetType();
@@ -84,7 +89,7 @@ namespace PageDesigner
                     {
                         string fileName = standaloneSection.PreviewImage;
 
-                        AddLocalImageToGridLayout(fileName, true);
+                        AddLocalImageToGridLayout(standaloneSection.PreviewImage, standaloneSection.DetailedImage, true);
                     }
                 }
                 else if (sectionType == typeof(ColumnImageSection))
@@ -101,13 +106,13 @@ namespace PageDesigner
                         //if (_pictureBoxBuffer.Count < )
                         foreach (StandaloneImageSection standaloneImage in columnSection.Sections)
                         {
-                            PictureBox pictureBox = null;
+                            GridPictureBox pictureBox = null;
                             if (_pictureBoxBuffer.Count > 0)
                             {
                                 pictureBox = _pictureBoxBuffer.Dequeue();
                             }
 
-                            AddLocalImageToGridLayout(standaloneImage.PreviewImage, false, pictureBox);
+                            AddLocalImageToGridLayout(standaloneImage.PreviewImage, standaloneImage.DetailedImage, false, pictureBox);
                         }
 
                         // Clear anything left in the buffer (this isn't great)
@@ -119,11 +124,10 @@ namespace PageDesigner
                         {
                             if (standaloneImage != null)
                             {
-                                string fileName = standaloneImage.PreviewImage;
-                                AddLocalImageToGridLayout(fileName, false);
+                                AddLocalImageToGridLayout(standaloneImage.PreviewImage, standaloneImage.DetailedImage, false);
 
                                 // Add the picturebox for the other column items
-                                PictureBox pictureBox = new();
+                                GridPictureBox pictureBox = new();
                                 pictureBox.SizeMode = PictureBoxSizeMode.AutoSize;
                                 GridFlowLayoutPanel.Controls.Add(pictureBox);
                                 _pictureBoxBuffer.Enqueue(pictureBox);
@@ -139,15 +143,16 @@ namespace PageDesigner
         }
 
         // TODO: Cache and retrieve (do in another thread
-        private void AddLocalImageToGridLayout(string imageName, bool fullSize, PictureBox existingPictureBox = null)
+        private GridPictureBox? AddLocalImageToGridLayout(string previewImageName, string detailedPictureName, bool standaloneImage, GridPictureBox existingPictureBox = null)
         {
             // Find the image locally and save a resized copy
-            string localImagePath = Path.Combine(_workingPath, imageName);
+            string localImagePath = Path.Combine(_workingPath, previewImageName);
             if (File.Exists(localImagePath) == false)
             {
-                return;
+                return null;
             }
 
+            // Load original image, resize it to fit into grid
             // TODO: Work out size without loading the whole image into memory
             using (Image sourceImage = Image.FromFile(localImagePath))
             {
@@ -156,31 +161,68 @@ namespace PageDesigner
 
                 // Find the width that we need to fit into
                 int targetWidth = GridFlowLayoutPanel.Width;
-                if (fullSize == false)
+                if (standaloneImage == false)
                 {
                     targetWidth /= 2;
                 }
-                // TODO: There is a bug where, when we add an image to a picturebox from the buffer there is some deadspace
+                
+                // There is a bug where, when we add an image to a picturebox from the buffer there is some deadspace
                 // causing an overflow, meaning we have to reduce this width for now
                 targetWidth -= 20;// 10; 
                 int targetHeight = ar.CalculateHeight(targetWidth);
 
                 Image resizedImage = ImageUtils.ResizeImage(sourceImage, targetWidth, targetHeight);
 
-                if (existingPictureBox == null)
+                // Create image (or re-use image) and add it to the grid
+                GridPictureBox gridPictureBox = null;
+                if (existingPictureBox != null)
                 {
-                    PictureBox pictureBox = new()
-                    {
-                        Image = resizedImage,
-                        SizeMode = PictureBoxSizeMode.AutoSize
-                    };
-                    GridFlowLayoutPanel.Controls.Add(pictureBox);
+                    // Reused picture box if we are provided one
+                    gridPictureBox = existingPictureBox;
                 }
                 else
                 {
-                    existingPictureBox.Image = resizedImage;
+                    // Otherwise create a new one and add to grid
+                    gridPictureBox = new GridPictureBox();
+                    GridFlowLayoutPanel.Controls.Add(gridPictureBox);
+
                 }
 
+                // Setup image
+                gridPictureBox.Image = resizedImage;
+                gridPictureBox.SizeMode = PictureBoxSizeMode.AutoSize;
+
+                // Save properties for later
+                gridPictureBox.Standalone = standaloneImage;
+                gridPictureBox.DetailedImageName = detailedPictureName;
+                gridPictureBox.PreviewImageName = previewImageName;
+
+                // Add callbacks
+                gridPictureBox.Click += GridPictureBox_Click;
+
+                return gridPictureBox;
+            }
+        }
+
+        private void GridPictureBox_Click(object? sender, EventArgs e)
+        {
+            if (sender is GridPictureBox gridPictureBox)
+            {
+                // Update currently selected image
+                if (_selectedGridImage != null)
+                {
+                    _selectedGridImage.BackColor = Color.LightGray;
+                    _selectedGridImage.BorderStyle = BorderStyle.None;
+                }
+                _selectedGridImage = gridPictureBox;
+
+                // Retrieve details from selected image
+                PreviewImageTextBox.Text = gridPictureBox.PreviewImageName;
+                DetailedImageTextBox.Text = gridPictureBox.DetailedImageName;
+
+                // Highlight image
+                gridPictureBox.BorderStyle = BorderStyle.FixedSingle;
+                gridPictureBox.BackColor = Color.Blue;
             }
         }
 
@@ -241,8 +283,7 @@ namespace PageDesigner
             textBox1.Text = e.ImageName;
             string imageName = e.ImageName;
 
-            PreviewImageBox? previewImageControl = sender as PreviewImageBox;
-            if (previewImageControl != null)
+            if (sender is PreviewImageBox previewImageControl)
             {
                 if (_selectedPreviewImageControl != null)
                 {
@@ -254,7 +295,7 @@ namespace PageDesigner
                 _selectedPreviewImageControl = previewImageControl;
 
 
-                AddLocalImageToGridLayout(imageName, false);
+                AddLocalImageToGridLayout(imageName, imageName, false);
 
 
                 //// Load the preview straight into the flow panel
@@ -270,7 +311,6 @@ namespace PageDesigner
                 //}
             }
         }
-
 
         private void ImagePreviewFlowLayoutPanel_Click(object sender, EventArgs e)
         {
@@ -297,7 +337,114 @@ namespace PageDesigner
                 return;
             }
 
+            // Update tokens values from page
+            // TODO: Copy or add class id and option base values
+            _schema.TokenValues.AddOrUpdate(Schema.Token.BaseUrl, BaseUrlTextBox.Text);
+            _schema.TokenValues.AddOrUpdate(Schema.Token.PageUrl, PageUrlTextBox.Text);
+            _schema.TokenValues.AddOrUpdate(Schema.Token.Title, TitleTextBox.Text);
+            _schema.TokenValues.AddOrUpdate(Schema.Token.Location, LocationTextBox.Text);
+            _schema.TokenValues.AddOrUpdate(Schema.Token.Month, MonthTextBox.Text);
+            _schema.TokenValues.AddOrUpdate(Schema.Token.Year, YearTextBox.Text);
+            _schema.TokenValues.AddOrUpdate(Schema.Token.Author, AuthorTextBox.Text);
+            _schema.TokenValues.AddOrUpdate(Schema.Token.Camera, CameraTextBox.Text);
+
+            // Parse grid layout
+            List<ImageSection> sections = new ();
+            List<StandaloneImageSection>[] columnsBuffer = new List<StandaloneImageSection>[]
+            {
+                new List<StandaloneImageSection>(),
+                new List<StandaloneImageSection>()
+            };
+            foreach (Control control in GridFlowLayoutPanel.Controls)
+            {
+                if (control is GridPictureBox gridPictureBox)
+                {
+                    // Create standalone image from GridPictureBox
+                    StandaloneImageSection currentImageSection = new()
+                    {
+                        DetailedImage = gridPictureBox.DetailedImageName,
+                        PreviewImage = gridPictureBox.PreviewImageName
+                    };
+
+                    if (gridPictureBox.Standalone)
+                    {
+                        // Attempt to add contents of previous column buffer if we encounter a standalone image
+                        TryAddColumnsBuffer(ref columnsBuffer, ref sections);
+
+                        // Add it straight to sections
+                        sections.Add(currentImageSection);
+                    }
+                    else
+                    {
+                        // Add to appropriate column
+                        // NOTE: Because columns are displayed side by side we need to add images to columns tit for tat (aka one image per time to each column)
+
+                        // Check size of column buffers to see where to add image to
+                        int currentColumn = 1; // Add to second column by default
+                        if ((columnsBuffer[0].Count == 0 && columnsBuffer[1].Count == 0)
+                            || columnsBuffer[0].Count <= columnsBuffer[1].Count)
+                        {
+                            // Add to first column
+                            currentColumn = 0;
+                        }
+
+                        // Add new image to column
+                        columnsBuffer[currentColumn].Add(currentImageSection);
+                    }
+                }
+            }
+            TryAddColumnsBuffer(ref columnsBuffer, ref sections);
+
+            _schema.ImageSections = sections;
+
             _schema.Save(Path.Combine(_workingPath, "test"));
+        }
+
+        private void TryAddColumnsBuffer(ref List<StandaloneImageSection>[] buffer, ref List<ImageSection> destination)
+        {
+            // First check that the buffer has anything in it
+            if (buffer[0].Count == 0 && buffer[1].Count == 0)
+            {
+                return;
+            }
+
+            // Do the same to the second column
+            for (int index = 0; index < buffer.Length; index++) 
+            {
+                // Skip if there is nothing in the column
+                if (buffer[index].Count == 0)
+                {
+                    continue;
+                }
+
+                // Add the column
+                ColumnImageSection columnSection = new();
+                columnSection.Sections = new List<StandaloneImageSection>(buffer[index].ToArray());
+                destination.Add(columnSection);
+
+                // Clear buffer 
+                buffer[index].Clear();
+            }
+        }
+
+        private void PreviewImageTextBox_TextChanged(object sender, EventArgs e)
+        {
+            if (_selectedGridImage != null)
+            {
+                // Update grid image with new name
+                // (bit inefficient to do it each time the text is updated but oh well)
+                _selectedGridImage.PreviewImageName = PreviewImageTextBox.Text;
+            }
+        }
+
+        private void DetailedImageTextBox_TextChanged(object sender, EventArgs e)
+        {
+            if (_selectedGridImage != null)
+            {
+                // Update grid image with new name
+                // (bit inefficient to do it each time the text is updated but oh well)
+                _selectedGridImage.DetailedImageName = DetailedImageTextBox.Text;
+            }
         }
     }
 }

@@ -68,6 +68,14 @@ namespace Carpenter
             return default;
         }
 
+        public static void AddOrUpdate<T, L>(this Dictionary<T, L> dict, T key, L value)
+        {
+            if (dict.TryAdd(key, value) == false)
+            {
+                dict[key] = value;
+            }
+        }
+
         public static string[] RemoveSection(this string[] array, int start, int end)
         {
             string[] result = new string[array.Length - (end - start)];
