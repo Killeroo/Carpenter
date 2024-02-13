@@ -112,12 +112,12 @@ namespace Carpenter
             try
             {
                 _fileContents = File.ReadAllLines(path);
-                Logger.DebugLog($"Template file loaded (\"{path}\")");
+                Logger.Log(LogLevel.Verbose, $"Template file loaded (\"{path}\")");
                 _loaded = true;
             }
             catch (Exception e)
             {
-                Logger.DebugError($"[{e.GetType()}] Could not read template file - {e.Message}");
+                Logger.Log(LogLevel.Error, $"Could not read template file ({e.GetType()} exception occured)");
                 return;
             }
         }
@@ -128,14 +128,14 @@ namespace Carpenter
         {
             if (!_loaded)
             {
-                Logger.DebugError("Cannot generate page without template loaded. Call load() first.");
+                Logger.Log(LogLevel.Error, "Cannot generate page without template loaded. Call load() first.");
                 return false;
             }
 
             // Store a list of image size so we can use those when generating the img tags
             // HACK: Assumes output directory also contains images
             _schemaImages.Clear();
-            Logger.DebugLog($"Caching image sizes in {outputPath}...");
+            Logger.Log(LogLevel.Verbose, $"Caching image sizes in {outputPath}...");
             foreach (string imagePath in Directory.GetFiles(outputPath, "*.jpg"))
             {
                 // TODO: Replace this with in place reading of metadata
@@ -157,7 +157,7 @@ namespace Carpenter
 
             // Next lets build our photo grid
             string[] photoGridContents = GeneratePhotoGrid(schema);
-            Logger.DebugLog($"PhotoGrid generated");
+            Logger.Log(LogLevel.Verbose, $"PhotoGrid generated");
 
             // Ok add it to the template copy where the image grid was in the template
             templateCopy.InsertRange(_imageGridSection.StartIndex, photoGridContents);
@@ -177,7 +177,7 @@ namespace Carpenter
 
                 templateCopy[i] = line;
             }
-            Logger.DebugLog($"All tokens in template file replaced");
+            Logger.Log(LogLevel.Verbose, $"All tokens in template file replaced");
 
             // Add generated timestamp
             templateCopy.Insert(0, "");
@@ -215,15 +215,16 @@ namespace Carpenter
                 string generatedPath = Path.Combine(outputPath, Path.GetFileNameWithoutExtension(schema.OptionValues[Schema.Option.OutputFilename]));
                 if (preview)
                 {
-                    generatedPath += string.Format("_preview{0}", Path.GetExtension(schema.OptionValues[Schema.Option.OutputFilename]));
+                    generatedPath += "_preview";
                 }
-                
+                generatedPath += Path.GetExtension(schema.OptionValues[Schema.Option.OutputFilename]);
+
                 File.WriteAllLines(generatedPath, templateCopy);
-                Logger.DebugLog($"File generated: {generatedPath}");
+                Logger.Log(LogLevel.Info, $"File generated: {generatedPath}");
             }
             catch (Exception e)
             {
-                Logger.DebugError($"[{e.GetType()}] Could not create generated file - {e.Message}");
+                Logger.Log(LogLevel.Error, $"[{e.GetType()}] Could not create generated file - {e.Message}");
                 return false;
             }
 
@@ -303,8 +304,16 @@ namespace Carpenter
                     line = line.Replace("loading=\"lazy\"", "");
                 }
 
-                line = line.Replace("%HEIGHT", _schemaImages[section.PreviewImage].height.ToString());
-                line = line.Replace("%WIDTH", _schemaImages[section.PreviewImage].width.ToString());
+
+                if (_schemaImages.ContainsKey(section.PreviewImage))
+                {
+                    line = line.Replace("%HEIGHT", _schemaImages[section.PreviewImage].height.ToString());
+                    line = line.Replace("%WIDTH", _schemaImages[section.PreviewImage].width.ToString());
+                }
+                else
+                {
+                    Logger.Log(LogLevel.Warning, $"Could not find referenced image ({section.PreviewImage}) in directory, generated file might not render properly");
+                }
 
                 // Add the modified line into the outputted html
                 outputContent.Add(line);
@@ -358,35 +367,35 @@ namespace Carpenter
                 {
                     // First we need to find of the template that corresponds to our photo grid
                     _imageGridSection = new TemplateSection(this, i);
-                    Logger.DebugLog($"Found ImageGrid element (id={schema.TokenValues[Schema.Token.ClassIdImageGrid]})");
+                    Logger.Log(LogLevel.Verbose, $"Found ImageGrid element (id={schema.TokenValues[Schema.Token.ClassIdImageGrid]})");
                 }
                 else if (line.Contains($"class=\"{schema.TokenValues[Schema.Token.ClassIdImageElement]}\""))
                 {
                     // Next we need to find the second of the template that makes up the element for our image
                     _imageSection = new TemplateSection(this, i);
-                    Logger.DebugLog($"Found ImageSection element (id={schema.TokenValues[Schema.Token.ClassIdImageElement]})");
+                    Logger.Log(LogLevel.Verbose, $"Found ImageSection element (id={schema.TokenValues[Schema.Token.ClassIdImageElement]})");
                 }
                 else if (line.Contains($"class=\"{schema.TokenValues[Schema.Token.ClassIdImageColumn]}\""))
                 {
                     // Next we need to know what what our column sections are
                     _imageColumnSection = new TemplateSection(this, i);
-                    Logger.DebugLog($"Found ImageColumn element (id={schema.TokenValues[Schema.Token.ClassIdImageColumn]})");
+                    Logger.Log(LogLevel.Verbose, $"Found ImageColumn element (id={schema.TokenValues[Schema.Token.ClassIdImageColumn]})");
                 }
                 else if (schema.TokenValues.ContainsKey(Schema.Token.ClassIdImageTitle) && line.Contains($"class=\"{schema.TokenValues[Schema.Token.ClassIdImageTitle]}\""))
                 {
                     // Next we need to know what what our column sections are
                     _imageTitleSection = new TemplateSection(this, i);
-                    Logger.DebugLog($"Found ImageTitle element (id={schema.TokenValues[Schema.Token.ClassIdImageTitle]})");
+                    Logger.Log(LogLevel.Verbose, $"Found ImageTitle element (id={schema.TokenValues[Schema.Token.ClassIdImageTitle]})");
                 }
             }
 
             if (_imageSection == null || _imageColumnSection == null || _imageGridSection == null || _imageTitleSection == null)
             {
-                Logger.DebugError("Did not parse all sections of template file");
+                Logger.Log(LogLevel.Error, "Did not parse all sections of template file");
             }
             else
             {
-                Logger.DebugLog($"Template file parsed using Schema, all elements found");
+                Logger.Log(LogLevel.Verbose, $"Template file parsed using Schema, all elements found");
             }
         }
 
@@ -454,7 +463,7 @@ namespace Carpenter
             // Check the first character is valid
             if (characters[0] != '<')
             {
-                Logger.DebugError($"Line {index + 1} of template file doesn't start with '<', invalid html. check template file and try again.");
+                Logger.Log(LogLevel.Error, $"Line {index + 1} of template file doesn't start with '<', invalid html. check template file and try again.");
                 return string.Empty;
                 //throw new argumentexception($"line {index + 1} of template file doesn't start with '<', invalid html. check template file and try again.");
             }
@@ -467,7 +476,7 @@ namespace Carpenter
             {
                 if (count > maxCount)
                 {
-                    Logger.DebugError($"Element too long (50+ characters), bailing. Final element string={elementType}");
+                    Logger.Log(LogLevel.Error, $"Element too long (50+ characters), bailing. Final element string={elementType}");
                     break;
                 }
                 else

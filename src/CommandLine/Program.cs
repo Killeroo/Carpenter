@@ -43,7 +43,7 @@ namespace Carpenter.CommandLine
             string pathToTemplateFile = Path.Combine(rootDirectory, "template.html");
             if (!File.Exists(pathToTemplateFile))
             {
-                Logger.DebugError($"Could not find template file ({TemplateFilename}) at path {rootDirectory}. " +
+                Logger.Log(LogLevel.Error, $"Could not find template file ({TemplateFilename}) at path {rootDirectory}. " +
                     $"Please place template at this path and try again.");
                 return;
             }
@@ -60,12 +60,12 @@ namespace Carpenter.CommandLine
                 string currentSchemaPath = Path.Combine(directory, SchemaFilename);
                 if (!File.Exists(currentSchemaPath))
                 {
-                    Logger.DebugError($"Could not find ({SchemaFilename}) at {directory}, skipping..");
+                    Logger.Log(LogLevel.Error, $"Could not find ({SchemaFilename}) at {directory}, skipping..");
                     continue;
                 }
                 else
                 {
-                    Logger.DebugLog($"Generating page for directory" + Path.GetDirectoryName(directory));
+                    Logger.Log(LogLevel.Verbose, $"Generating page for directory: " + Path.GetDirectoryName(directory));
                 }
 
                 // Load the schema file
@@ -73,7 +73,7 @@ namespace Carpenter.CommandLine
                 Schema schema = new Schema();
                 if (!schema.Load(pathToSchemaFile))
                 {
-                    Logger.DebugError($"Encountered an error parsing schema, skipping..");
+                    Logger.Log(LogLevel.Error, $"Encountered an error parsing schema, skipping..");
                     continue;
                 }
 
@@ -84,7 +84,7 @@ namespace Carpenter.CommandLine
             }
 
             stopwatch.Stop();
-            Logger.DebugLog($"Website generation completed. {count} pages created in {stopwatch.ElapsedMilliseconds}ms.");
+            Logger.Log(LogLevel.Info, $"Website generation completed. {count} pages created in {stopwatch.ElapsedMilliseconds}ms.");
         }
     }
 }

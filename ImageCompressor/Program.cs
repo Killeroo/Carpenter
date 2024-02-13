@@ -49,7 +49,7 @@ namespace ImageCompressor
                     if (originalImageNameWithoutExtension.Contains(CompressPreviewImagePostfix))
                     {
                         previewImageName = originalImageName.Replace(CompressPreviewImagePostfix, "");
-                        Logger.DebugLog($"Found what looks like an already compressed image ({originalImageName}), skipping...");
+                        Logger.Info($"Found what looks like an already compressed image ({originalImageName}), skipping...");
 
                         // Add the original filename (without the postfix) to the image file names to patch
                         newPreviewImageNames.Add(previewImageName, originalImageName);
@@ -60,7 +60,7 @@ namespace ImageCompressor
                         previewImageName = originalImageNameWithoutExtension + CompressPreviewImagePostfix + ".jpg";
                         Image previewImage = ImageUtils.CompressImage(image, CompressedPreviewImageQuality, CompressedPreviewImageScale);
                         previewImage.Save(Path.Combine(currentPath, previewImageName));
-                        Logger.DebugLog($"Saved preview image @ {previewImageName}");
+                        Logger.Info($"Saved preview image @ {previewImageName}");
 
                         // Track it in the new file so we can replace it later
                         newPreviewImageNames.Add(originalImageName, previewImageName);
@@ -74,7 +74,7 @@ namespace ImageCompressor
                     if (originalImageNameWithoutExtension.Contains(CompressDetailedImagePostfix))
                     {
                         detailedImageName = originalImageName.Replace(CompressDetailedImagePostfix, "");
-                        Logger.DebugLog($"Found what looks like an already compressed image ({originalImageName}), skipping...");
+                        Logger.Info($"Found what looks like an already compressed image ({originalImageName}), skipping...");
 
                         newDetailedImageNames.Add(detailedImageName, originalImageName);
                     }
@@ -83,7 +83,7 @@ namespace ImageCompressor
                         detailedImageName = originalImageNameWithoutExtension + CompressDetailedImagePostfix + ".jpg";
                         Image detailedImage = ImageUtils.CompressImage(image, CompressedDetailedImageQuality, CompressedDetailedImageScale);
                         detailedImage.Save(Path.Combine(currentPath, detailedImageName));
-                        Logger.DebugLog($"Saved detailed image @ {detailedImageName}");
+                        Logger.Info($"Saved detailed image @ {detailedImageName}");
 
                         newDetailedImageNames.Add(originalImageName, detailedImageName);
                     }
@@ -116,7 +116,7 @@ namespace ImageCompressor
                     }
                 }
             }
-            Logger.DebugLog($"Patched schema's sections with new compressed images");
+            Logger.Info($"Patched schema's sections with new compressed images");
         }
     }
 }

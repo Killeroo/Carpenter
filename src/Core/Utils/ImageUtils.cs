@@ -61,7 +61,7 @@ namespace Carpenter
         /// Based off: https://stackoverflow.com/a/24651073
         public static Image CompressImage(string filename, int quality, float scalePercent = 1.0f)
         {
-            Logger.DebugLog($"Compressing image {Path.GetFileName(filename)} with {quality}% quality and scaled by {scalePercent * 100}%");
+            Logger.Log(LogLevel.Verbose, $"Compressing image {Path.GetFileName(filename)} with {quality}% quality and scaled by {scalePercent * 100}%");
             using (Image image = Image.FromFile(filename))
             {
                 float newWidth = image.Width * scalePercent;

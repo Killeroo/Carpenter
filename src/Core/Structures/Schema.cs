@@ -103,21 +103,21 @@ namespace Carpenter
             }
             catch (Exception e)
             {
-                Logger.DebugError($"[{e.GetType()}] Could not read schema file - {e.Message}");
+                Logger.Log(LogLevel.Error, $"Could not read schema file ({e.GetType()} exception occured)");
                 return false;
             }
 
             // Sanity check size
             if (schemaFileContents.Length == 0)
             {
-                Logger.DebugError($"Schema file empty!");
+                Logger.Log(LogLevel.Error, $"Schema file empty!");
                 return false;
             }
 
             // Version check
             if (schemaFileContents[0].Contains(kVersionToken) == false || schemaFileContents[0].Contains('=') == false)
             {
-                Logger.DebugError($"Could not read schema file version");
+                Logger.Log(LogLevel.Error, $"Could not read schema file version");
                 return false;
             }
             string versionValue = GetTokenValue(schemaFileContents[0]);
@@ -128,12 +128,12 @@ namespace Carpenter
             }
             catch (Exception e) 
             {
-                Logger.DebugError($"[{e.GetType()}] Could not parse schema version (\'{versionValue}\') - {e.Message}");
+                Logger.Log(LogLevel.Error, $"[] Could not parse schema version string (\'{versionValue}\') ({e.GetType()} exception occured)");
                 return false;
             }
             if (version != kSchemaVersion)
             {
-                Logger.DebugError($"Incompabitable schema version, found v{version} but can only parse v{kSchemaVersion}. Please update.");
+                Logger.Log(LogLevel.Error, $"Incompabitable schema version, found v{version} but can only parse v{kSchemaVersion}. Please update.");
                 return false;
             }
 
@@ -147,7 +147,7 @@ namespace Carpenter
                     if (line.Contains(token))
                     {
                         TokenValues[TokenTable[token]] = GetTokenValue(line);
-                        Logger.DebugLog($"Schema token {TokenTable[token]}={TokenValues[TokenTable[token]]}");
+                        Logger.Log(LogLevel.Verbose, $"Schema token {TokenTable[token]}={TokenValues[TokenTable[token]]}");
                         break;
                     }
                 }
@@ -163,7 +163,7 @@ namespace Carpenter
                     if (line.Contains(option))
                     {
                         OptionValues[_optionsTable[option]] = GetTokenValue(line);
-                        Logger.DebugLog($"Schema option {_optionsTable[option]}={OptionValues[_optionsTable[option]]}");
+                        Logger.Log(LogLevel.Verbose, $"Schema option {_optionsTable[option]}={OptionValues[_optionsTable[option]]}");
                         break;
                     }
                 }
@@ -184,7 +184,7 @@ namespace Carpenter
             int photoSectionStartIndex = schemaFileContents.FindIndexWhichContainsValue(gridTag);
             if (photoSectionStartIndex < 0)
             {
-                Logger.DebugError($"Could not find image layout section with tag \"{gridTag}\" while parsing schema. Add it to the schema and try again.");
+                Logger.Log(LogLevel.Error, $"Could not find image layout section with tag \"{gridTag}\" while parsing schema. Add it to the schema and try again.");
                 return false;
             }
 
@@ -207,19 +207,19 @@ namespace Carpenter
                             case ImageTag.Standalone:
                                 currentSectionIndex++;
                                 ImageSections.Add(new StandaloneImageSection());
-                                Logger.DebugLog("Adding standalone image section to photo grid");
+                                Logger.Log(LogLevel.Verbose, "Adding standalone image section to photo grid");
                                 break;
 
                             case ImageTag.Column:
                                 currentSectionIndex++;
                                 ImageSections.Add(new ColumnImageSection());
-                                Logger.DebugLog("Adding column section to photo grid");
+                                Logger.Log(LogLevel.Verbose, "Adding column section to photo grid");
                                 break;
 
                             case ImageTag.Title:
                                 currentSectionIndex++;
                                 ImageSections.Add(new TitleImageSection());
-                                Logger.DebugLog("Adding title section to photo grid");
+                                Logger.Log(LogLevel.Verbose, "Adding title section to photo grid");
                                 break;
 
                             case ImageTag.Grid:
@@ -228,7 +228,7 @@ namespace Carpenter
                                 break;
 
                             default:
-                                Logger.DebugError("Could not parse tag in photo grid");
+                                Logger.Log(LogLevel.Error, "Could not parse tag in photo grid");
                                 return false;
                         }
 
@@ -259,7 +259,7 @@ namespace Carpenter
 
                             default:
                                 // TODO: Stronger identification for bad formatted tags
-                                Logger.DebugError($"Could not parse token ({token}) in photo grid");
+                                Logger.Log(LogLevel.Error, $"Could not parse token ({token}) in photo grid");
                                 return false;
                         }
 
@@ -274,7 +274,7 @@ namespace Carpenter
                                 standaloneSection.PreviewImage = imageUrl;
                                 standaloneSection.DetailedImage = detailedImageUrl;
 
-                                Logger.DebugLog($"Added single image section to photo grid (image_url={imageUrl} detailed_image_url={imageUrl})");
+                                Logger.Log(LogLevel.Verbose, $"Added single image section to photo grid (image_url={imageUrl} detailed_image_url={imageUrl})");
                             }
                             else if (ImageSections[currentSectionIndex].GetType().Equals(typeof(ColumnImageSection)))
                             {
@@ -286,14 +286,14 @@ namespace Carpenter
                                     DetailedImage = detailedImageUrl,
                                 });
 
-                                Logger.DebugLog($"Added image to column section (image_url={imageUrl} detailed_image_url={imageUrl})");
+                                Logger.Log(LogLevel.Verbose, $"Added image to column section (image_url={imageUrl} detailed_image_url={imageUrl})");
                             }
                             else if (ImageSections[currentSectionIndex].GetType().Equals(typeof(TitleImageSection)))
                             {
                                 var titleSection = ImageSections[currentSectionIndex] as TitleImageSection;
                                 titleSection.TitleText = imageTitle;
 
-                                Logger.DebugLog($"Added image title section to photo grid (titile={imageTitle})");
+                                Logger.Log(LogLevel.Verbose, $"Added image title section to photo grid (titile={imageTitle})");
                             }
 
                             // Blank the urls again
@@ -306,7 +306,7 @@ namespace Carpenter
             }
 
             // TODO: Check that all tokens are present
-            Logger.DebugLog($"Schema file parsed (\"{path}\")");
+            Logger.Log(LogLevel.Verbose, $"Schema parsed (\"{path}\")");
             return true;
         }
 
@@ -343,7 +343,7 @@ namespace Carpenter
                 if (string.IsNullOrEmpty(tokenName))
                 {
                     // This definitely isn't great to bail on writing a property
-                    Logger.DebugError($"Couldn't find token name for {tokenPair.Key.ToString()}. This isn't great...");
+                    Logger.Log(LogLevel.Error, $"Couldn't find token name for {tokenPair.Key.ToString()}. This isn't great...");
                     continue;
                 }
                 schemaFileContents.Add(CreateSchemaPair(tokenName, tokenPair.Value));
@@ -364,7 +364,7 @@ namespace Carpenter
                 string tokenName = TokenTable.GetKeyOfValue(tokenPair.Key);
                 if (string.IsNullOrEmpty(tokenName))
                 {
-                    Logger.DebugError($"Couldn't find token name for {tokenPair.Key.ToString()}. This isn't great...");
+                    Logger.Log(LogLevel.Error, $"Couldn't find token name for {tokenPair.Key.ToString()}. This isn't great...");
                     continue;
                 }
                 schemaFileContents.Add(CreateSchemaPair(tokenName, tokenPair.Value));
@@ -378,7 +378,7 @@ namespace Carpenter
                 string optionName = _optionsTable.GetKeyOfValue(optionPair.Key);
                 if (string.IsNullOrEmpty(optionName))
                 {
-                    Logger.DebugError($"Couldn't find option name for {optionPair.Key.ToString()}. This isn't great...");
+                    Logger.Log(LogLevel.Error, $"Couldn't find option name for {optionPair.Key.ToString()}. This isn't great...");
                     continue;
                 }
                 schemaFileContents.Add(CreateSchemaPair(optionName, optionPair.Value));
@@ -436,7 +436,7 @@ namespace Carpenter
             // Now we try and write it all to a file
             string schemaPath = Path.Combine(path, "SCHEMA");
             File.WriteAllLines(schemaPath, schemaFileContents);
-            Logger.DebugLog($"File generated: {schemaPath}");
+            Logger.Log(LogLevel.Info, $"Schema generated: {schemaPath}");
         }
 
         private bool SanityCheckSchema()
