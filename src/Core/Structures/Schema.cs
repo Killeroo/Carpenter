@@ -6,7 +6,7 @@ using System.IO;
 
 namespace Carpenter
 {
-    public class Schema : IDisposable
+    public class Schema : IDisposable, IEquatable<Schema>
     {
         public const float kSchemaVersion = 2.0f;
 
@@ -91,6 +91,17 @@ namespace Carpenter
 
         public Schema() { }
         public Schema(string path) => Load(path);
+        public Schema(Schema otherSchema)
+        {
+            if (otherSchema == null)
+            {
+                return;
+            }
+
+            TokenValues = otherSchema.TokenValues;
+            OptionValues = otherSchema.OptionValues;
+            ImageSections = otherSchema.ImageSections;
+        }
 
         // TODO: Throw exception
         public bool Load(string path)
@@ -312,12 +323,12 @@ namespace Carpenter
 
         // TODO: Handle thrown exceptions
         // TODO: More logging
-        public void Save(string path)
+        public bool Save(string path)
         {
             // TODO: Sanity check that we have everything setup in the values tables 
             if (!SanityCheckSchema())
             {
-                return;
+                return false;
             }
 
             // Contents of our schema file
@@ -437,6 +448,7 @@ namespace Carpenter
             string schemaPath = Path.Combine(path, "SCHEMA");
             File.WriteAllLines(schemaPath, schemaFileContents);
             Logger.Log(LogLevel.Info, $"Schema generated: {schemaPath}");
+            return true;
         }
 
         private bool SanityCheckSchema()
@@ -456,6 +468,15 @@ namespace Carpenter
         private string GetTokenValue(string token)
         {
             return token.Split('=').Last().Split("``").First().StripWhitespaces();
+        }
+
+        public bool Equals(Schema? other)
+        {
+            bool equal = false;
+            equal &= TokenValues == other.TokenValues;
+            equal &= OptionValues == other.OptionValues;
+            equal &= ImageSections == other.ImageSections;
+            return equal;
         }
 
         private bool _disposed;

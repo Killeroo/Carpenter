@@ -49,6 +49,58 @@ namespace Carpenter
         }
     }
 
+    //public struct PureAspectRatio
+    //{
+    //    public readonly int WidthRatio;
+    //    public readonly int HeightRatio;
+
+    //    public PureAspectRatio(int width, int height)
+    //    {
+    //        WidthRatio = width;
+    //        HeightRatio = height;
+    //    }
+
+    //    public int CalculateHeight(int inputHeight)
+    //    {
+    //        Debug.Assert(WidthRatio != 0);
+    //        Debug.Assert(WidthRatio != 0);
+
+    //        int factor = width / WidthRatio;
+    //        return Height * factor;
+    //    }
+
+    //    public int CalculateWidth(int height)
+    //    {
+    //        Debug.Assert(Width != 0);
+    //        Debug.Assert(Height != 0);
+
+    //        int factor = height / HeightRatio;
+    //        return Width * factor;
+    //    }
+
+    //    public Tuple<(int width, int height)> Calculate(int inputWidth, int inputHeight)
+    //    {
+    //        Debug.Assert(inputWidth != 0);
+    //        Debug.Assert(inputHeight != 0);
+
+    //        int widthFactor = inputWidth / WidthRatio;
+    //        int heightFactor = inputHeight / HeightRatio;
+
+
+
+    //        (int width, int height) newDimensions = (;
+    //        newDimensions.
+
+    //        return ;
+    //    }
+
+    //    public override string ToString()
+    //    {
+    //        return string.Format("{0}:{1}", WidthRatio, HeightRatio);
+    //    }
+
+    //}
+
     public static class ImageUtils
     {
         /// <summary>
@@ -121,16 +173,27 @@ namespace Carpenter
             return null;
         }
 
+        // TODO: Just garbage, produces terrible aspect ratio's rework to use floats maybe?
         public static AspectRatio CalculateAspectRatio(Image image)
         {
             int lowestCommonDemoninator = MathUtils.LowestCommonMultiple(image.Width, image.Height);
             return new AspectRatio(lowestCommonDemoninator / image.Width, lowestCommonDemoninator / image.Height);
         }
 
-        // TODO: Cache (Maybe just a general caching method
+        private const int MaxResizeImageCacheSize = 30;
+        private static Queue<int> _resizeHashes = new();
+        private static Dictionary<int, Bitmap> _resizeImageCache = new();
+
         //https://stackoverflow.com/a/24199315
-        public static Bitmap ResizeImage(Image sourceImage, int width, int height)
+        public static Bitmap ResizeImage(string path, Image sourceImage, int width, int height)
         {
+            // TODO: How unique really is this
+            int hash = path.GetHashCode() * width * height;
+            if (_resizeImageCache.ContainsKey(hash))
+            {
+                return _resizeImageCache[hash];
+            }
+
             Rectangle destRect = new(0, 0, width, height);
             Bitmap destImage = new(width, height);
 
@@ -150,6 +213,14 @@ namespace Carpenter
                     graphics.DrawImage(sourceImage, destRect, 0, 0, sourceImage.Width, sourceImage.Height, GraphicsUnit.Pixel, attributes);
                 }
             }
+
+            // Remove oldest item from cache when limit reached
+            if (_resizeImageCache.Count > MaxResizeImageCacheSize)
+            {
+                _resizeImageCache.Remove(_resizeHashes.Dequeue());
+            }
+            _resizeImageCache.Add(hash, destImage);
+            _resizeHashes.Enqueue(hash);
 
             return destImage;
         }

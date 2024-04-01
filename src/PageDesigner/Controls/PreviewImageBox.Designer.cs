@@ -32,12 +32,13 @@
             Panel = new Panel();
             Label = new Label();
             PictureBox = new PictureBox();
-            contextMenuStrip1 = new ContextMenuStrip(components);
-            testToolStripMenuItem = new ToolStripMenuItem();
-            anothewrWiderTestToolStripMenuItem = new ToolStripMenuItem();
+            ImageContextMenuStrip = new ContextMenuStrip(components);
+            AddImageToolStripMenuItem = new ToolStripMenuItem();
+            ReplaceImageToolStripMenuItem = new ToolStripMenuItem();
+            InsertToolStripMenuItem = new ToolStripMenuItem();
             Panel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)PictureBox).BeginInit();
-            contextMenuStrip1.SuspendLayout();
+            ImageContextMenuStrip.SuspendLayout();
             SuspendLayout();
             // 
             // Panel
@@ -62,7 +63,7 @@
             // 
             // PictureBox
             // 
-            PictureBox.ContextMenuStrip = contextMenuStrip1;
+            PictureBox.ContextMenuStrip = ImageContextMenuStrip;
             PictureBox.Location = new Point(3, 3);
             PictureBox.Name = "PictureBox";
             PictureBox.Size = new Size(141, 123);
@@ -70,23 +71,32 @@
             PictureBox.TabIndex = 0;
             PictureBox.TabStop = false;
             // 
-            // contextMenuStrip1
+            // ImageContextMenuStrip
             // 
-            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { testToolStripMenuItem, anothewrWiderTestToolStripMenuItem });
-            contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new Size(179, 48);
+            ImageContextMenuStrip.Items.AddRange(new ToolStripItem[] { AddImageToolStripMenuItem, InsertToolStripMenuItem, ReplaceImageToolStripMenuItem });
+            ImageContextMenuStrip.Name = "contextMenuStrip1";
+            ImageContextMenuStrip.Size = new Size(181, 92);
             // 
-            // testToolStripMenuItem
+            // AddImageToolStripMenuItem
             // 
-            testToolStripMenuItem.Name = "testToolStripMenuItem";
-            testToolStripMenuItem.Size = new Size(178, 22);
-            testToolStripMenuItem.Text = "test";
+            AddImageToolStripMenuItem.Name = "AddImageToolStripMenuItem";
+            AddImageToolStripMenuItem.Size = new Size(180, 22);
+            AddImageToolStripMenuItem.Text = "Add";
+            AddImageToolStripMenuItem.Click += AddImageToolStripMenuItem_Click;
             // 
-            // anothewrWiderTestToolStripMenuItem
+            // ReplaceImageToolStripMenuItem
             // 
-            anothewrWiderTestToolStripMenuItem.Name = "anothewrWiderTestToolStripMenuItem";
-            anothewrWiderTestToolStripMenuItem.Size = new Size(178, 22);
-            anothewrWiderTestToolStripMenuItem.Text = "anothewr wider test";
+            ReplaceImageToolStripMenuItem.Name = "ReplaceImageToolStripMenuItem";
+            ReplaceImageToolStripMenuItem.Size = new Size(180, 22);
+            ReplaceImageToolStripMenuItem.Text = "Replace";
+            ReplaceImageToolStripMenuItem.Click += ReplaceImageToolStripMenuItem_Click;
+            // 
+            // InsertToolStripMenuItem
+            // 
+            InsertToolStripMenuItem.Name = "InsertToolStripMenuItem";
+            InsertToolStripMenuItem.Size = new Size(180, 22);
+            InsertToolStripMenuItem.Text = "Insert";
+            InsertToolStripMenuItem.Click += InsertToolStripMenuItem_Click;
             // 
             // PreviewImageBox
             // 
@@ -98,7 +108,7 @@
             Panel.ResumeLayout(false);
             Panel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)PictureBox).EndInit();
-            contextMenuStrip1.ResumeLayout(false);
+            ImageContextMenuStrip.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -107,8 +117,9 @@
         private Panel Panel;
         private PictureBox PictureBox;
         private Label Label;
-        private ContextMenuStrip contextMenuStrip1;
-        private ToolStripMenuItem testToolStripMenuItem;
-        private ToolStripMenuItem anothewrWiderTestToolStripMenuItem;
+        private ContextMenuStrip ImageContextMenuStrip;
+        private ToolStripMenuItem AddImageToolStripMenuItem;
+        private ToolStripMenuItem ReplaceImageToolStripMenuItem;
+        private ToolStripMenuItem InsertToolStripMenuItem;
     }
 }

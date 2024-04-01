@@ -15,8 +15,16 @@ namespace PageDesigner.Controls
 {
     public partial class PageEntry : UserControl
     {
+        public enum Status
+        {
+            SUCCESS,
+            FAILURE,
+            PENDING
+        }
+
         private Template _template;
         private string _directoryPath;
+        private Status _status;
 
         public PageEntry()
         {
@@ -30,18 +38,58 @@ namespace PageDesigner.Controls
             // TODO: Check yeah yeah yeah check some stuff...
             _directoryPath = directoryPath;
             _template = template;
-            
-            DirectoryLabel.Text = Path.GetFileName(directoryPath);
 
-            if (createButton)
+            DirectoryLabel.Text = Path.GetFileName(directoryPath);
+            DirectoryName = Path.GetFileName(directoryPath);
+
+            ToggleButtons(createButton);
+        }
+
+        private string DirectoryName;
+        // TODO: Null check
+        public string GetDirectoryName() { return DirectoryLabel.Text; }
+        public string GetDirectoryPath() { return _directoryPath; }
+
+        public void SetStatus(Status newStatus)
+        {
+            if (_status == newStatus)
             {
-                EditButton.Text = "Create";
+                return;
+            }
+
+            switch (newStatus)
+            {
+                case Status.SUCCESS: StatusButton.BackColor = Color.LightGreen; break;
+                case Status.FAILURE: StatusButton.BackColor = Color.Red; break;
+                case Status.PENDING: StatusButton.BackColor = Color.Yellow; break;
+            }
+
+            _status = newStatus;
+        }
+
+        public Status GetStatus() => _status;
+
+        private void ToggleButtons(bool showCreateButton)
+        {
+            if (showCreateButton)
+            {
+                CreateButton.Visible = true;
+
+                EditButton.Visible = false;
+                PreviewButton.Visible = false;
+            }
+            else
+            {
+                CreateButton.Visible = false;
+
+                EditButton.Visible = true;
+                PreviewButton.Visible = true;
             }
         }
 
         private void EditButton_Click(object sender, EventArgs e)
         {
-            PageDesignerForm form = new (_directoryPath);
+            PageDesignerForm form = new(_directoryPath, _template);
             form.ShowDialog();
         }
 
@@ -70,7 +118,7 @@ namespace PageDesigner.Controls
 
                     // Open it with default app
                     if (File.Exists(previewPath))
-                    { 
+                    {
                         Process.Start(new ProcessStartInfo(previewPath)
                         {
                             UseShellExecute = true
@@ -79,6 +127,13 @@ namespace PageDesigner.Controls
                 }
 
             }
+        }
+
+        // TODO: Don't repeat
+        private void CreateButton_Click(object sender, EventArgs e)
+        {
+            PageDesignerForm form = new(_directoryPath, _template);
+            form.ShowDialog();
         }
     }
 }
