@@ -24,7 +24,7 @@ namespace PageDesigner
         public void SetSelected(bool isSelected) => _isPreviewSelected = isSelected;
         public bool GetSelected() => _isPreviewSelected;
 
-        public string GetImageName => _imageName;
+        public string GetImageName() => _imageName;
 
 
         private string _imageName;

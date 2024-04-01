@@ -36,7 +36,7 @@
             StateToolStripStatusLabel = new ToolStripStatusLabel();
             GenerateAllButton = new Button();
             NewFolderButton = new Button();
-            MainFormBackgroundWorker = new System.ComponentModel.BackgroundWorker();
+            GenerateSiteBackgroundWorker = new System.ComponentModel.BackgroundWorker();
             StatusStrip.SuspendLayout();
             SuspendLayout();
             // 
@@ -111,12 +111,12 @@
             NewFolderButton.UseVisualStyleBackColor = true;
             NewFolderButton.Click += NewFolderButton_Click;
             // 
-            // MainFormBackgroundWorker
+            // GenerateSiteBackgroundWorker
             // 
-            MainFormBackgroundWorker.WorkerReportsProgress = true;
-            MainFormBackgroundWorker.DoWork += MainFormBackgroundWorker_DoWork;
-            MainFormBackgroundWorker.ProgressChanged += MainFormBackgroundWorker_ProgressChanged;
-            MainFormBackgroundWorker.RunWorkerCompleted += MainFormBackgroundWorker_RunWorkerCompleted;
+            GenerateSiteBackgroundWorker.WorkerReportsProgress = true;
+            GenerateSiteBackgroundWorker.DoWork += GenerateSiteBackgroundWorker_DoWork;
+            GenerateSiteBackgroundWorker.ProgressChanged += GenerateSiteBackgroundWorker_ProgressChanged;
+            GenerateSiteBackgroundWorker.RunWorkerCompleted += GenerateSiteBackgroundWorker_RunWorkerCompleted;
             // 
             // MainForm
             // 
@@ -148,6 +148,6 @@
         private ToolStripProgressBar ToolStripProgressBar;
         private Button GenerateAllButton;
         private Button NewFolderButton;
-        private System.ComponentModel.BackgroundWorker MainFormBackgroundWorker;
+        private System.ComponentModel.BackgroundWorker GenerateSiteBackgroundWorker;
     }
 }

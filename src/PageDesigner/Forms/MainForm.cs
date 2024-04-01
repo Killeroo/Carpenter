@@ -78,7 +78,8 @@ namespace PageDesigner.Forms
         {
 
             ResetStatusButtons();
-            MainFormBackgroundWorker.RunWorkerAsync();
+            EnablePageEntryButtons(false);
+            GenerateSiteBackgroundWorker.RunWorkerAsync();
         }
 
         class WebpageGenerationState
@@ -90,7 +91,7 @@ namespace PageDesigner.Forms
             public string ProgressMessage = string.Empty;
         }
 
-        private void MainFormBackgroundWorker_DoWork(object sender, DoWorkEventArgs e)
+        private void GenerateSiteBackgroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             if (_template == null)
             {
@@ -111,7 +112,7 @@ namespace PageDesigner.Forms
                 string localSchemaPath = Path.Combine(_rootPath, Path.GetFileName(localDirectories[i]), "SCHEMA");
                 if (File.Exists(localSchemaPath))
                 {
-                    MainFormBackgroundWorker.ReportProgress((100 * i) / localDirectories.Length, $"Generating '{Path.GetFileName(localDirectories[i])}'...");
+                    GenerateSiteBackgroundWorker.ReportProgress((100 * i) / localDirectories.Length, $"Generating '{Path.GetFileName(localDirectories[i])}'...");
 
                     string currentDirectoryPath = Path.GetDirectoryName(localSchemaPath);
                     using Schema localSchema = new(localSchemaPath);
@@ -125,15 +126,15 @@ namespace PageDesigner.Forms
                     }
                     state.ProcessedPaths.Add(currentDirectoryPath);
 
-                    MainFormBackgroundWorker.ReportProgress((100 * i) / localDirectories.Length, state);
+                    GenerateSiteBackgroundWorker.ReportProgress((100 * i) / localDirectories.Length, state);
                 }
             }
             progressStopwatch.Stop();
 
-            MainFormBackgroundWorker.ReportProgress(100, $"Site generated in {progressStopwatch.ElapsedMilliseconds}ms");
+            GenerateSiteBackgroundWorker.ReportProgress(100, $"Site generated in {progressStopwatch.ElapsedMilliseconds}ms");
         }
 
-        private void MainFormBackgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        private void GenerateSiteBackgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             ToolStripProgressBar.Value = e.ProgressPercentage;
             if (e.UserState is string message)
@@ -164,12 +165,13 @@ namespace PageDesigner.Forms
                     }
                 }
             }
-            
+
         }
 
-        private void MainFormBackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void GenerateSiteBackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             ToolStripProgressBar.Value = 100;
+            EnablePageEntryButtons(true);
         }
 
         private void GenerateWebpages()
@@ -184,6 +186,17 @@ namespace PageDesigner.Forms
                 if (control is PageEntry entry)
                 {
                     entry.SetStatus(PageEntry.Status.PENDING);
+                }
+            }
+        }
+
+        private void EnablePageEntryButtons(bool shouldEnable)
+        {
+            foreach (Control control in TableLayoutPanel.Controls)
+            {
+                if (control is PageEntry entry)
+                {
+                    entry.EnableButtons(shouldEnable);
                 }
             }
         }

@@ -67,6 +67,13 @@ namespace PageDesigner.Controls
             _status = newStatus;
         }
 
+        public void EnableButtons(bool shouldEnable)
+        {
+            EditButton.Enabled = shouldEnable;
+            CreateButton.Enabled = shouldEnable;
+            PreviewButton.Enabled = shouldEnable;
+        }
+
         public Status GetStatus() => _status;
 
         private void ToggleButtons(bool showCreateButton)

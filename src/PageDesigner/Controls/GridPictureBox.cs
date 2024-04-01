@@ -15,7 +15,7 @@ namespace PageDesigner.Controls
         public event EventHandler<EventArgs> RemoveMenuItemClicked;
         public event EventHandler<EventArgs> StandaloneMenuItemClicked;
 
-        public bool IsStandaloneImage => _isStandaloneImage;
+        public bool IsStandaloneImage() => _isStandaloneImage;
 
         // TODO: Make readonly
         public string PreviewImageName = string.Empty;

@@ -15,6 +15,7 @@ using System.Security.Cryptography.Pkcs;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace PageDesigner
 {
@@ -43,7 +44,7 @@ namespace PageDesigner
             this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
         }
 
-        public string GetSelectedPreviewImageName() { return _selectedPreviewImageControl == null ? string.Empty : _selectedPreviewImageControl.GetImageName; }
+        public string GetSelectedPreviewImageName() { return _selectedPreviewImageControl == null ? string.Empty : _selectedPreviewImageControl.GetImageName(); }
         public string GetSelectedGridImageName() { return _selectedGridImage == null ? string.Empty : _selectedGridImage.PreviewImageName; }
 
         private void PageDesignerForm_Load(object sender, EventArgs e)
@@ -168,6 +169,36 @@ namespace PageDesigner
             return true;
         }
 
+        private Image LoadImage(string imageName, bool standalone)
+        {
+            // Find the image locally and save a resized copy
+            string localImagePath = Path.Combine(_workingPath, imageName);
+            if (File.Exists(localImagePath) == false)
+            {
+                return null;
+            }
+            using (Image sourceImage = Image.FromFile(localImagePath)) // TODO: Cache this
+            {
+
+                // TODO: This is just awful, so we hardcode the aspect ratio
+                AspectRatio ar = new AspectRatio(3, 4);//ImageUtils.CalculateAspectRatio(sourceImage);
+
+                // Find the width that we need to fit into
+                int targetWidth = GridFlowLayoutPanel.Width - 10;
+                if (standalone == false)
+                {
+                    targetWidth /= 2;
+                }
+
+                // There is a bug where, when we add an image to a picturebox from the buffer there is some deadspace
+                // causing an overflow, meaning we have to reduce this width for now
+                targetWidth -= 20;// 10; 
+                int targetHeight = ar.CalculateHeight(targetWidth);
+
+                return ImageUtils.ResizeImage(localImagePath, sourceImage, targetWidth, targetHeight);
+            }
+        }
+
         // TODO: DRY
         private GridPictureBox CreateGridPictureBox(string previewImageName, string detailedImageName, bool standaloneImage)
         {
@@ -180,7 +211,7 @@ namespace PageDesigner
 
             // Load original image, resize it to fit into grid
             // TODO: Work out size without loading the whole image into memory
-            using (Image sourceImage = Image.FromFile(localImagePath))
+            using (Image sourceImage = Image.FromFile(localImagePath)) // TODO: Cache this
             {
                 // TODO: This is just awful, so we hardcode the aspect ratio
                 AspectRatio ar = new AspectRatio(3, 4);//ImageUtils.CalculateAspectRatio(sourceImage);
@@ -320,8 +351,8 @@ namespace PageDesigner
                 gridPictureBox.SizeMode = PictureBoxSizeMode.AutoSize;
 
                 // Save properties for later
-                gridPictureBox.DetailedImageName = detailedImageName;
-                gridPictureBox.PreviewImageName = previewImageName;
+                gridPictureBox.DetailedImageName = TEMP_CreateDetailedImageName(detailedImageName);
+                gridPictureBox.PreviewImageName = TEMP_CreatePreviewImageName(previewImageName);
                 gridPictureBox.SetStandaloneImage(standaloneImage);
 
                 // Add callbacks
@@ -347,13 +378,13 @@ namespace PageDesigner
                 Image image = _selectedGridImage.Image;
                 string previewImageName = _selectedGridImage.PreviewImageName;
                 string detailedImageName = _selectedGridImage.DetailedImageName;
-                bool standalone = _selectedGridImage.IsStandaloneImage;
+                bool standalone = _selectedGridImage.IsStandaloneImage();
 
                 _selectedGridImage.SetImage(
                     currentGridPictureBox.Image,
                     currentGridPictureBox.PreviewImageName,
                     currentGridPictureBox.DetailedImageName,
-                    currentGridPictureBox.IsStandaloneImage);
+                    currentGridPictureBox.IsStandaloneImage());
 
                 currentGridPictureBox.SetImage(
                     image,
@@ -368,7 +399,7 @@ namespace PageDesigner
         {
             if (sender is GridPictureBox gridPictureBox)
             {
-                bool newStandaloneValue = !gridPictureBox.IsStandaloneImage;
+                bool newStandaloneValue = !gridPictureBox.IsStandaloneImage();
 
                 UpdateGridPictureBox(gridPictureBox, gridPictureBox.PreviewImageName, gridPictureBox.DetailedImageName, newStandaloneValue);
                 gridPictureBox.SetStandaloneImage(newStandaloneValue);
@@ -504,7 +535,10 @@ namespace PageDesigner
 
                     if (control == _selectedGridImage)
                     {
-                        GridPictureBox newPictureBox = CreateGridPictureBox(e.ImageName, e.ImageName, false);
+                        GridPictureBox newPictureBox = CreateGridPictureBox(
+                            TEMP_CreatePreviewImageName(e.ImageName),
+                            TEMP_CreateDetailedImageName(e.ImageName),
+                            false);
                         newControlCollection.Add(newPictureBox);
                     }
                 }
@@ -512,6 +546,39 @@ namespace PageDesigner
 
             GridFlowLayoutPanel.Controls.Clear();
             GridFlowLayoutPanel.Controls.AddRange(newControlCollection.ToArray());
+        }
+
+        // TODO: No, remove this, handle preview and detailed images better than hack hardcoding them
+        private string TEMP_CreateDetailedImageName(string originalName)
+        {
+            //if (originalName.Contains('_') == false)
+            //{
+            //    return $"{originalName}_Detailed";
+            //}
+            //else
+            //{
+            //    return $"{originalName.Split('_').Last()}_Detailed";
+
+            //}
+
+            // LOL
+            return originalName;
+
+        }
+
+        private string TEMP_CreatePreviewImageName(string originalName)
+        {
+            return originalName;
+            //if (originalName.Contains('_') == false)
+            //{
+            //    return $"{originalName}_Preview";
+            //}
+            //else
+            //{
+            //    return $"{originalName.Split('_').Last()}_Preview";
+
+            //}
+
         }
 
         private void UpdateSelectedPreviewPictureControl(PreviewImageBox previewImageControl)
@@ -569,7 +636,27 @@ namespace PageDesigner
 
         private void ImagePreviewFlowPanel_ReplaceContextItem_Clicked(object? sender, ImageEventArgs e)
         {
+            if (sender is PreviewImageBox previewImageControl)
+            {
+                if (_selectedGridImage == null)
+                {
+                    return;
+                }
 
+                Image image = LoadImage(previewImageControl.GetImageName(), _selectedGridImage.IsStandaloneImage());
+                if (image == null)
+                {
+                    // TODO: Show error
+                    return;
+                }
+
+                _selectedGridImage.SetImage(
+                    image,
+                    TEMP_CreatePreviewImageName(previewImageControl.GetImageName()),
+                    TEMP_CreateDetailedImageName(previewImageControl.GetImageName()),
+                    _selectedGridImage.IsStandaloneImage());
+
+            }
         }
 
         private void ImagePreviewFlowLayoutPanel_Click(object sender, EventArgs e)
@@ -582,7 +669,7 @@ namespace PageDesigner
 
         private void PreviewButton_Click(object sender, EventArgs e)
         {
- 
+
 
 
             GeneratePreview();
@@ -599,7 +686,6 @@ namespace PageDesigner
             }
 
             // Update tokens values from page
-            // TODO: Copy or add class id and option base values
             _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.BaseUrl, BaseUrlTextBox.Text);
             _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.PageUrl, PageUrlTextBox.Text);
             _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.Title, TitleTextBox.Text);
@@ -608,6 +694,18 @@ namespace PageDesigner
             _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.Year, YearTextBox.Text);
             _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.Author, AuthorTextBox.Text);
             _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.Camera, CameraTextBox.Text);
+
+            // TODO: Copy or add class id and option base values
+            if (_originalSchema != null)
+            {
+                // TODO: HACK: Copy values from original (WHICH WON'T ALWAYS EXIST)
+                _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageColumn, _originalSchema.TokenValues[Schema.Token.ClassIdImageColumn]);
+                _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageElement, _originalSchema.TokenValues[Schema.Token.ClassIdImageElement]);
+                _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageGrid, _originalSchema.TokenValues[Schema.Token.ClassIdImageGrid]);
+                _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageTitle, _originalSchema.TokenValues[Schema.Token.ClassIdImageTitle]);
+
+                _modifiedSchema.OptionValues = _originalSchema.OptionValues;
+            }
 
             // Parse grid layout
             List<ImageSection> sections = new();
@@ -627,7 +725,7 @@ namespace PageDesigner
                         PreviewImage = gridPictureBox.PreviewImageName
                     };
 
-                    if (gridPictureBox.IsStandaloneImage)
+                    if (gridPictureBox.IsStandaloneImage())
                     {
                         // Attempt to add contents of previous column buffer if we encounter a standalone image
                         TryAddColumnsBuffer(ref columnsBuffer, ref sections);
