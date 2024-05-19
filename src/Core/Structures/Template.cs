@@ -5,6 +5,8 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
+using JpgMetadataExtractor;
+
 namespace Carpenter
 {
     public class Template
@@ -138,11 +140,31 @@ namespace Carpenter
             Logger.Log(LogLevel.Verbose, $"Caching image sizes in {outputPath}...");
             foreach (string imagePath in Directory.GetFiles(outputPath, "*.jpg"))
             {
-                // TODO: Replace this with in place reading of metadata
-                using (System.Drawing.Image image = System.Drawing.Image.FromFile(imagePath))
+                // Fetch image dimensions
+                int width = 0, height = 0;
+                // TEMP: Comment out so we can diagnose and harden the jpgparser
+                //try
                 {
-                    _schemaImages.Add(Path.GetFileName(imagePath), (image.Height, image.Width));
-                }
+                    // TODO: Find somewhere else to do this
+                    JpgParser.UseInternalCache = true;
+                    JpgParser.CacheSize = 1;
+
+                    width = JpgParser.GetMetadata(imagePath).Width;
+                    height = JpgParser.GetMetadata(imagePath).Height;
+
+                } 
+                //catch (Exception)
+                //{
+                //    // If we encounter an error then we fall back on reading the medata using C#'s GDI Image interface
+                //    // (it's slower and more memory intensive)
+                //    System.Drawing.Image image = System.Drawing.Image.FromFile(imagePath);
+                //    width = image.Width;
+                //    height = image.Height;
+                //    image.Dispose();
+                //}
+
+                
+                _schemaImages.Add(Path.GetFileName(imagePath), (height, width));
             }
 
             // TODO: More logs
