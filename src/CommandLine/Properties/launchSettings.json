@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CommandLine": {
+      "commandName": "Project",
+      "workingDirectory": "C:\\Users\\Kelpie\\My Drive\\Website\\photos"
+    }
+  }
+}
