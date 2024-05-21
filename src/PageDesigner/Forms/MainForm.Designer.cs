@@ -28,114 +28,117 @@
         /// </summary>
         private void InitializeComponent()
         {
-            OpenFolderButton = new Button();
-            TableLayoutPanel = new TableLayoutPanel();
-            PathTextBox = new TextBox();
-            StatusStrip = new StatusStrip();
-            ToolStripProgressBar = new ToolStripProgressBar();
-            StateToolStripStatusLabel = new ToolStripStatusLabel();
-            GenerateAllButton = new Button();
-            NewFolderButton = new Button();
-            GenerateSiteBackgroundWorker = new System.ComponentModel.BackgroundWorker();
-            StatusStrip.SuspendLayout();
-            SuspendLayout();
+            this.OpenFolderButton = new System.Windows.Forms.Button();
+            this.TableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
+            this.PathTextBox = new System.Windows.Forms.TextBox();
+            this.StatusStrip = new System.Windows.Forms.StatusStrip();
+            this.ToolStripProgressBar = new System.Windows.Forms.ToolStripProgressBar();
+            this.StateToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.GenerateAllButton = new System.Windows.Forms.Button();
+            this.NewFolderButton = new System.Windows.Forms.Button();
+            this.GenerateSiteBackgroundWorker = new System.ComponentModel.BackgroundWorker();
+            this.StatusStrip.SuspendLayout();
+            this.SuspendLayout();
             // 
             // OpenFolderButton
             // 
-            OpenFolderButton.Location = new Point(512, 8);
-            OpenFolderButton.Name = "OpenFolderButton";
-            OpenFolderButton.Size = new Size(28, 23);
-            OpenFolderButton.TabIndex = 0;
-            OpenFolderButton.Text = "...";
-            OpenFolderButton.UseVisualStyleBackColor = true;
+            this.OpenFolderButton.Location = new System.Drawing.Point(512, 8);
+            this.OpenFolderButton.Name = "OpenFolderButton";
+            this.OpenFolderButton.Size = new System.Drawing.Size(28, 23);
+            this.OpenFolderButton.TabIndex = 0;
+            this.OpenFolderButton.Text = "...";
+            this.OpenFolderButton.UseVisualStyleBackColor = true;
             // 
             // TableLayoutPanel
             // 
-            TableLayoutPanel.AutoScroll = true;
-            TableLayoutPanel.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
-            TableLayoutPanel.ColumnCount = 1;
-            TableLayoutPanel.ColumnStyles.Add(new ColumnStyle());
-            TableLayoutPanel.Location = new Point(12, 37);
-            TableLayoutPanel.Name = "TableLayoutPanel";
-            TableLayoutPanel.RowCount = 1;
-            TableLayoutPanel.RowStyles.Add(new RowStyle());
-            TableLayoutPanel.Size = new Size(529, 333);
-            TableLayoutPanel.TabIndex = 1;
+            this.TableLayoutPanel.AutoScroll = true;
+            this.TableLayoutPanel.CellBorderStyle = System.Windows.Forms.TableLayoutPanelCellBorderStyle.Single;
+            this.TableLayoutPanel.ColumnCount = 1;
+            this.TableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.TableLayoutPanel.Location = new System.Drawing.Point(12, 37);
+            this.TableLayoutPanel.Name = "TableLayoutPanel";
+            this.TableLayoutPanel.RowCount = 1;
+            this.TableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.TableLayoutPanel.Size = new System.Drawing.Size(529, 333);
+            this.TableLayoutPanel.TabIndex = 1;
             // 
             // PathTextBox
             // 
-            PathTextBox.Location = new Point(12, 8);
-            PathTextBox.Name = "PathTextBox";
-            PathTextBox.Size = new Size(494, 23);
-            PathTextBox.TabIndex = 2;
-            PathTextBox.Text = "C:\\Users\\Shadowfax\\My Drive\\Website\\photos";
-            PathTextBox.TextChanged += PathTextBox_TextChanged;
+            this.PathTextBox.Location = new System.Drawing.Point(12, 8);
+            this.PathTextBox.Name = "PathTextBox";
+            this.PathTextBox.Size = new System.Drawing.Size(494, 23);
+            this.PathTextBox.TabIndex = 2;
+            this.PathTextBox.Text = "C:\\Users\\Shadowfax\\My Drive\\Website\\photos";
+            this.PathTextBox.TextChanged += new System.EventHandler(this.PathTextBox_TextChanged);
             // 
             // StatusStrip
             // 
-            StatusStrip.Items.AddRange(new ToolStripItem[] { ToolStripProgressBar, StateToolStripStatusLabel });
-            StatusStrip.Location = new Point(0, 402);
-            StatusStrip.Name = "StatusStrip";
-            StatusStrip.Size = new Size(553, 22);
-            StatusStrip.TabIndex = 3;
-            StatusStrip.Text = "statusStrip1";
+            this.StatusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.ToolStripProgressBar,
+            this.StateToolStripStatusLabel});
+            this.StatusStrip.Location = new System.Drawing.Point(0, 402);
+            this.StatusStrip.Name = "StatusStrip";
+            this.StatusStrip.Size = new System.Drawing.Size(553, 22);
+            this.StatusStrip.TabIndex = 3;
+            this.StatusStrip.Text = "statusStrip1";
             // 
             // ToolStripProgressBar
             // 
-            ToolStripProgressBar.Name = "ToolStripProgressBar";
-            ToolStripProgressBar.Size = new Size(100, 16);
+            this.ToolStripProgressBar.Name = "ToolStripProgressBar";
+            this.ToolStripProgressBar.Size = new System.Drawing.Size(100, 16);
             // 
             // StateToolStripStatusLabel
             // 
-            StateToolStripStatusLabel.Name = "StateToolStripStatusLabel";
-            StateToolStripStatusLabel.Size = new Size(39, 17);
-            StateToolStripStatusLabel.Text = "Ready";
+            this.StateToolStripStatusLabel.Name = "StateToolStripStatusLabel";
+            this.StateToolStripStatusLabel.Size = new System.Drawing.Size(39, 17);
+            this.StateToolStripStatusLabel.Text = "Ready";
             // 
             // GenerateAllButton
             // 
-            GenerateAllButton.Location = new Point(466, 376);
-            GenerateAllButton.Name = "GenerateAllButton";
-            GenerateAllButton.Size = new Size(75, 23);
-            GenerateAllButton.TabIndex = 4;
-            GenerateAllButton.Text = "Generate all";
-            GenerateAllButton.UseVisualStyleBackColor = true;
-            GenerateAllButton.Click += GenerateAllButton_Click;
+            this.GenerateAllButton.Location = new System.Drawing.Point(461, 376);
+            this.GenerateAllButton.Name = "GenerateAllButton";
+            this.GenerateAllButton.Size = new System.Drawing.Size(80, 23);
+            this.GenerateAllButton.TabIndex = 4;
+            this.GenerateAllButton.Text = "Generate all";
+            this.GenerateAllButton.UseVisualStyleBackColor = true;
+            this.GenerateAllButton.Click += new System.EventHandler(this.GenerateAllButton_Click);
             // 
             // NewFolderButton
             // 
-            NewFolderButton.Location = new Point(385, 376);
-            NewFolderButton.Name = "NewFolderButton";
-            NewFolderButton.Size = new Size(75, 23);
-            NewFolderButton.TabIndex = 5;
-            NewFolderButton.Text = "New Folder";
-            NewFolderButton.UseVisualStyleBackColor = true;
-            NewFolderButton.Click += NewFolderButton_Click;
+            this.NewFolderButton.Location = new System.Drawing.Point(380, 376);
+            this.NewFolderButton.Name = "NewFolderButton";
+            this.NewFolderButton.Size = new System.Drawing.Size(75, 23);
+            this.NewFolderButton.TabIndex = 5;
+            this.NewFolderButton.Text = "New Folder";
+            this.NewFolderButton.UseVisualStyleBackColor = true;
+            this.NewFolderButton.Click += new System.EventHandler(this.NewFolderButton_Click);
             // 
             // GenerateSiteBackgroundWorker
             // 
-            GenerateSiteBackgroundWorker.WorkerReportsProgress = true;
-            GenerateSiteBackgroundWorker.DoWork += GenerateSiteBackgroundWorker_DoWork;
-            GenerateSiteBackgroundWorker.ProgressChanged += GenerateSiteBackgroundWorker_ProgressChanged;
-            GenerateSiteBackgroundWorker.RunWorkerCompleted += GenerateSiteBackgroundWorker_RunWorkerCompleted;
+            this.GenerateSiteBackgroundWorker.WorkerReportsProgress = true;
+            this.GenerateSiteBackgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.GenerateSiteBackgroundWorker_DoWork);
+            this.GenerateSiteBackgroundWorker.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.GenerateSiteBackgroundWorker_ProgressChanged);
+            this.GenerateSiteBackgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.GenerateSiteBackgroundWorker_RunWorkerCompleted);
             // 
             // MainForm
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
-            AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(553, 424);
-            Controls.Add(NewFolderButton);
-            Controls.Add(GenerateAllButton);
-            Controls.Add(StatusStrip);
-            Controls.Add(PathTextBox);
-            Controls.Add(TableLayoutPanel);
-            Controls.Add(OpenFolderButton);
-            Name = "MainForm";
-            Text = "Carpenter";
-            Load += MainForm_Load;
-            StatusStrip.ResumeLayout(false);
-            StatusStrip.PerformLayout();
-            ResumeLayout(false);
-            PerformLayout();
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(553, 424);
+            this.Controls.Add(this.NewFolderButton);
+            this.Controls.Add(this.GenerateAllButton);
+            this.Controls.Add(this.StatusStrip);
+            this.Controls.Add(this.PathTextBox);
+            this.Controls.Add(this.TableLayoutPanel);
+            this.Controls.Add(this.OpenFolderButton);
+            this.Name = "MainForm";
+            this.Text = "Carpenter";
+            this.Load += new System.EventHandler(this.MainForm_Load);
+            this.StatusStrip.ResumeLayout(false);
+            this.StatusStrip.PerformLayout();
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
         }
 
         #endregion
