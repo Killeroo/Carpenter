@@ -54,14 +54,25 @@ namespace PageDesigner.Forms
             pageEntries.Sort((x, y) => x.GetDirectoryName().CompareTo(y.GetDirectoryName()));//(x => x.DirectoryName).ToList();
 
             // Add to form
+            TableLayoutPanel.Controls.Clear();
             TableLayoutPanel.Controls.AddRange(pageEntries.ToArray());
+
+            // Save path to settings
+            Properties.Settings.Default.LastLoadedRootPath = path;
+            Properties.Settings.Default.Save();
 
             return true;
         }
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            TryLoadDirectory(PathTextBox.Text);
+            // Try and load the last entered path
+            string previouslyLoadedPath = Properties.Settings.Default.LastLoadedRootPath;
+            if (string.IsNullOrEmpty(previouslyLoadedPath) == false)
+            {
+                PathTextBox.Text = previouslyLoadedPath;
+                TryLoadDirectory(previouslyLoadedPath);
+            }
         }
 
         private void PathTextBox_TextChanged(object sender, EventArgs e)
@@ -76,7 +87,6 @@ namespace PageDesigner.Forms
 
         private void GenerateAllButton_Click(object sender, EventArgs e)
         {
-
             ResetStatusButtons();
             EnablePageEntryButtons(false);
             GenerateSiteBackgroundWorker.RunWorkerAsync();
