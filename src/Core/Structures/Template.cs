@@ -5,7 +5,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-using JpgMetadataExtractor;
+using JpegMetadataExtractor;
 
 namespace Carpenter
 {
@@ -146,11 +146,11 @@ namespace Carpenter
                 //try
                 {
                     // TODO: Find somewhere else to do this
-                    JpgParser.UseInternalCache = true;
-                    JpgParser.CacheSize = 1;
+                    JpegParser.UseInternalCache = true;
+                    JpegParser.CacheSize = 1;
 
-                    width = JpgParser.GetMetadata(imagePath).Width;
-                    height = JpgParser.GetMetadata(imagePath).Height;
+                    width = JpegParser.GetMetadata(imagePath).Width;
+                    height = JpegParser.GetMetadata(imagePath).Height;
 
                 } 
                 //catch (Exception)

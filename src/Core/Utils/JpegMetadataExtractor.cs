@@ -35,13 +35,14 @@ using System.Linq;
 using System.Text;
 using System.IO;
 
-namespace JpgMetadataExtractor
+namespace JpegMetadataExtractor
 {
     /// <summary>
     /// Simplified data about an image. Constructed using a mixture of different metadata sources within the file.
     /// 
     /// For all retrieved image data RawImageMetadata instead.
     /// </summary>
+    /// <see cref="JpegParser.GetMetadata(string)"/>
     /// <seealso cref="RawImageMetadata"/>
     public class ImageMetadata
     {
@@ -119,6 +120,7 @@ namespace JpgMetadataExtractor
     /// <summary>
     /// All metadata extracted from an image. To be processed by the user however they want
     /// </summary>
+    /// <see cref="JpegParser.GetRawMetadata(string)"/>
     public class RawImageMetadata
     {
         /// <summary>
@@ -148,9 +150,6 @@ namespace JpgMetadataExtractor
         /// <summary>
         /// The thumbnail image data found in the Jpeg
         /// </summary>
-        /// <remarks>
-        /// Not currently populated
-        /// </remarks>
         public byte[] ThumbnailData = new byte[0];
     }
 
@@ -573,52 +572,55 @@ namespace JpgMetadataExtractor
     }
 
     /// <summary>
-    /// Class that can extract Exif Version 2.0 tags from Jpg files
+    /// The main Jpeg parsing class, capable of extracting different formats of metadata from a file.
     /// </summary>
-    public static class JpgParser
+    /// <see cref="GetMetadata(string)"/>
+    /// <see cref="GetRawMetadata(string)"/>
+    /// <see cref="GetExifTags(string)"/>
+    public static class JpegParser
     {
         // Segment types
-        private const byte kJpgStartOfImage = 0xD8;
-        private const byte kJpgStartOfScan = 0xDA;
-        private const byte kJpgEndOfImage = 0xD9;
-        private const byte kJpgExifAppData = 0xE1;
-        private const byte kJpgDefineRestartInterval = 0xDD;
-        private const byte kJpgJfifAppData = 0xE0;
+        private const byte kJpegStartOfImage = 0xD8;
+        private const byte kJpegStartOfScan = 0xDA;
+        private const byte kJpegEndOfImage = 0xD9;
+        private const byte kJpegExifAppData = 0xE1;
+        private const byte kJpegDefineRestartInterval = 0xDD;
+        private const byte kJpegJfifAppData = 0xE0;
 
         // Different StartOfFrame segmenets
         // A different one of these is used per file depending on the type of DCT
         // used in the image (but the metadata stored in them is the same)
-        private const byte kJpgStartOfFrame0 = 0xC0;
-        private const byte kJpgStartOfFrame1 = 0xC1;
-        private const byte kJpgStartOfFrame2 = 0xC2;
-        private const byte kJpgStartOfFrame3 = 0xC3;
-        private const byte kJpgStartOfFrame5 = 0xC5;
-        private const byte kJpgStartOfFrame6 = 0xC6;
-        private const byte kJpgStartOfFrame7 = 0xC7;
-        private const byte kJpgStartOfFrame9 = 0xC9;
-        private const byte kJpgStartOfFrame10 = 0xCA;
-        private const byte kJpgStartOfFrame11 = 0xCB;
-        private const byte kJpgStartOfFrame13 = 0xCD;
-        private const byte kJpgStartOfFrame14 = 0xCE;
-        private const byte kJpgStartOfFrame15 = 0xCF;
+        private const byte kJpegStartOfFrame0 = 0xC0;
+        private const byte kJpegStartOfFrame1 = 0xC1;
+        private const byte kJpegStartOfFrame2 = 0xC2;
+        private const byte kJpegStartOfFrame3 = 0xC3;
+        private const byte kJpegStartOfFrame5 = 0xC5;
+        private const byte kJpegStartOfFrame6 = 0xC6;
+        private const byte kJpegStartOfFrame7 = 0xC7;
+        private const byte kJpegStartOfFrame9 = 0xC9;
+        private const byte kJpegStartOfFrame10 = 0xCA;
+        private const byte kJpegStartOfFrame11 = 0xCB;
+        private const byte kJpegStartOfFrame13 = 0xCD;
+        private const byte kJpegStartOfFrame14 = 0xCE;
+        private const byte kJpegStartOfFrame15 = 0xCF;
 
         // Dictionary of each encoding process.
         // Taken from https://github.com/Matthias-Wandel/jhead
-        private static readonly Dictionary<byte, string> JpgEncodingProcesses = new Dictionary<byte, string>()
+        private static readonly Dictionary<byte, string> JpegEncodingProcesses = new Dictionary<byte, string>()
         {
-            { kJpgStartOfFrame0, "Baseline" },
-            { kJpgStartOfFrame1, "Extended Sequential" },
-            { kJpgStartOfFrame2, "Progressive" },
-            { kJpgStartOfFrame3, "Lossless" },
-            { kJpgStartOfFrame5, "Differential Sequential" },
-            { kJpgStartOfFrame6, "Differential Progressive" },
-            { kJpgStartOfFrame7, "Differential Lossless" },
-            { kJpgStartOfFrame9, "Extended Sequential, Arithmetic coding" },
-            { kJpgStartOfFrame10, "Progressive, Arithmetic coding" },
-            { kJpgStartOfFrame11, "Lossless, Arithmetic coding" },
-            { kJpgStartOfFrame13, "Differential Sequential, Arithmetic coding" },
-            { kJpgStartOfFrame14, "Differential Progressive, Arithmetic coding" },
-            { kJpgStartOfFrame15, "Differential Lossless, Arithmetic coding" },
+            { kJpegStartOfFrame0, "Baseline" },
+            { kJpegStartOfFrame1, "Extended Sequential" },
+            { kJpegStartOfFrame2, "Progressive" },
+            { kJpegStartOfFrame3, "Lossless" },
+            { kJpegStartOfFrame5, "Differential Sequential" },
+            { kJpegStartOfFrame6, "Differential Progressive" },
+            { kJpegStartOfFrame7, "Differential Lossless" },
+            { kJpegStartOfFrame9, "Extended Sequential, Arithmetic coding" },
+            { kJpegStartOfFrame10, "Progressive, Arithmetic coding" },
+            { kJpegStartOfFrame11, "Lossless, Arithmetic coding" },
+            { kJpegStartOfFrame13, "Differential Sequential, Arithmetic coding" },
+            { kJpegStartOfFrame14, "Differential Progressive, Arithmetic coding" },
+            { kJpegStartOfFrame15, "Differential Lossless, Arithmetic coding" },
         };
 
         // Identifiers for different data
@@ -678,9 +680,11 @@ namespace JpgMetadataExtractor
                 _cache.Clear();
             }
 
-            public int Capacity {
+            public int Capacity
+            {
                 get => _maxCacheSize;
-                set {
+                set
+                {
                     _maxCacheSize = value;
 
                     if (_maxCacheSize == 0)
@@ -709,7 +713,7 @@ namespace JpgMetadataExtractor
                     return _cache[key];
                 }
 
-                return default(T);
+                return default;
             }
 
             public void Add(string key, T @object)
@@ -761,9 +765,9 @@ namespace JpgMetadataExtractor
         /// <exception cref="ObjectDisposedException">Thrown if an object used during parsing is null. (whoops)</exception>
         /// <exception cref="IOException">Thrown if an error occurs while trying to read from the file stream.</exception>
         /// <exception cref="EndOfStreamException">Thrown if the end of the file is unexpectedly reached.</exception>
-        /// <exception cref="JpgParsingException">Thrown when an error occurs while navigating the Jpg's structure</exception>
-        /// <exception cref="JfifParsingException">Thrown if an error occurs while trying to pass the Jpg Jfif segmenet</exception>
-        /// <exception cref="ExifParsingException">Thrown if an error occurs while parsing the Jpg Exif data</exception>
+        /// <exception cref="JpegParsingException">Thrown when an error occurs while navigating the Jpeg's structure</exception>
+        /// <exception cref="JfifParsingException">Thrown if an error occurs while trying to pass the Jpeg Jfif segmenet</exception>
+        /// <exception cref="ExifParsingException">Thrown if an error occurs while parsing the Jpeg Exif data</exception>
         /// <remarks>
         /// Use GetExifTag or GetRawMetadata for accessible to all metadata that we were able to parse from the file.
         /// </remarks>
@@ -778,26 +782,26 @@ namespace JpgMetadataExtractor
         /// <exception cref="ObjectDisposedException">Thrown if an object used during parsing is null. (whoops)</exception>
         /// <exception cref="IOException">Thrown if an error occurs while trying to read from the file stream.</exception>
         /// <exception cref="EndOfStreamException">Thrown if the end of the file is unexpectedly reached.</exception>
-        /// <exception cref="JpgParsingException">Thrown when an error occurs while navigating the Jpg's structure</exception>
-        /// <exception cref="JfifParsingException">Thrown if an error occurs while trying to pass the Jpg Jfif segmenet</exception>
-        /// <exception cref="ExifParsingException">Thrown if an error occurs while parsing the Jpg Exif data</exception>
+        /// <exception cref="JpegParsingException">Thrown when an error occurs while navigating the Jpeg's structure</exception>
+        /// <exception cref="JfifParsingException">Thrown if an error occurs while trying to pass the Jpeg Jfif segmenet</exception>
+        /// <exception cref="ExifParsingException">Thrown if an error occurs while parsing the Jpeg Exif data</exception>
         public static RawImageMetadata GetRawMetadata(string filePath)
         {
             return RetrieveRawMetadata(filePath);
         }
 
         /// <summary>
-        /// Tries to retrieve all image related Exif tags in a Jpg file.
+        /// Tries to retrieve all image related Exif tags in a Jpeg file.
         /// </summary>
-        /// <param name="filePath">The Jpg file path to extract the tags from</param>
+        /// <param name="filePath">The Jpeg file path to extract the tags from</param>
         /// <param name="entries">The structure used to store the found tags</param>
         /// <returns>If the tags were successfully extracted.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if an object used during parsing is null. (whoops)</exception>
         /// <exception cref="IOException">Thrown if an error occurs while trying to read from the file stream.</exception>
         /// <exception cref="EndOfStreamException">Thrown if the end of the file is unexpectedly reached.</exception>
-        /// <exception cref="JpgParsingException">Thrown when an error occurs while navigating the Jpg's structure</exception>
-        /// <exception cref="JfifParsingException">Thrown if an error occurs while trying to pass the Jpg Jfif segmenet</exception>
-        /// <exception cref="ExifParsingException">Thrown if an error occurs while parsing the Jpg Exif data</exception>
+        /// <exception cref="JpegParsingException">Thrown when an error occurs while navigating the Jpeg's structure</exception>
+        /// <exception cref="JfifParsingException">Thrown if an error occurs while trying to pass the Jpeg Jfif segmenet</exception>
+        /// <exception cref="ExifParsingException">Thrown if an error occurs while parsing the Jpeg Exif data</exception>
         /// <remarks>
         /// The Exif entries for a file can be cached once the file is parsed, this is done to make retrieving entries quick. You can set the cache size, reset it's contents or disable it completely 
         /// via CacheSize, ResetCache and UseInternalCache respectively.
@@ -811,7 +815,7 @@ namespace JpgMetadataExtractor
         }
 
         /// <summary>
-        /// Tries to retrieve a specific Exif image tag in a Jpg file.
+        /// Tries to retrieve a specific Exif image tag in a Jpeg file.
         /// </summary>
         /// <param name="filePath">The path to the file to extract the tag from</param>
         /// <param name="tag">The tag type to look for</param>
@@ -820,9 +824,9 @@ namespace JpgMetadataExtractor
         /// <exception cref="ObjectDisposedException">Thrown if an object used during parsing is null. (whoops)</exception>
         /// <exception cref="IOException">Thrown if an error occurs while trying to read from the file stream.</exception>
         /// <exception cref="EndOfStreamException">Thrown if the end of the file is unexpectedly reached.</exception>
-        /// <exception cref="JpgParsingException">Thrown when an error occurs while navigating the Jpg's structure</exception>
-        /// <exception cref="JfifParsingException">Thrown if an error occurs while trying to pass the Jpg Jfif segmenet</exception>
-        /// <exception cref="ExifParsingException">Thrown if an error occurs while parsing the Jpg Exif data</exception>
+        /// <exception cref="JpegParsingException">Thrown when an error occurs while navigating the Jpeg's structure</exception>
+        /// <exception cref="JfifParsingException">Thrown if an error occurs while trying to pass the Jpeg Jfif segmenet</exception>
+        /// <exception cref="ExifParsingException">Thrown if an error occurs while parsing the Jpeg Exif data</exception>
         /// <remarks>
         /// The Exif entries for a file can be cached once the file is parsed, this is done to make retrieving entries quick. You can set the cache size, reset it's contents or disable it completely 
         /// via CacheSize, ResetCache and UseInternalCache respectively.
@@ -843,14 +847,14 @@ namespace JpgMetadataExtractor
         }
 
         /// <summary>
-        /// Extracts any Exif image tags in a Jpg file and returns them as a dictionary
+        /// Extracts any Exif image tags in a Jpeg file and returns them as a dictionary
         /// </summary>
         /// <exception cref="ObjectDisposedException">Thrown if an object used during parsing is null. (whoops)</exception>
         /// <exception cref="IOException">Thrown if an error occurs while trying to read from the file stream.</exception>
         /// <exception cref="EndOfStreamException">Thrown if the end of the file is unexpectedly reached.</exception>
-        /// <exception cref="JpgParsingException">Thrown when an error occurs while navigating the Jpg's structure</exception>
-        /// <exception cref="JfifParsingException">Thrown if an error occurs while trying to pass the Jpg Jfif segmenet</exception>
-        /// <exception cref="ExifParsingException">Thrown if an error occurs while parsing the Jpg Exif data</exception>
+        /// <exception cref="JpegParsingException">Thrown when an error occurs while navigating the Jpeg's structure</exception>
+        /// <exception cref="JfifParsingException">Thrown if an error occurs while trying to pass the Jpeg Jfif segmenet</exception>
+        /// <exception cref="ExifParsingException">Thrown if an error occurs while parsing the Jpeg Exif data</exception>
         /// <remarks>
         /// The Exif entries for a file can be cached once the file is parsed, this is done to make retrieving entries quick. You can set the cache size, reset it's contents or disable it completely 
         /// via CacheSize, ResetCache and UseInternalCache respectively.
@@ -863,16 +867,16 @@ namespace JpgMetadataExtractor
         }
 
         /// <summary>
-        /// Extracts a specific Exif image tag from a Jpg file
+        /// Extracts a specific Exif image tag from a Jpeg file
         /// </summary>
         /// <param name="filePath">The path to the file to extract the tag from</param>
         /// <param name="tag">The tag type to look for</param>
         /// <exception cref="ObjectDisposedException">Thrown if an object used during parsing is null. (whoops)</exception>
         /// <exception cref="IOException">Thrown if an error occurs while trying to read from the file stream.</exception>
         /// <exception cref="EndOfStreamException">Thrown if the end of the file is unexpectedly reached.</exception>
-        /// <exception cref="JpgParsingException">Thrown when an error occurs while navigating the Jpg's structure</exception>
-        /// <exception cref="JfifParsingException">Thrown if an error occurs while trying to pass the Jpg Jfif segmenet</exception>
-        /// <exception cref="ExifParsingException">Thrown if an error occurs while parsing the Jpg Exif data</exception>
+        /// <exception cref="JpegParsingException">Thrown when an error occurs while navigating the Jpeg's structure</exception>
+        /// <exception cref="JfifParsingException">Thrown if an error occurs while trying to pass the Jpeg Jfif segmenet</exception>
+        /// <exception cref="ExifParsingException">Thrown if an error occurs while parsing the Jpeg Exif data</exception>
         /// <remarks>
         /// The Exif entries for a file can be cached once the file is parsed, this is done to make retrieving entries quick. You can set the cache size, reset it's contents or disable it completely 
         /// via CacheSize, ResetCache and UseInternalCache respectively.
@@ -901,7 +905,7 @@ namespace JpgMetadataExtractor
                 return RawMetadataCache.Retrieve(filePath);
             }
 
-            RawImageMetadata rawImageMetadata = ParseJpgFile(filePath);
+            RawImageMetadata rawImageMetadata = ParseJpegFile(filePath);
             if (UseInternalCache && CacheSize != 0)
             {
                 // Cache for later
@@ -1020,7 +1024,7 @@ namespace JpgMetadataExtractor
         /// </summary>
         /// <param name="filePath">Path to the file</param>
         /// <returns>Return a RawImageMetadata object that contains all the metadata that was parsed</returns>
-        private static RawImageMetadata ParseJpgFile(string filePath)
+        private static RawImageMetadata ParseJpegFile(string filePath)
         {
             RawImageMetadata metadata = new RawImageMetadata();
 
@@ -1030,9 +1034,9 @@ namespace JpgMetadataExtractor
 
             // Verify jpeg file, should always start with StartOfImage segment
             byte[] segment = reader.ReadBytes(2);
-            if (segment[0] != 0xFF || segment[1] != kJpgStartOfImage)
+            if (segment[0] != 0xFF || segment[1] != kJpegStartOfImage)
             {
-                throw new JpgParsingException($"Encountered incorrect starting segment, expected StartOfImage segment (0xFF 0xD8) instead found segment ({segment[0]} {segment[1]})");
+                throw new JpegParsingException($"Encountered incorrect starting segment, expected StartOfImage segment (0xFF 0xD8) instead found segment ({segment[0]} {segment[1]})");
             }
 
             // Loop through segments processing the appropriate ones as we go along
@@ -1046,20 +1050,20 @@ namespace JpgMetadataExtractor
                 marker = reader.ReadByte();
                 if (marker != 0xFF)
                 {
-                    throw new JpgParsingException($"Found incorrect segment marker ({marker}) @ 0x{(reader.BaseStream.Position - 1).ToString("X6")}");
+                    throw new JpegParsingException($"Found incorrect segment marker ({marker}) @ 0x{(reader.BaseStream.Position - 1).ToString("X6")}");
                 }
                 type = reader.ReadByte();
                 pos = reader.BaseStream.Position;
 
                 // Check if we have reached the last segment
-                if (type == kJpgEndOfImage)
+                if (type == kJpegEndOfImage)
                 {
                     LogMessage("JPG", "Reached end of image");
                     break;
                 }
 
                 // Determine the size of the segment
-                if (type != kJpgStartOfScan && type != kJpgEndOfImage)
+                if (type != kJpegStartOfScan && type != kJpegEndOfImage)
                 {
                     size = reader.ReadUInt16(true);
                 }
@@ -1074,14 +1078,14 @@ namespace JpgMetadataExtractor
                 // Process segment (if we care about it or it's contents)
                 switch (type)
                 {
-                    case kJpgDefineRestartInterval:
+                    case kJpegDefineRestartInterval:
                         {
                             // This alerts future parsing code that we need to watch out for restart markers
                             _restartMarkersPresent = true;
                             break;
                         }
 
-                    case kJpgExifAppData:
+                    case kJpegExifAppData:
                         {
                             // Multiple different things use this segmenet
                             string segmentSignature = Encoding.ASCII.GetString(reader.PeakBytes(4));
@@ -1093,31 +1097,31 @@ namespace JpgMetadataExtractor
                             break;
                         }
 
-                    case kJpgStartOfFrame0:
-                    case kJpgStartOfFrame1:
-                    case kJpgStartOfFrame2:
-                    case kJpgStartOfFrame3:
-                    case kJpgStartOfFrame5:
-                    case kJpgStartOfFrame6:
-                    case kJpgStartOfFrame7:
-                    case kJpgStartOfFrame9:
-                    case kJpgStartOfFrame10:
-                    case kJpgStartOfFrame11:
-                    case kJpgStartOfFrame13:
-                    case kJpgStartOfFrame14:
-                    case kJpgStartOfFrame15:
+                    case kJpegStartOfFrame0:
+                    case kJpegStartOfFrame1:
+                    case kJpegStartOfFrame2:
+                    case kJpegStartOfFrame3:
+                    case kJpegStartOfFrame5:
+                    case kJpegStartOfFrame6:
+                    case kJpegStartOfFrame7:
+                    case kJpegStartOfFrame9:
+                    case kJpegStartOfFrame10:
+                    case kJpegStartOfFrame11:
+                    case kJpegStartOfFrame13:
+                    case kJpegStartOfFrame14:
+                    case kJpegStartOfFrame15:
                         {
                             ProcessStartOfFrameSegment(reader, size, type, metadata);
                             break;
                         }
 
-                    case kJpgJfifAppData:
+                    case kJpegJfifAppData:
                         {
                             ProcessJfifSegment(reader, size, metadata);
                             break;
                         }
 
-                    case kJpgStartOfScan:
+                    case kJpegStartOfScan:
                         {
                             if (ParseImageData)
                             {
@@ -1178,8 +1182,8 @@ namespace JpgMetadataExtractor
                 throw new ExifParsingException("Did not recognise Tiff byte alignment");
             }
             ushort byteAlignmentTest = reader.ReadUInt16();
-            if ((byteAlignment == kTiffIntelAligned && byteAlignmentTest != 0x2A00)
-                && (byteAlignment == kTiffMotorolaAligned && byteAlignmentTest != 0x002A))
+            if (byteAlignment == kTiffIntelAligned && byteAlignmentTest != 0x2A00
+                && byteAlignment == kTiffMotorolaAligned && byteAlignmentTest != 0x002A)
             {
                 throw new ExifParsingException("Tiff byte alignment test failed");
             }
@@ -1343,9 +1347,9 @@ namespace JpgMetadataExtractor
             metadata.FrameData.IsColor = metadata.FrameData.ColorComponents == 3;
 
             string encoding = "Unknown";
-            if (JpgEncodingProcesses.ContainsKey(markerType))
+            if (JpegEncodingProcesses.ContainsKey(markerType))
             {
-                encoding = JpgEncodingProcesses[markerType];
+                encoding = JpegEncodingProcesses[markerType];
             }
             metadata.FrameData.EncodingProcess = encoding;
 
@@ -1511,7 +1515,7 @@ namespace JpgMetadataExtractor
             uint value = reader.ReadUInt32();
             if (reverseOrder)
             {
-                value = (value & 0x000000FFU) << 24 | 
+                value = (value & 0x000000FFU) << 24 |
                         (value & 0x0000FF00U) << 8 |
                         (value & 0x00FF0000U) >> 8 |
                         (value & 0xFF000000U) >> 24;
@@ -1534,11 +1538,11 @@ namespace JpgMetadataExtractor
     }
 
     /// <summary>
-    /// Exception representing errors encountered while traversing Jpg file
+    /// Exception representing errors encountered while traversing Jpeg file
     /// </summary>
-    public class JpgParsingException : Exception
+    public class JpegParsingException : Exception
     {
-        public JpgParsingException(string message) : base(message) { }
+        public JpegParsingException(string message) : base(message) { }
     }
 
     /// <summary>
