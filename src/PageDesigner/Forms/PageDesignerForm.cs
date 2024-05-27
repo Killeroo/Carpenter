@@ -19,8 +19,6 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace PageDesigner
 {
-
-
     public partial class PageDesignerForm : Form
     {
         private string _workingPath;
@@ -29,7 +27,7 @@ namespace PageDesigner
         private Schema _originalSchema;
         private Template _template;
 
-        PreviewImageBox _selectedPreviewImageControl; // TODO: Rename _selectedPreviewImageControl
+        PreviewImageBox _selectedPreviewImageControl;
         GridPictureBox _selectedGridImage;
         Dictionary<string, Image> _previewImages = new();
         Queue<GridPictureBox> _pictureBoxBuffer = new();
@@ -44,23 +42,19 @@ namespace PageDesigner
             this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
         }
 
-        public string GetSelectedPreviewImageName() { return _selectedPreviewImageControl == null ? string.Empty : _selectedPreviewImageControl.GetImageName(); }
-        public string GetSelectedGridImageName() { return _selectedGridImage == null ? string.Empty : _selectedGridImage.PreviewImageName; }
-
         private void PageDesignerForm_Load(object sender, EventArgs e)
         {
-            if (LoadSchemaIfAvailable())
+            if (LoadSchemaIfAvailable() == false)
             {
                 SetupBlankSchema();
             }
 
             LoadAvailableImagePreviews();
-
         }
 
         private void SetupBlankSchema()
         {
-            // Just leave this blank
+            _originalSchema = new Schema();
             _modifiedSchema = new Schema();
 
             // Fill in some default values
@@ -73,7 +67,6 @@ namespace PageDesigner
             YearTextBox.Text = "2016";
             AuthorTextBox.Text = "Matthew Carney";
             CameraTextBox.Text = "Canon EOS 600D";
-
         }
 
         private bool LoadSchemaIfAvailable()
@@ -568,6 +561,8 @@ namespace PageDesigner
 
         private string TEMP_CreatePreviewImageName(string originalName)
         {
+
+
             return originalName;
             //if (originalName.Contains('_') == false)
             //{
@@ -695,16 +690,33 @@ namespace PageDesigner
             _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.Author, AuthorTextBox.Text);
             _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.Camera, CameraTextBox.Text);
 
-            // TODO: Copy or add class id and option base values
-            if (_originalSchema != null)
+            // Copy or add class id and option base values
+            if (_originalSchema.TokenValues != _modifiedSchema.TokenValues && _originalSchema.TokenValues.Count != 0)
             {
                 // TODO: HACK: Copy values from original (WHICH WON'T ALWAYS EXIST)
                 _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageColumn, _originalSchema.TokenValues[Schema.Token.ClassIdImageColumn]);
                 _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageElement, _originalSchema.TokenValues[Schema.Token.ClassIdImageElement]);
                 _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageGrid, _originalSchema.TokenValues[Schema.Token.ClassIdImageGrid]);
                 _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageTitle, _originalSchema.TokenValues[Schema.Token.ClassIdImageTitle]);
+            }
+            else
+            {
+                // Create some default values
+                // TODO: Have these set via a form on the main form or have them stored somewhere else
+                _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageColumn, "photo_column");
+                _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageElement, "photo_image");
+                _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageGrid, "photo_grid");
+                _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageTitle, "photo_title");
+            }
 
+            if (_originalSchema.OptionValues != _modifiedSchema.OptionValues)
+            {
+                // TODO: Have these set via a form on the main form or have them stored somewhere else
                 _modifiedSchema.OptionValues = _originalSchema.OptionValues;
+            }
+            else
+            {
+                _modifiedSchema.OptionValues.AddOrUpdate(Schema.Option.OutputFilename, "index.html");
             }
 
             // Parse grid layout
@@ -793,6 +805,8 @@ namespace PageDesigner
                 return;
             }
 
+            UpdateSchemaFromForm();
+
             if (File.Exists(_schemaPath))
             {
                 if (ShowConfirmSaveDialog() == false)
@@ -812,7 +826,6 @@ namespace PageDesigner
         // TODO: Cleanup
         private void GenerateButton_Click(object sender, EventArgs e)
         {
-            UpdateSchemaFromForm();
             // TODO: Save schema
             SaveSchema();
             // Generate html file
@@ -871,7 +884,6 @@ namespace PageDesigner
             SaveSchema();
         }
 
-        // TODO: Really?
         private bool ShowConfirmSaveDialog()
         {
             DialogResult result = MessageBox.Show(

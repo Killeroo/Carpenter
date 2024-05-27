@@ -17,14 +17,81 @@ namespace PageDesigner.Forms
 {
     public partial class MainForm : Form
     {
+        private class WebpageGenerationState
+        {
+            public List<string> ProcessedPaths = new();
+            public List<string> FailedPaths = new();
+            public List<string> SuccessfulPaths = new();
+
+            public string ProgressMessage = string.Empty;
+        }
+
         private const string kTemplateFilename = "template.html";
 
+        private FileSystemWatcher _fileSystemWatcher = null;
         private Template _template = new Template();
-        private string _rootPath;
+        private string _rootPath = string.Empty;
 
         public MainForm()
         {
             InitializeComponent();
+        }
+
+        private void SetupFileSystemWatcher(string path)
+        {
+            _fileSystemWatcher = new FileSystemWatcher();
+            _fileSystemWatcher.Path = path;
+            _fileSystemWatcher.Filter = "*.*";
+            _fileSystemWatcher.NotifyFilter = NotifyFilters.DirectoryName;
+            _fileSystemWatcher.EnableRaisingEvents = true;
+            _fileSystemWatcher.Created += FileSystemWatcher_Created;
+            _fileSystemWatcher.Renamed += _fileSystemWatcher_Renamed;
+            _fileSystemWatcher.Deleted += _fileSystemWatcher_Deleted;
+            //_fileSystemWatcher.IncludeSubdirectories = true;
+        }
+
+        // TODO: Dry (call common method)
+        private void _fileSystemWatcher_Deleted(object sender, FileSystemEventArgs e)
+        {
+            //throw new NotImplementedException();
+            BeginInvoke(new Action(() =>
+            {
+                //FileAttributes attributes = File.GetAttributes(e.FullPath);
+                //if (attributes.HasFlag(FileAttributes.Directory))
+                //{
+                    RefreshDirectoryList();
+                //}
+
+            }));
+        }
+
+        
+        private void _fileSystemWatcher_Renamed(object sender, RenamedEventArgs e)
+        {
+            BeginInvoke(new Action(() =>
+            {
+                //FileAttributes attributes = File.GetAttributes(e.FullPath);
+                //if (attributes.HasFlag(FileAttributes.Directory))
+                //{
+                    RefreshDirectoryList();
+                //}
+
+            }));
+        }
+
+
+        private void FileSystemWatcher_Created(object sender, FileSystemEventArgs e)
+        {
+            BeginInvoke(new Action(() =>
+            {
+                //FileAttributes attributes = File.GetAttributes(e.FullPath);
+                //if (attributes.HasFlag(FileAttributes.Directory))
+                //{
+                    //TryLoadDirectory(e.FullPath);
+                    RefreshDirectoryList();
+                //}
+            }));
+            //throw new NotImplementedException();
         }
 
         private bool TryLoadDirectory(string path)
@@ -44,6 +111,27 @@ namespace PageDesigner.Forms
                 _template.Load(templatePath);
             }
 
+            RefreshDirectoryList();
+
+            // Save path to settings
+            Properties.Settings.Default.LastLoadedRootPath = path;
+            Properties.Settings.Default.Save();
+
+            // Change path for system watcher to monitor
+            if (_fileSystemWatcher == null)
+            {
+                SetupFileSystemWatcher(path);
+            }
+            else
+            {
+                _fileSystemWatcher.Path = path;
+            }
+
+            return true;
+        }
+
+        private void RefreshDirectoryList()
+        {
             // Create entries from the directory and order them
             List<PageEntry> pageEntries = new List<PageEntry>();
             foreach (string directory in Directory.GetDirectories(_rootPath))
@@ -51,17 +139,11 @@ namespace PageDesigner.Forms
                 bool schemaPresent = File.Exists(Path.Combine(_rootPath, directory, "SCHEMA"));
                 pageEntries.Add(new PageEntry(directory, !schemaPresent, _template));
             }
-            pageEntries.Sort((x, y) => x.GetDirectoryName().CompareTo(y.GetDirectoryName()));//(x => x.DirectoryName).ToList();
+            pageEntries.Sort((x, y) => x.GetDirectoryName().CompareTo(y.GetDirectoryName()));
 
             // Add to form
             TableLayoutPanel.Controls.Clear();
             TableLayoutPanel.Controls.AddRange(pageEntries.ToArray());
-
-            // Save path to settings
-            Properties.Settings.Default.LastLoadedRootPath = path;
-            Properties.Settings.Default.Save();
-
-            return true;
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -82,7 +164,16 @@ namespace PageDesigner.Forms
 
         private void NewFolderButton_Click(object sender, EventArgs e)
         {
+            // TODO: Put into method
+            FolderBrowser.InitialDirectory = _rootPath;
+            FolderBrowser.ShowNewFolderButton = true;
+            FolderBrowser.Description = "Create new folder";
+            FolderBrowser.UseDescriptionForTitle = true;
 
+            if (FolderBrowser.ShowDialog() == DialogResult.OK)
+            {
+                RefreshDirectoryList();
+            }
         }
 
         private void GenerateAllButton_Click(object sender, EventArgs e)
@@ -90,15 +181,6 @@ namespace PageDesigner.Forms
             ResetStatusButtons();
             EnablePageEntryButtons(false);
             GenerateSiteBackgroundWorker.RunWorkerAsync();
-        }
-
-        class WebpageGenerationState
-        {
-            public List<string> ProcessedPaths = new();
-            public List<string> FailedPaths = new();
-            public List<string> SuccessfulPaths = new();
-
-            public string ProgressMessage = string.Empty;
         }
 
         private void GenerateSiteBackgroundWorker_DoWork(object sender, DoWorkEventArgs e)

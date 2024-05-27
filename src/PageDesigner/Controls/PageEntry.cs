@@ -97,7 +97,7 @@ namespace PageDesigner.Controls
         private void EditButton_Click(object sender, EventArgs e)
         {
             PageDesignerForm form = new(_directoryPath, _template);
-            form.ShowDialog();
+            form.Show();
         }
 
         private void PreviewButton_Click(object sender, EventArgs e)
