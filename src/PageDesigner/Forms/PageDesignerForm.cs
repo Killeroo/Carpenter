@@ -19,6 +19,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace PageDesigner
 {
+    // TODO: Separate out into own form, add buttons to tool bar
     public partial class PageDesignerForm : Form
     {
         private string _workingPath;
