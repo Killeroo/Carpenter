@@ -265,7 +265,6 @@ namespace Carpenter
                 if (section.GetType() == typeof(StandaloneImageSection))
                 {
                     CreateImageElement(schema, section as StandaloneImageSection, ref photoGridContents);
-
                     _processedImages++;
                 }
                 else if (section.GetType() == typeof(ColumnImageSection))
@@ -273,14 +272,11 @@ namespace Carpenter
                     ColumnImageSection columnSection = section as ColumnImageSection;
 
                     photoGridContents.Add(_imageColumnSection.StartLine);
-
                     foreach (StandaloneImageSection imageSection in columnSection.Sections)
                     {
                         CreateImageElement(schema, imageSection, ref photoGridContents);
                     }
-
                     photoGridContents.Add(_imageColumnSection.EndLine);
-
                     _processedImages++;
                 }
                 else if (section.GetType() == typeof(TitleImageSection))
@@ -398,13 +394,11 @@ namespace Carpenter
                 }
                 else if (line.Contains($"class=\"{schema.TokenValues[Schema.Token.ClassIdImageColumn]}\""))
                 {
-                    // Next we need to know what what our column sections are
                     _imageColumnSection = new TemplateSection(this, i);
                     Logger.Log(LogLevel.Verbose, $"Found ImageColumn element (id={schema.TokenValues[Schema.Token.ClassIdImageColumn]})");
                 }
                 else if (schema.TokenValues.ContainsKey(Schema.Token.ClassIdImageTitle) && line.Contains($"class=\"{schema.TokenValues[Schema.Token.ClassIdImageTitle]}\""))
                 {
-                    // Next we need to know what what our column sections are
                     _imageTitleSection = new TemplateSection(this, i);
                     Logger.Log(LogLevel.Verbose, $"Found ImageTitle element (id={schema.TokenValues[Schema.Token.ClassIdImageTitle]})");
                 }

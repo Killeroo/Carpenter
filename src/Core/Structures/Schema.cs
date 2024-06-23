@@ -453,7 +453,6 @@ namespace Carpenter
 
         private bool SanityCheckSchema()
         {
-
             // TODO: Check table contents etc
             return true;
         }

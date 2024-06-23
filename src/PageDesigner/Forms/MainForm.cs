@@ -12,6 +12,7 @@ using System.Windows.Forms;
 using System.IO;
 using System.Threading;
 using System.Diagnostics;
+using static System.Windows.Forms.AxHost;
 
 namespace PageDesigner.Forms
 {
@@ -59,13 +60,13 @@ namespace PageDesigner.Forms
                 //FileAttributes attributes = File.GetAttributes(e.FullPath);
                 //if (attributes.HasFlag(FileAttributes.Directory))
                 //{
-                    RefreshDirectoryList();
+                RefreshDirectoryList();
                 //}
 
             }));
         }
 
-        
+
         private void _fileSystemWatcher_Renamed(object sender, RenamedEventArgs e)
         {
             BeginInvoke(new Action(() =>
@@ -73,7 +74,7 @@ namespace PageDesigner.Forms
                 //FileAttributes attributes = File.GetAttributes(e.FullPath);
                 //if (attributes.HasFlag(FileAttributes.Directory))
                 //{
-                    RefreshDirectoryList();
+                RefreshDirectoryList();
                 //}
 
             }));
@@ -87,8 +88,8 @@ namespace PageDesigner.Forms
                 //FileAttributes attributes = File.GetAttributes(e.FullPath);
                 //if (attributes.HasFlag(FileAttributes.Directory))
                 //{
-                    //TryLoadDirectory(e.FullPath);
-                    RefreshDirectoryList();
+                //TryLoadDirectory(e.FullPath);
+                RefreshDirectoryList();
                 //}
             }));
             //throw new NotImplementedException();
@@ -291,6 +292,58 @@ namespace PageDesigner.Forms
                     entry.EnableButtons(shouldEnable);
                 }
             }
+        }
+
+        private void CleanButton_Click(object sender, EventArgs e)
+        {
+            string[] localDirectories = Directory.GetDirectories(_rootPath);
+            int count = 0;
+            for (int i = 0; i < localDirectories.Length; i++)
+            {
+                string localPath = Path.Combine(_rootPath, Path.GetFileName(localDirectories[i]));
+                string localSchemaPath = Path.Combine(localPath, "SCHEMA");
+                if (File.Exists(localSchemaPath))
+                {
+                    // try and load the schema in the directory
+                    string currentDirectoryPath = Path.GetDirectoryName(localSchemaPath);
+                    using Schema localSchema = new(localSchemaPath);
+                    
+                    // Construct a list of all referenced images in the schema so we can
+                    // work out what files aren't referenced
+                    List<string> referencedImages = new List<string>();
+                    foreach (ImageSection section in localSchema.ImageSections)
+                    {
+                        if (section is ColumnImageSection)
+                        {
+                            ColumnImageSection columnSection = section as ColumnImageSection;
+                            foreach (StandaloneImageSection innerImage in columnSection.Sections)
+                            {
+                                referencedImages.Add(innerImage.PreviewImage);
+                                referencedImages.Add(innerImage.DetailedImage);
+                            }
+                        }
+                        else if (section is StandaloneImageSection)
+                        {
+                            StandaloneImageSection standaloneSection = section as StandaloneImageSection;
+                            referencedImages.Add(standaloneSection.PreviewImage);
+                            referencedImages.Add(standaloneSection.DetailedImage);
+                        }
+                    }
+
+                    // Loop through and remove any files that aren't referenced in the schema 
+                    foreach (string imagePath in Directory.GetFiles(localPath, "*.jpg"))
+                    {
+                        string imageName = Path.GetFileName(imagePath);
+                        if (referencedImages.Contains(imageName) == false)
+                        {
+                            File.Delete(imagePath);
+                            count++;
+                        }
+                    }
+                }
+            }
+
+            StateToolStripStatusLabel.Text = count + " files removed";
         }
     }
 }
