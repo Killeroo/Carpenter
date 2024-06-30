@@ -9,8 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Core\Framework.csproj" />
-    <ProjectReference Include="..\src\PageDesigner\PageDesigner.csproj" />
+    <ProjectReference Include="..\Framework\Framework.csproj" />
+    <ProjectReference Include="..\PageDesigner\PageDesigner.csproj" />
   </ItemGroup>
 
   <ItemGroup>
