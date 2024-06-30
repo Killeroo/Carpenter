@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "PageDesigner": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Users\\Kelpie\\My Drive\\Website\\photos\\central-london-4\" \"C:\\Users\\Kelpie\\My Drive\\Website\\photos\\template.html\""
+    }
+  }
+}

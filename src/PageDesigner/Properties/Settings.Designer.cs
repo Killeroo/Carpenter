@@ -12,7 +12,7 @@ namespace PageDesigner.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.4.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.10.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -26,12 +26,96 @@ namespace PageDesigner.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string LastLoadedRootPath {
+        public string BaseUrlLastUsedValue {
             get {
-                return ((string)(this["LastLoadedRootPath"]));
+                return ((string)(this["BaseUrlLastUsedValue"]));
             }
             set {
-                this["LastLoadedRootPath"] = value;
+                this["BaseUrlLastUsedValue"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string PageUrlLastUsedValue {
+            get {
+                return ((string)(this["PageUrlLastUsedValue"]));
+            }
+            set {
+                this["PageUrlLastUsedValue"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string TitleLastUsedValue {
+            get {
+                return ((string)(this["TitleLastUsedValue"]));
+            }
+            set {
+                this["TitleLastUsedValue"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LocationLastUsedValue {
+            get {
+                return ((string)(this["LocationLastUsedValue"]));
+            }
+            set {
+                this["LocationLastUsedValue"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string MonthLastUsedValue {
+            get {
+                return ((string)(this["MonthLastUsedValue"]));
+            }
+            set {
+                this["MonthLastUsedValue"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string YearLastUsedValue {
+            get {
+                return ((string)(this["YearLastUsedValue"]));
+            }
+            set {
+                this["YearLastUsedValue"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string AuthorLastUsedValue {
+            get {
+                return ((string)(this["AuthorLastUsedValue"]));
+            }
+            set {
+                this["AuthorLastUsedValue"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string CameraLastUsedValue {
+            get {
+                return ((string)(this["CameraLastUsedValue"]));
+            }
+            set {
+                this["CameraLastUsedValue"] = value;
             }
         }
     }

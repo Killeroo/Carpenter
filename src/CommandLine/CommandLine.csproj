@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Core\Carpenter.csproj" />
+    <ProjectReference Include="..\Core\Framework.csproj" />
   </ItemGroup>
 
 </Project>

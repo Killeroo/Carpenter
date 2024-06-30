@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using Carpenter;
-using PageDesigner.Controls;
 using System.Data;
 using System.Drawing;
 using System.Linq;
@@ -12,9 +10,13 @@ using System.Windows.Forms;
 using System.IO;
 using System.Threading;
 using System.Diagnostics;
-using static System.Windows.Forms.AxHost;
 
-namespace PageDesigner.Forms
+using Carpenter;
+
+using SiteViewer;
+using SiteViewer.Controls;
+
+namespace SiteViewer.Forms
 {
     public partial class MainForm : Form
     {
@@ -32,6 +34,7 @@ namespace PageDesigner.Forms
         private FileSystemWatcher _fileSystemWatcher = null;
         private Template _template = new Template();
         private string _rootPath = string.Empty;
+        private string _templatePath = string.Empty;
 
         public MainForm()
         {
@@ -45,78 +48,41 @@ namespace PageDesigner.Forms
             _fileSystemWatcher.Filter = "*.*";
             _fileSystemWatcher.NotifyFilter = NotifyFilters.DirectoryName;
             _fileSystemWatcher.EnableRaisingEvents = true;
-            _fileSystemWatcher.Created += FileSystemWatcher_Created;
-            _fileSystemWatcher.Renamed += _fileSystemWatcher_Renamed;
-            _fileSystemWatcher.Deleted += _fileSystemWatcher_Deleted;
+            _fileSystemWatcher.Created += FileSystemWatcher_Modification;
+            _fileSystemWatcher.Renamed += FileSystemWatcher_Modification;
+            _fileSystemWatcher.Deleted += FileSystemWatcher_Modification;
             //_fileSystemWatcher.IncludeSubdirectories = true;
         }
 
-        // TODO: Dry (call common method)
-        private void _fileSystemWatcher_Deleted(object sender, FileSystemEventArgs e)
+        private void FileSystemWatcher_Modification(object sender, FileSystemEventArgs e)
         {
-            //throw new NotImplementedException();
-            BeginInvoke(new Action(() =>
-            {
-                //FileAttributes attributes = File.GetAttributes(e.FullPath);
-                //if (attributes.HasFlag(FileAttributes.Directory))
-                //{
-                RefreshDirectoryList();
-                //}
-
-            }));
+            BeginInvoke(new Action(() => RefreshPageList()));
         }
 
-
-        private void _fileSystemWatcher_Renamed(object sender, RenamedEventArgs e)
-        {
-            BeginInvoke(new Action(() =>
-            {
-                //FileAttributes attributes = File.GetAttributes(e.FullPath);
-                //if (attributes.HasFlag(FileAttributes.Directory))
-                //{
-                RefreshDirectoryList();
-                //}
-
-            }));
-        }
-
-
-        private void FileSystemWatcher_Created(object sender, FileSystemEventArgs e)
-        {
-            BeginInvoke(new Action(() =>
-            {
-                //FileAttributes attributes = File.GetAttributes(e.FullPath);
-                //if (attributes.HasFlag(FileAttributes.Directory))
-                //{
-                //TryLoadDirectory(e.FullPath);
-                RefreshDirectoryList();
-                //}
-            }));
-            //throw new NotImplementedException();
-        }
-
-        private bool TryLoadDirectory(string path)
+        // Try and load pages and template file at a path, silently fail otherwise.
+        // This is because this is called everytime new path text is added 
+        private void TryLoadDirectory(string path)
         {
             // Sanity check path
             if (Directory.Exists(path) == false)
             {
-                return false;
+                return;
             }
 
             _rootPath = path;
 
-            // Find template at root
-            string templatePath = Path.Combine(_rootPath, kTemplateFilename);
-            if (File.Exists(templatePath))
+            // We only want to try and load the template if it actually exits
+            _templatePath = Path.Combine(_rootPath, kTemplateFilename);
+            if (File.Exists(_templatePath))
             {
-                _template.Load(templatePath);
+                _template = new Template(_templatePath);
             }
 
-            RefreshDirectoryList();
+            RefreshPageList();
 
             // Save path to settings
-            Properties.Settings.Default.LastLoadedRootPath = path;
-            Properties.Settings.Default.Save();
+            Settings.Default.LastLoadedRootPath = path;
+            Settings.Default.Save();
 
             // Change path for system watcher to monitor
             if (_fileSystemWatcher == null)
@@ -127,11 +93,9 @@ namespace PageDesigner.Forms
             {
                 _fileSystemWatcher.Path = path;
             }
-
-            return true;
         }
 
-        private void RefreshDirectoryList()
+        private void RefreshPageList()
         {
             // Create entries from the directory and order them
             List<PageEntry> pageEntries = new List<PageEntry>();
@@ -150,7 +114,7 @@ namespace PageDesigner.Forms
         private void MainForm_Load(object sender, EventArgs e)
         {
             // Try and load the last entered path
-            string previouslyLoadedPath = Properties.Settings.Default.LastLoadedRootPath;
+            string previouslyLoadedPath = Settings.Default.LastLoadedRootPath;
             if (string.IsNullOrEmpty(previouslyLoadedPath) == false)
             {
                 PathTextBox.Text = previouslyLoadedPath;
@@ -173,7 +137,7 @@ namespace PageDesigner.Forms
 
             if (FolderBrowser.ShowDialog() == DialogResult.OK)
             {
-                RefreshDirectoryList();
+                RefreshPageList();
             }
         }
 

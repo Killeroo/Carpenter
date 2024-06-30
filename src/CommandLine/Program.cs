@@ -39,18 +39,18 @@ namespace Carpenter.CommandLine
 
             Console.WriteLine($"Carpenter {VersionString} - Static photo webpage generator");
 
-            // Ok first thing's first we need to find the template file in the root
+            // Load the template we will use for all pages, it should be in our root directory
             string pathToTemplateFile = Path.Combine(rootDirectory, "template.html");
-            if (!File.Exists(pathToTemplateFile))
+            Template template;
+            try
             {
-                Logger.Log(LogLevel.Error, $"Could not find template file ({TemplateFilename}) at path {rootDirectory}. " +
-                    $"Please place template at this path and try again.");
+                template = new Template(pathToTemplateFile);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(LogLevel.Error, $"Exception occured parsing template ({ex.GetType()}) at {pathToTemplateFile}.");
                 return;
             }
-
-            // Load the template
-            Template template = new Template();
-            template.Load(pathToTemplateFile);
 
             // Now loop through every folder and generate a webpage from the SCHEMA file present in the directory
             int count = 0;

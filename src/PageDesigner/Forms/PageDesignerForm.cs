@@ -1,5 +1,6 @@
 ﻿using Carpenter;
 using PageDesigner.Controls;
+using PageDesigner.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -10,6 +11,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography.Pkcs;
 using System.Text;
@@ -17,9 +19,8 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
-namespace PageDesigner
+namespace PageDesigner.Forms
 {
-    // TODO: Separate out into own form, add buttons to tool bar
     public partial class PageDesignerForm : Form
     {
         private string _workingPath;
@@ -28,18 +29,61 @@ namespace PageDesigner
         private Schema _originalSchema;
         private Template _template;
 
-        PreviewImageBox _selectedPreviewImageControl;
-        GridPictureBox _selectedGridImage;
-        Dictionary<string, Image> _previewImages = new();
-        Queue<GridPictureBox> _pictureBoxBuffer = new();
+        private PreviewImageBox _selectedPreviewImageControl;
+        private GridPictureBox _selectedGridImage;
+        private Dictionary<string, Image> _previewImages = new();
+        private Queue<GridPictureBox> _pictureBoxBuffer = new();
 
-        public PageDesignerForm(string path, Template template)
+        // TODO: DRY
+        public PageDesignerForm() 
         {
             InitializeComponent();
 
-            _workingPath = path;
-            _template = template;
+            _workingPath = Environment.CurrentDirectory;
+        }
+        public PageDesignerForm(string path, Template template) : this()
+        {
+            if (Directory.Exists(path) == false)
+            {
+                MessageBox.Show(
+                    $"Could not find path, please check and try again",
+                    "Carpenter",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
 
+            _template = template;
+            _workingPath = path;
+            this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
+        }
+        public PageDesignerForm(string path, string templatePath) : this()
+        {
+            if (Directory.Exists(path) == false || File.Exists(templatePath) == false)
+            {
+                MessageBox.Show(
+                    $"Could not find directory path or page path, please check and try again",
+                    "Carpenter",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
+            try
+            {
+                _template = new Template(templatePath);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Could not parse template ({ex.GetType()}). Check format and try again.",
+                    "Carpenter",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
+            _workingPath = path;
             this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
         }
 
@@ -59,15 +103,14 @@ namespace PageDesigner
             _modifiedSchema = new Schema();
 
             // Fill in some default values
-            // TODO: Populate from program settings
-            BaseUrlTextBox.Text = "https://matthewcarney.info";
-            PageUrlTextBox.Text = "photos/Sept-2016";
-            TitleTextBox.Text = "Donegal, Ireland";
-            LocationTextBox.Text = "Ireland";
-            MonthTextBox.Text = "September";
-            YearTextBox.Text = "2016";
-            AuthorTextBox.Text = "Matthew Carney";
-            CameraTextBox.Text = "Canon EOS 600D";
+            BaseUrlTextBox.Text = Settings.Default.BaseUrlLastUsedValue;
+            PageUrlTextBox.Text = Settings.Default.PageUrlLastUsedValue;
+            TitleTextBox.Text = Settings.Default.TitleLastUsedValue;
+            LocationTextBox.Text = Settings.Default.LocationLastUsedValue;
+            MonthTextBox.Text = Settings.Default.MonthLastUsedValue;
+            YearTextBox.Text = Settings.Default.YearLastUsedValue;
+            AuthorTextBox.Text = Settings.Default.AuthorLastUsedValue;
+            CameraTextBox.Text = Settings.Default.CameraLastUsedValue;
         }
 
         private bool LoadSchemaIfAvailable()
@@ -89,18 +132,16 @@ namespace PageDesigner
             _modifiedSchema = new Schema(_originalSchema);
 
             // Populate text fields first
-            // TODO: Store default values in a application settings somewhere
-            BaseUrlTextBox.Text = GetTokenFromSchema(Schema.Token.BaseUrl, "https://matthewcarney.info");
-            PageUrlTextBox.Text = GetTokenFromSchema(Schema.Token.PageUrl, "photos/Sept-2016");
-            TitleTextBox.Text = GetTokenFromSchema(Schema.Token.Title, "Donegal, Ireland");
-            LocationTextBox.Text = GetTokenFromSchema(Schema.Token.Location, "Ireland");
-            MonthTextBox.Text = GetTokenFromSchema(Schema.Token.Month, "September");
-            YearTextBox.Text = GetTokenFromSchema(Schema.Token.Year, "2016");
-            AuthorTextBox.Text = GetTokenFromSchema(Schema.Token.Author, "Matthew Carney");
-            CameraTextBox.Text = GetTokenFromSchema(Schema.Token.Camera, "Canon EOS 600D");
+            BaseUrlTextBox.Text = GetTokenFromSchema(Schema.Token.BaseUrl, Settings.Default.BaseUrlLastUsedValue);
+            PageUrlTextBox.Text = GetTokenFromSchema(Schema.Token.PageUrl, Settings.Default.PageUrlLastUsedValue);
+            TitleTextBox.Text = GetTokenFromSchema(Schema.Token.Title, Settings.Default.TitleLastUsedValue);
+            LocationTextBox.Text = GetTokenFromSchema(Schema.Token.Location, Settings.Default.LocationLastUsedValue);
+            MonthTextBox.Text = GetTokenFromSchema(Schema.Token.Month, Settings.Default.MonthLastUsedValue);
+            YearTextBox.Text = GetTokenFromSchema(Schema.Token.Year, Settings.Default.YearLastUsedValue);
+            AuthorTextBox.Text = GetTokenFromSchema(Schema.Token.Author, Settings.Default.AuthorLastUsedValue);
+            CameraTextBox.Text = GetTokenFromSchema(Schema.Token.Camera, Settings.Default.CameraLastUsedValue);
 
             // Populate the grid
-            // TODO: Cleanup
             foreach (ImageSection section in _modifiedSchema.ImageSections)
             {
                 Type sectionType = section.GetType();
@@ -119,7 +160,6 @@ namespace PageDesigner
                     ColumnImageSection columnSection = (ColumnImageSection)section;
                     if (columnSection == null)
                     {
-                        // TODO: Error and stuff
                         continue;
                     }
 
@@ -156,8 +196,6 @@ namespace PageDesigner
                         }
                     }
                 }
-
-                // TODO: support the text sections..
             }
 
             return true;
@@ -173,9 +211,10 @@ namespace PageDesigner
             }
             using (Image sourceImage = Image.FromFile(localImagePath)) // TODO: Cache this
             {
-
-                // TODO: This is just awful, so we hardcode the aspect ratio
-                AspectRatio ar = new AspectRatio(3, 4);//ImageUtils.CalculateAspectRatio(sourceImage);
+                // Calcuating the aspect ratio for images that have been resized is hard.
+                // The ImageUtils.CalculateAspectRatio I used produces horrible results so we hardcode the aspect ratio for now.
+                // TODO: use the actual aspect ratio of the image.
+                AspectRatio ar = new AspectRatio(1, 1);// 3, 4);//ImageUtils.CalculateAspectRatio(sourceImage);
 
                 // Find the width that we need to fit into
                 int targetWidth = GridFlowLayoutPanel.Width - 10;

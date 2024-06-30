@@ -9,12 +9,16 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using PageDesigner.Forms;
+
 using Carpenter;
 
-namespace PageDesigner.Controls
+namespace SiteViewer.Controls
 {
     public partial class PageEntry : UserControl
     {
+        private const string kPageDesignerAppName = "PageDesigner.exe";
+
         public enum Status
         {
             SUCCESS,
@@ -96,8 +100,14 @@ namespace PageDesigner.Controls
 
         private void EditButton_Click(object sender, EventArgs e)
         {
-            PageDesignerForm form = new(_directoryPath, _template);
-            form.Show();
+            //#if DEBUG
+            //PageDesignerForm form = new(_directoryPath, _template.FilePath);
+            //form.Show();
+            //#else
+            ProcessStartInfo startInfo = new(kPageDesignerAppName);
+            startInfo.Arguments = $"\"{_directoryPath}\" \"{_template.FilePath}\"";
+            Process.Start(startInfo);
+            //#endif
         }
 
         private void PreviewButton_Click(object sender, EventArgs e)
@@ -139,8 +149,14 @@ namespace PageDesigner.Controls
         // TODO: Don't repeat
         private void CreateButton_Click(object sender, EventArgs e)
         {
+#if DEBUG
             PageDesignerForm form = new(_directoryPath, _template);
             form.ShowDialog();
+#else
+
+#endif
+
+            //Process.Start(kPageDesignerAppName);
         }
     }
 }

@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Core\Carpenter.csproj" />
+    <ProjectReference Include="..\Core\Framework.csproj" />
   </ItemGroup>
 
   <ItemGroup>

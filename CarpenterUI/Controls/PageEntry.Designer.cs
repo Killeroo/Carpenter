@@ -1,4 +1,4 @@
-﻿namespace PageDesigner.Controls
+﻿namespace SiteViewer.Controls
 {
     partial class PageEntry
     {
