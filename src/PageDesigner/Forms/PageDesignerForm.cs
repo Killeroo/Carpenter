@@ -1,4 +1,5 @@
 ﻿using Carpenter;
+using JpegMetadataExtractor;
 using PageDesigner.Controls;
 using PageDesigner.Properties;
 using System;
@@ -35,7 +36,7 @@ namespace PageDesigner.Forms
         private Queue<GridPictureBox> _pictureBoxBuffer = new();
 
         // TODO: DRY
-        public PageDesignerForm() 
+        public PageDesignerForm()
         {
             InitializeComponent();
 
@@ -500,6 +501,7 @@ namespace PageDesigner.Forms
             return _modifiedSchema.TokenValues[token];
         }
 
+        List<RawImageMetadata> data = new(); // REMOVE THIS
         private void LoadAvailableImagePreviews()
         {
             if (string.IsNullOrEmpty(_workingPath) || Directory.Exists(_workingPath) == false)
@@ -514,12 +516,50 @@ namespace PageDesigner.Forms
             }
 
             // TODO: Thread
+            //foreach (string imagePath in imageFilesAtPath)
+            //{
+            //    data.Add(JpegParser.GetRawMetadata(imagePath));
+
+            //    using (Image previewImage = Image.FromStream(new MemoryStream(data[data.Count - 1].ThumbnailData)))
+            //    {
+            //        // TODO: Wish we didn't have to force aspectratio but CalculateAspectRatio is broken
+            //        //AspectRatio ar = new AspectRatio(3, 4);//ImageUtils.CalculateAspectRatio(originalImage);
+
+            //        //int desiredWidth = 120;
+            //        //int desiredHeight = ar.CalculateHeight(desiredWidth);
+
+            //        //// TODO: Use DrawImage to properly resize
+            //        //Image previewImage2 = previewImage.GetThumbnailImage(desiredWidth, desiredHeight, () => false, IntPtr.Zero);
+
+            //        var width = previewImage.Width;
+            //        _previewImages.Add(Path.GetFileName(imagePath), previewImage);
+
+            //        //_previewImages.Add(Path.GetFileName(imagePath), previewImage2);
+
+            //        // Cache in temp directory
+            //        // TODO: Fix with aspect ratio
+            //        PreviewImageBox previewImageBox = new PreviewImageBox(
+            //            Path.GetFileName(imagePath), previewImage);
+            //        //FetchOrCatchPreviewImage(Path.GetFileName(filename), inputtedPath));  //
+
+            //        //previewImageBox.MouseClick += ImagePreviewFlowLayoutPanel_MouseClick;
+            //        previewImageBox.ControlClicked += ImagePreviewFlowLayoutPanel_Control_Clicked;
+            //        previewImageBox.ControlDoubleClicked += ImagePreviewFlowLayoutPanel_Control_DoubleClicked;
+            //        previewImageBox.AddContextItemClicked += ImagePreviewFlowLayoutPanel_Control_DoubleClicked;
+            //        previewImageBox.InsertContextItemClicked += ImagePreviewFlowPanel_InsertContextItem_Clicked;
+            //        previewImageBox.ReplaceContextItemClicked += ImagePreviewFlowPanel_ReplaceContextItem_Clicked;
+
+            //        ImagePreviewFlowLayoutPanel.Controls.Add(previewImageBox);
+            //    }
+
+
             foreach (string imagePath in imageFilesAtPath)
             {
+                // TODO: Use as fallback
                 using (Image originalImage = Image.FromFile(imagePath))
                 {
                     // TODO: Wish we didn't have to force aspectratio but CalculateAspectRatio is broken
-                    AspectRatio ar = new AspectRatio(3, 4);//ImageUtils.CalculateAspectRatio(originalImage);
+                    AspectRatio ar = new AspectRatio(1, 1);//ImageUtils.CalculateAspectRatio(originalImage);
 
                     int desiredWidth = 120;
                     int desiredHeight = ar.CalculateHeight(desiredWidth);
@@ -932,6 +972,36 @@ namespace PageDesigner.Forms
                 MessageBoxButtons.YesNo);
 
             return result == DialogResult.Yes;
+        }
+
+        private void newToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void openToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void webpageToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void previewToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

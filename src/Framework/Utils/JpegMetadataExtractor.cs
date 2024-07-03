@@ -234,6 +234,9 @@ namespace JpegMetadataExtractor
         public const ushort ModifyDate = 0x0132;
         public const ushort Copyright = 0x8298;
         public const ushort Artist = 0x013B;
+        public const ushort Compression = 0x0103;
+        public const ushort ThumbnailLocation = 0x0201;
+        public const ushort ThumbnailLength = 0x0202;
     }
 
     /// <summary>
@@ -574,9 +577,9 @@ namespace JpegMetadataExtractor
     /// <summary>
     /// The main Jpeg parsing class, capable of extracting different formats of metadata from a file.
     /// </summary>
-    /// <see cref="GetMetadata(string)"/>
-    /// <see cref="GetRawMetadata(string)"/>
-    /// <see cref="GetExifTags(string)"/>
+    /// <see cref="JpegParser.GetMetadata(string)"/>
+    /// <see cref="JpegParser.GetRawMetadata(string)"/>
+    /// <see cref="JpegParser.GetExifTags(string)"/>
     public static class JpegParser
     {
         // Segment types
@@ -680,11 +683,9 @@ namespace JpegMetadataExtractor
                 _cache.Clear();
             }
 
-            public int Capacity
-            {
+            public int Capacity {
                 get => _maxCacheSize;
-                set
-                {
+                set {
                     _maxCacheSize = value;
 
                     if (_maxCacheSize == 0)
@@ -713,7 +714,7 @@ namespace JpegMetadataExtractor
                     return _cache[key];
                 }
 
-                return default;
+                return default(T);
             }
 
             public void Add(string key, T @object)
@@ -1182,8 +1183,8 @@ namespace JpegMetadataExtractor
                 throw new ExifParsingException("Did not recognise Tiff byte alignment");
             }
             ushort byteAlignmentTest = reader.ReadUInt16();
-            if (byteAlignment == kTiffIntelAligned && byteAlignmentTest != 0x2A00
-                && byteAlignment == kTiffMotorolaAligned && byteAlignmentTest != 0x002A)
+            if ((byteAlignment == kTiffIntelAligned && byteAlignmentTest != 0x2A00)
+                && (byteAlignment == kTiffMotorolaAligned && byteAlignmentTest != 0x002A))
             {
                 throw new ExifParsingException("Tiff byte alignment test failed");
             }
@@ -1237,7 +1238,7 @@ namespace JpegMetadataExtractor
             {
                 // Look up and store the image exif data
                 Dictionary<ushort, ExifEntry> exifEntries = new Dictionary<ushort, ExifEntry>();
-                foreach (var tiffEntry in imageEntries)
+                foreach (var tiffEntry in entries)
                 {
                     int exifDataLength = (int)tiffEntry.Count * ExifEntry.TypeSizeMap[(ExifType)tiffEntry.Type];
 
@@ -1270,6 +1271,20 @@ namespace JpegMetadataExtractor
             // Resolve and store the exif entries 
             outMetadata.ExifImageEntries = ResolveTiffEntries(imageEntries);
             outMetadata.ExifThumbnailEntries = ResolveTiffEntries(thumbnailEntries);
+
+            // Whats this? I sniff an embedded preview thumbnail...
+            if (outMetadata.ExifThumbnailEntries.ContainsKey(ExifTags.ThumbnailLocation) &&
+                outMetadata.ExifThumbnailEntries.ContainsKey(ExifTags.ThumbnailLength))
+            {
+                long offset = outMetadata.ExifThumbnailEntries[ExifTags.ThumbnailLocation].GetValueAsULong();
+                long length = outMetadata.ExifThumbnailEntries[ExifTags.ThumbnailLength].GetValueAsULong();
+
+                outMetadata.ThumbnailData = new byte[length];
+                reader.BaseStream.Seek(tiffOffset + offset, SeekOrigin.Begin);
+                outMetadata.ThumbnailData = reader.ReadBytes((int)length);
+
+                LogMessage("EXIF", "Read thumbnail data [Len={0} Offset={1}] ", length, offset);
+            }
         }
 
         /// <summary>
