@@ -413,8 +413,8 @@ namespace Carpenter
 
         private int ParseTillElementEnds(int startIndex, string elementIdentifier)
         {
-            // Keep track of each element we encounter, what element it was an where we found it
-            // so that we avoid thinking that out element has ended when it was infact the terminator
+            // Keep track of each element we encounter, what element it was and where we found it
+            // so that we avoid thinking that our element has ended when it was infact the terminator
             // for a nested element
             Dictionary<int, string> duplicateElementTracker = new Dictionary<int, string>();
 

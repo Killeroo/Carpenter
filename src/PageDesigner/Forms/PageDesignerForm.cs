@@ -22,18 +22,79 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace PageDesigner.Forms
 {
+
+
+    public class ChangesStack<T> where T : class
+    {
+        private List<T> _changes;
+        private int _current = 0;
+        private int _head = 0;
+
+        public ChangesStack()
+        {
+            _changes = new List<T>();
+        }
+
+        public void Commit(T change)
+        {
+            if (change == GetCurrentChange())
+            {
+                return;
+            }
+
+            if (_current != _head)
+            {
+                _changes.RemoveRange(_current, _head - _current);
+            }
+
+            _changes.Add(change);
+            _head = _current = _changes.Count - 1;
+        }
+
+        public T GetCurrentChange()
+        {
+            if (_changes.Count == 0)
+            {
+                return null;
+            }
+
+            return _changes[_current];
+        }
+
+        public T Undo()
+        {
+            _current = Math.Max(--_current, 0);
+            return _changes[_current];
+        }
+
+        public T Redo()
+        {
+            _current = Math.Min(++_current, _head);
+            return _changes[_current];
+        }
+
+        public void Reset()
+        {
+            _changes.Clear();
+            _current = _head = 0;
+        }
+    }
+
     public partial class PageDesignerForm : Form
     {
+        private const string kUnsavedTitleString = " *";
+
         private string _workingPath;
         private string _schemaPath;
-        private Schema _modifiedSchema;
-        private Schema _originalSchema;
+        private Schema _workingSchema;
+        private Schema _savedSchema;
         private Template _template;
 
         private PreviewImageBox _selectedPreviewImageControl;
         private GridPictureBox _selectedGridImage;
         private Dictionary<string, Image> _previewImages = new();
         private Queue<GridPictureBox> _pictureBoxBuffer = new();
+        private ChangesStack<Schema> _schemaChanges = new();
 
         // TODO: DRY
         public PageDesignerForm()
@@ -85,25 +146,15 @@ namespace PageDesigner.Forms
             }
 
             _workingPath = path;
-            this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
         }
 
-        private void PageDesignerForm_Load(object sender, EventArgs e)
+        private void ResetForm()
         {
-            if (LoadSchemaIfAvailable() == false)
-            {
-                SetupBlankSchema();
-            }
+            RemoveTextboxCallbacks();
+            _savedSchema = new Schema();
+            _workingSchema = new Schema();
+            _schemaChanges.Reset();
 
-            LoadAvailableImagePreviews();
-        }
-
-        private void SetupBlankSchema()
-        {
-            _originalSchema = new Schema();
-            _modifiedSchema = new Schema();
-
-            // Fill in some default values
             BaseUrlTextBox.Text = Settings.Default.BaseUrlLastUsedValue;
             PageUrlTextBox.Text = Settings.Default.PageUrlLastUsedValue;
             TitleTextBox.Text = Settings.Default.TitleLastUsedValue;
@@ -112,94 +163,150 @@ namespace PageDesigner.Forms
             YearTextBox.Text = Settings.Default.YearLastUsedValue;
             AuthorTextBox.Text = Settings.Default.AuthorLastUsedValue;
             CameraTextBox.Text = Settings.Default.CameraLastUsedValue;
+
+            GridFlowLayoutPanel.Controls.Clear();
+            ImagePreviewFlowLayoutPanel.Controls.Clear();
+            AddTextboxCallbacks();
         }
 
-        private bool LoadSchemaIfAvailable()
+        private void CreateBlankForm()
         {
-            _schemaPath = Path.Combine(_workingPath, "SCHEMA");
-            if (File.Exists(_schemaPath) == false)
+            ResetForm();
+            LoadAvailableImagePreviews();
+            SignalSchemaChange();
+            this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
+        }
+
+        private bool LoadSchemaFromFile(string path)
+        {
+            string schemaPath = Path.Combine(path, "SCHEMA");
+            if (File.Exists(schemaPath) == false)
             {
                 return false;
             }
 
-            _originalSchema = new Schema();
-            if (_originalSchema.Load(_schemaPath) == false)
+            Schema schema = new Schema();
+            if (schema.Load(schemaPath) == false)
             {
                 // TODO: Raise an error or something
                 return false;
             }
 
-            // Create a copy to actually work on
-            _modifiedSchema = new Schema(_originalSchema);
+            // Clear any old data before continuing
+            ResetForm();
 
-            // Populate text fields first
-            BaseUrlTextBox.Text = GetTokenFromSchema(Schema.Token.BaseUrl, Settings.Default.BaseUrlLastUsedValue);
-            PageUrlTextBox.Text = GetTokenFromSchema(Schema.Token.PageUrl, Settings.Default.PageUrlLastUsedValue);
-            TitleTextBox.Text = GetTokenFromSchema(Schema.Token.Title, Settings.Default.TitleLastUsedValue);
-            LocationTextBox.Text = GetTokenFromSchema(Schema.Token.Location, Settings.Default.LocationLastUsedValue);
-            MonthTextBox.Text = GetTokenFromSchema(Schema.Token.Month, Settings.Default.MonthLastUsedValue);
-            YearTextBox.Text = GetTokenFromSchema(Schema.Token.Year, Settings.Default.YearLastUsedValue);
-            AuthorTextBox.Text = GetTokenFromSchema(Schema.Token.Author, Settings.Default.AuthorLastUsedValue);
-            CameraTextBox.Text = GetTokenFromSchema(Schema.Token.Camera, Settings.Default.CameraLastUsedValue);
+            // We are passed the point where loading could fail, setup the page for displaying the schema
+            _workingPath = path;
+            _schemaPath = schemaPath;
+            _savedSchema = schema;
+            _workingSchema = new Schema(_savedSchema);
 
-            // Populate the grid
-            foreach (ImageSection section in _modifiedSchema.ImageSections)
+            UpdateFormFromSchema();
+
+            // Load available images in the directory
+            LoadAvailableImagePreviews();
+
+            this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
+
+            return true;
+        }
+
+        private void AddTextboxCallbacks()
+        {
+            //PreviewImageTextBox.TextChanged += FormTextBox_TextChanged;
+            //DetailedImageTextBox.TextChanged += FormTextBox_TextChanged;
+            PageUrlTextBox.TextChanged += FormTextBox_TextChanged;
+            TitleTextBox.TextChanged += FormTextBox_TextChanged;
+            BaseUrlTextBox.TextChanged += FormTextBox_TextChanged;
+            LocationTextBox.TextChanged += FormTextBox_TextChanged;
+            MonthTextBox.TextChanged += FormTextBox_TextChanged;
+            YearTextBox.TextChanged += FormTextBox_TextChanged;
+            AuthorTextBox.TextChanged += FormTextBox_TextChanged;
+            CameraTextBox.TextChanged += FormTextBox_TextChanged;
+        }
+
+        private void RemoveTextboxCallbacks()
+        {
+            //PreviewImageTextBox.TextChanged -= FormTextBox_TextChanged;
+            //DetailedImageTextBox.TextChanged -= FormTextBox_TextChanged;
+            PageUrlTextBox.TextChanged -= FormTextBox_TextChanged;
+            TitleTextBox.TextChanged -= FormTextBox_TextChanged;
+            BaseUrlTextBox.TextChanged -= FormTextBox_TextChanged;
+            LocationTextBox.TextChanged -= FormTextBox_TextChanged;
+            MonthTextBox.TextChanged -= FormTextBox_TextChanged;
+            YearTextBox.TextChanged -= FormTextBox_TextChanged;
+            AuthorTextBox.TextChanged -= FormTextBox_TextChanged;
+            CameraTextBox.TextChanged -= FormTextBox_TextChanged;
+        }
+
+        private void SaveSchemaToFile()
+        {
+            if (_savedSchema != null && _workingSchema == _savedSchema)
             {
-                Type sectionType = section.GetType();
-                if (sectionType == typeof(StandaloneImageSection))
+                return;
+            }
+
+            UpdateSchemaFromForm();
+
+            if (File.Exists(_schemaPath))
+            {
+                if (ShowConfirmSaveDialog() == false)
                 {
-                    StandaloneImageSection? standaloneSection = section as StandaloneImageSection;
-                    if (standaloneSection != null)
-                    {
-                        string fileName = standaloneSection.PreviewImage;
-
-                        AddLocalImageToGridLayout(standaloneSection.PreviewImage, standaloneSection.DetailedImage, true);
-                    }
-                }
-                else if (sectionType == typeof(ColumnImageSection))
-                {
-                    ColumnImageSection columnSection = (ColumnImageSection)section;
-                    if (columnSection == null)
-                    {
-                        continue;
-                    }
-
-                    if (_pictureBoxBuffer.Count > 0)
-                    {
-                        foreach (StandaloneImageSection standaloneImage in columnSection.Sections)
-                        {
-                            GridPictureBox pictureBox = null;
-                            if (_pictureBoxBuffer.Count > 0)
-                            {
-                                pictureBox = _pictureBoxBuffer.Dequeue();
-                            }
-
-                            AddLocalImageToGridLayout(standaloneImage.PreviewImage, standaloneImage.DetailedImage, false, pictureBox);
-                        }
-
-                        // Clear anything left in the buffer (this isn't great)
-                        _pictureBoxBuffer.Clear();
-                    }
-                    else
-                    {
-                        foreach (StandaloneImageSection standaloneImage in columnSection.Sections)
-                        {
-                            if (standaloneImage != null)
-                            {
-                                AddLocalImageToGridLayout(standaloneImage.PreviewImage, standaloneImage.DetailedImage, false);
-
-                                // Add the picturebox for the other column items
-                                GridPictureBox pictureBox = new();
-                                pictureBox.SizeMode = PictureBoxSizeMode.AutoSize;
-                                GridFlowLayoutPanel.Controls.Add(pictureBox);
-                                _pictureBoxBuffer.Enqueue(pictureBox);
-                            }
-                        }
-                    }
+                    return;
                 }
             }
 
-            return true;
+            if (_workingSchema.Save(Path.GetDirectoryName(_schemaPath)))
+            {
+                MessageBox.Show("Schema successfully saved.", "File saved");
+            }
+
+            this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
+        }
+
+        private void SignalSchemaChange()
+        {
+            if (_workingSchema == _schemaChanges.GetCurrentChange())
+            {
+                return;
+            }
+
+            UpdateSchemaFromForm();
+            _schemaChanges.Commit(new Schema(_workingSchema));
+            if (this.Text.Contains(kUnsavedTitleString) == false)
+                this.Text += kUnsavedTitleString;
+        }
+
+        private void UndoSchemaChanges()
+        {
+            Schema lastSchemaChange = new Schema(_schemaChanges.Undo());
+            if (lastSchemaChange != _workingSchema)
+            {
+                _workingSchema = lastSchemaChange;
+                UpdateFormFromSchema();
+
+                // Remove unsaved character from title bar if we are at parity with the last saved schema
+                if (_workingSchema == _savedSchema)
+                {
+                    this.Text = this.Text.Replace(kUnsavedTitleString, "");
+                }
+            }
+        }
+
+        private void RedoSchemaChanges()
+        {
+            Schema schemaChange = new Schema(_schemaChanges.Redo());
+            if (schemaChange != _workingSchema)
+            {
+                _workingSchema = schemaChange;
+                UpdateFormFromSchema();
+
+                // Remove unsaved character from title bar if we are at parity with the last saved schema
+                if (_workingSchema == _savedSchema)
+                {
+                    this.Text = this.Text.Replace(kUnsavedTitleString, "");
+                }
+            }
         }
 
         private Image LoadImage(string imageName, bool standalone)
@@ -400,403 +507,60 @@ namespace PageDesigner.Forms
             }
         }
 
-        private void GridPictureBox_SwapMenuItemClicked(object? sender, EventArgs e)
-        {
-            if (sender is GridPictureBox currentGridPictureBox)
-            {
-                if (_selectedGridImage == null)
-                {
-                    return;
-                }
-
-                Image image = _selectedGridImage.Image;
-                string previewImageName = _selectedGridImage.PreviewImageName;
-                string detailedImageName = _selectedGridImage.DetailedImageName;
-                bool standalone = _selectedGridImage.IsStandaloneImage();
-
-                _selectedGridImage.SetImage(
-                    currentGridPictureBox.Image,
-                    currentGridPictureBox.PreviewImageName,
-                    currentGridPictureBox.DetailedImageName,
-                    currentGridPictureBox.IsStandaloneImage());
-
-                currentGridPictureBox.SetImage(
-                    image,
-                    previewImageName,
-                    detailedImageName,
-                    standalone);
-
-            }
-        }
-
-        private void GridPictureBox_StandaloneMenuItemClicked(object? sender, EventArgs e)
-        {
-            if (sender is GridPictureBox gridPictureBox)
-            {
-                bool newStandaloneValue = !gridPictureBox.IsStandaloneImage();
-
-                UpdateGridPictureBox(gridPictureBox, gridPictureBox.PreviewImageName, gridPictureBox.DetailedImageName, newStandaloneValue);
-                gridPictureBox.SetStandaloneImage(newStandaloneValue);
-            }
-        }
-
-        private void GridPictureBox_RemoveMenuItemClicked(object? sender, EventArgs e)
-        {
-            if (sender is GridPictureBox gridPictureBox)
-            {
-                GridFlowLayoutPanel.Controls.Remove(gridPictureBox);
-            }
-        }
-
-        private void GridPictureBox_Click(object? sender, EventArgs e)
-        {
-            if (sender is GridPictureBox gridPictureBox)
-            {
-                // Update currently selected image
-                if (_selectedGridImage != null)
-                {
-                    //_selectedGridImage.BackColor = Color.LightGray;
-                    //_selectedGridImage.BorderStyle = BorderStyle.None;
-
-                    _selectedGridImage.Invalidate();
-                }
-                _selectedGridImage = gridPictureBox;
-
-                // Retrieve details from selected image
-                PreviewImageTextBox.Text = gridPictureBox.PreviewImageName;
-                DetailedImageTextBox.Text = gridPictureBox.DetailedImageName;
-
-                // Highlight image
-                //gridPictureBox.BorderStyle = BorderStyle.FixedSingle;
-                //gridPictureBox.BackColor = Color.Blue;
-
-                gridPictureBox.Invalidate();
-            }
-        }
-
-        private void GridPictureBox_Paint(object? sender, PaintEventArgs e)
-        {
-
-            if (sender is GridPictureBox gridPictureBox)
-            {
-                if (gridPictureBox == _selectedGridImage)
-                {
-                    //Rectangle rect = new Rectangle()
-                    using (Brush b = new SolidBrush(Color.FromArgb(100, Color.Blue)))
-                    {
-                        e.Graphics.FillRectangle(b, gridPictureBox.DisplayRectangle);
-                    }
-
-                }
-            }
-        }
-
         private string GetTokenFromSchema(Schema.Token token, string defaultValue)
         {
-            if (_modifiedSchema == null || _modifiedSchema.TokenValues.ContainsKey(token) == false)
+            if (_workingSchema == null || _workingSchema.TokenValues.ContainsKey(token) == false)
             {
                 return defaultValue;
             }
 
-            return _modifiedSchema.TokenValues[token];
+            return _workingSchema.TokenValues[token];
         }
 
-        List<RawImageMetadata> data = new(); // REMOVE THIS
-        private void LoadAvailableImagePreviews()
-        {
-            if (string.IsNullOrEmpty(_workingPath) || Directory.Exists(_workingPath) == false)
-            {
-                return;
-            }
-
-            string[] imageFilesAtPath = Directory.GetFiles(_workingPath, "*.jpg");
-            if (imageFilesAtPath.Length == 0)
-            {
-                return;
-            }
-
-            // TODO: Thread
-            //foreach (string imagePath in imageFilesAtPath)
-            //{
-            //    data.Add(JpegParser.GetRawMetadata(imagePath));
-
-            //    using (Image previewImage = Image.FromStream(new MemoryStream(data[data.Count - 1].ThumbnailData)))
-            //    {
-            //        // TODO: Wish we didn't have to force aspectratio but CalculateAspectRatio is broken
-            //        //AspectRatio ar = new AspectRatio(3, 4);//ImageUtils.CalculateAspectRatio(originalImage);
-
-            //        //int desiredWidth = 120;
-            //        //int desiredHeight = ar.CalculateHeight(desiredWidth);
-
-            //        //// TODO: Use DrawImage to properly resize
-            //        //Image previewImage2 = previewImage.GetThumbnailImage(desiredWidth, desiredHeight, () => false, IntPtr.Zero);
-
-            //        var width = previewImage.Width;
-            //        _previewImages.Add(Path.GetFileName(imagePath), previewImage);
-
-            //        //_previewImages.Add(Path.GetFileName(imagePath), previewImage2);
-
-            //        // Cache in temp directory
-            //        // TODO: Fix with aspect ratio
-            //        PreviewImageBox previewImageBox = new PreviewImageBox(
-            //            Path.GetFileName(imagePath), previewImage);
-            //        //FetchOrCatchPreviewImage(Path.GetFileName(filename), inputtedPath));  //
-
-            //        //previewImageBox.MouseClick += ImagePreviewFlowLayoutPanel_MouseClick;
-            //        previewImageBox.ControlClicked += ImagePreviewFlowLayoutPanel_Control_Clicked;
-            //        previewImageBox.ControlDoubleClicked += ImagePreviewFlowLayoutPanel_Control_DoubleClicked;
-            //        previewImageBox.AddContextItemClicked += ImagePreviewFlowLayoutPanel_Control_DoubleClicked;
-            //        previewImageBox.InsertContextItemClicked += ImagePreviewFlowPanel_InsertContextItem_Clicked;
-            //        previewImageBox.ReplaceContextItemClicked += ImagePreviewFlowPanel_ReplaceContextItem_Clicked;
-
-            //        ImagePreviewFlowLayoutPanel.Controls.Add(previewImageBox);
-            //    }
-
-
-            foreach (string imagePath in imageFilesAtPath)
-            {
-                // TODO: Use as fallback
-                using (Image originalImage = Image.FromFile(imagePath))
-                {
-                    // TODO: Wish we didn't have to force aspectratio but CalculateAspectRatio is broken
-                    AspectRatio ar = new AspectRatio(1, 1);//ImageUtils.CalculateAspectRatio(originalImage);
-
-                    int desiredWidth = 120;
-                    int desiredHeight = ar.CalculateHeight(desiredWidth);
-
-                    // TODO: Use DrawImage to properly resize
-                    Image previewImage = originalImage.GetThumbnailImage(desiredWidth, desiredHeight, () => false, IntPtr.Zero);
-
-                    _previewImages.Add(Path.GetFileName(imagePath), previewImage);
-
-                    // Cache in temp directory
-                    // TODO: Fix with aspect ratio
-                    PreviewImageBox previewImageBox = new PreviewImageBox(
-                        Path.GetFileName(imagePath), previewImage);
-                    //FetchOrCatchPreviewImage(Path.GetFileName(filename), inputtedPath));  //
-
-                    //previewImageBox.MouseClick += ImagePreviewFlowLayoutPanel_MouseClick;
-                    previewImageBox.ControlClicked += ImagePreviewFlowLayoutPanel_Control_Clicked;
-                    previewImageBox.ControlDoubleClicked += ImagePreviewFlowLayoutPanel_Control_DoubleClicked;
-                    previewImageBox.AddContextItemClicked += ImagePreviewFlowLayoutPanel_Control_DoubleClicked;
-                    previewImageBox.InsertContextItemClicked += ImagePreviewFlowPanel_InsertContextItem_Clicked;
-                    previewImageBox.ReplaceContextItemClicked += ImagePreviewFlowPanel_ReplaceContextItem_Clicked;
-
-                    ImagePreviewFlowLayoutPanel.Controls.Add(previewImageBox);
-                }
-            }
-        }
-
-        private void ImagePreviewFlowLayoutPanel_Control_Clicked(object? sender, ImageEventArgs e)
-        {
-
-            if (sender is PreviewImageBox previewImageControl)
-            {
-                UpdateSelectedPreviewPictureControl(previewImageControl);
-            }
-        }
-
-        private void ImagePreviewFlowPanel_InsertContextItem_Clicked(object? sender, ImageEventArgs e)
-        {
-            List<Control> newControlCollection = new();
-
-            foreach (Control control in GridFlowLayoutPanel.Controls)
-            {
-                if (control is GridPictureBox pictureBox)
-                {
-                    newControlCollection.Add(control);
-
-                    if (control == _selectedGridImage)
-                    {
-                        GridPictureBox newPictureBox = CreateGridPictureBox(
-                            TEMP_CreatePreviewImageName(e.ImageName),
-                            TEMP_CreateDetailedImageName(e.ImageName),
-                            false);
-                        newControlCollection.Add(newPictureBox);
-                    }
-                }
-            }
-
-            GridFlowLayoutPanel.Controls.Clear();
-            GridFlowLayoutPanel.Controls.AddRange(newControlCollection.ToArray());
-        }
-
-        // TODO: No, remove this, handle preview and detailed images better than hack hardcoding them
-        private string TEMP_CreateDetailedImageName(string originalName)
-        {
-            //if (originalName.Contains('_') == false)
-            //{
-            //    return $"{originalName}_Detailed";
-            //}
-            //else
-            //{
-            //    return $"{originalName.Split('_').Last()}_Detailed";
-
-            //}
-
-            // LOL
-            return originalName;
-
-        }
-
-        private string TEMP_CreatePreviewImageName(string originalName)
-        {
-
-
-            return originalName;
-            //if (originalName.Contains('_') == false)
-            //{
-            //    return $"{originalName}_Preview";
-            //}
-            //else
-            //{
-            //    return $"{originalName.Split('_').Last()}_Preview";
-
-            //}
-
-        }
-
-        private void UpdateSelectedPreviewPictureControl(PreviewImageBox previewImageControl)
-        {
-            if (previewImageControl == null)
-            {
-                return;
-            }
-
-            if (_selectedPreviewImageControl != null)
-            {
-                _selectedPreviewImageControl.BackColor = BackColor;
-                _selectedPreviewImageControl.SetSelected(false);
-                _selectedPreviewImageControl.Invalidate();
-            }
-
-            previewImageControl.SetSelected(true);
-            previewImageControl.Invalidate();
-
-
-            _selectedPreviewImageControl = previewImageControl;
-        }
-
-        private void ImagePreviewFlowLayoutPanel_Control_DoubleClicked(object? sender, ImageEventArgs e)
-        {
-            string imageName = e.ImageName;
-
-            if (sender is PreviewImageBox previewImageControl)
-            {
-                UpdateSelectedPreviewPictureControl(previewImageControl);
-
-
-
-                AddLocalImageToGridLayout(imageName, imageName, false);
-
-
-                //// Load the preview straight into the flow panel
-                //if (_previewImages.ContainsKey(imageName))
-                //{
-                //    PictureBox picture = new();
-                //    picture.Image = _previewImages[imageName];
-                //    // picture.Size = new Size(picture.Width, picture.Height);
-                //    picture.SizeMode = PictureBoxSizeMode.AutoSize;
-                //    GridFlowLayoutPanel.Controls.Add(picture);
-
-                //    _lastControlInGrid = picture;
-                //}
-            }
-        }
-
-        private void ImagePreviewFlowPanel_AddContextItem_Clicked(object? sender, ImageEventArgs e)
-        {
-
-        }
-
-        private void ImagePreviewFlowPanel_ReplaceContextItem_Clicked(object? sender, ImageEventArgs e)
-        {
-            if (sender is PreviewImageBox previewImageControl)
-            {
-                if (_selectedGridImage == null)
-                {
-                    return;
-                }
-
-                Image image = LoadImage(previewImageControl.GetImageName(), _selectedGridImage.IsStandaloneImage());
-                if (image == null)
-                {
-                    // TODO: Show error
-                    return;
-                }
-
-                _selectedGridImage.SetImage(
-                    image,
-                    TEMP_CreatePreviewImageName(previewImageControl.GetImageName()),
-                    TEMP_CreateDetailedImageName(previewImageControl.GetImageName()),
-                    _selectedGridImage.IsStandaloneImage());
-
-            }
-        }
-
-        private void ImagePreviewFlowLayoutPanel_Click(object sender, EventArgs e)
-        {
-            if (_selectedPreviewImageControl != null)
-            {
-                _selectedPreviewImageControl.BackColor = BackColor;
-            }
-        }
-
-        private void PreviewButton_Click(object sender, EventArgs e)
-        {
-
-
-
-            GeneratePreview();
-
-        }
-
-
-        // TODO: Move to utils 
         private void UpdateSchemaFromForm()
         {
-            if (_modifiedSchema == null)
+            if (_workingSchema == null)
             {
                 return;
             }
 
             // Update tokens values from page
-            _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.BaseUrl, BaseUrlTextBox.Text);
-            _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.PageUrl, PageUrlTextBox.Text);
-            _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.Title, TitleTextBox.Text);
-            _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.Location, LocationTextBox.Text);
-            _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.Month, MonthTextBox.Text);
-            _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.Year, YearTextBox.Text);
-            _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.Author, AuthorTextBox.Text);
-            _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.Camera, CameraTextBox.Text);
+            _workingSchema.TokenValues.AddOrUpdate(Schema.Token.BaseUrl, BaseUrlTextBox.Text);
+            _workingSchema.TokenValues.AddOrUpdate(Schema.Token.PageUrl, PageUrlTextBox.Text);
+            _workingSchema.TokenValues.AddOrUpdate(Schema.Token.Title, TitleTextBox.Text);
+            _workingSchema.TokenValues.AddOrUpdate(Schema.Token.Location, LocationTextBox.Text);
+            _workingSchema.TokenValues.AddOrUpdate(Schema.Token.Month, MonthTextBox.Text);
+            _workingSchema.TokenValues.AddOrUpdate(Schema.Token.Year, YearTextBox.Text);
+            _workingSchema.TokenValues.AddOrUpdate(Schema.Token.Author, AuthorTextBox.Text);
+            _workingSchema.TokenValues.AddOrUpdate(Schema.Token.Camera, CameraTextBox.Text);
 
             // Copy or add class id and option base values
-            if (_originalSchema.TokenValues != _modifiedSchema.TokenValues && _originalSchema.TokenValues.Count != 0)
+            if (_savedSchema.TokenValues != _workingSchema.TokenValues && _savedSchema.TokenValues.Count != 0)
             {
                 // TODO: HACK: Copy values from original (WHICH WON'T ALWAYS EXIST)
-                _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageColumn, _originalSchema.TokenValues[Schema.Token.ClassIdImageColumn]);
-                _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageElement, _originalSchema.TokenValues[Schema.Token.ClassIdImageElement]);
-                _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageGrid, _originalSchema.TokenValues[Schema.Token.ClassIdImageGrid]);
-                _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageTitle, _originalSchema.TokenValues[Schema.Token.ClassIdImageTitle]);
+                _workingSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageColumn, _savedSchema.TokenValues[Schema.Token.ClassIdImageColumn]);
+                _workingSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageElement, _savedSchema.TokenValues[Schema.Token.ClassIdImageElement]);
+                _workingSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageGrid, _savedSchema.TokenValues[Schema.Token.ClassIdImageGrid]);
+                _workingSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageTitle, _savedSchema.TokenValues[Schema.Token.ClassIdImageTitle]);
             }
             else
             {
                 // Create some default values
                 // TODO: Have these set via a form on the main form or have them stored somewhere else
-                _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageColumn, "photo_column");
-                _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageElement, "photo_image");
-                _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageGrid, "photo_grid");
-                _modifiedSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageTitle, "photo_title");
+                _workingSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageColumn, "photo_column");
+                _workingSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageElement, "photo_image");
+                _workingSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageGrid, "photo_grid");
+                _workingSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageTitle, "photo_title");
             }
 
-            if (_originalSchema.OptionValues != _modifiedSchema.OptionValues)
+            if (_savedSchema.OptionValues != _workingSchema.OptionValues)
             {
                 // TODO: Have these set via a form on the main form or have them stored somewhere else
-                _modifiedSchema.OptionValues = _originalSchema.OptionValues;
+                _workingSchema.OptionValues = _savedSchema.OptionValues;
             }
             else
             {
-                _modifiedSchema.OptionValues.AddOrUpdate(Schema.Option.OutputFilename, "index.html");
+                _workingSchema.OptionValues.AddOrUpdate(Schema.Option.OutputFilename, "index.html");
             }
 
             // Parse grid layout
@@ -846,13 +610,89 @@ namespace PageDesigner.Forms
             }
             TryAddColumnsBuffer(ref columnsBuffer, ref sections);
 
-            _modifiedSchema.ImageSections = sections;
+            _workingSchema.ImageSections = sections;
+        }
+        
+        // TODO: Don't update if they haven't changed
+        private void UpdateFormFromSchema()
+        {
+            RemoveTextboxCallbacks();
+
+            // Populate text fields first
+            BaseUrlTextBox.Text = GetTokenFromSchema(Schema.Token.BaseUrl, Settings.Default.BaseUrlLastUsedValue);
+            PageUrlTextBox.Text = GetTokenFromSchema(Schema.Token.PageUrl, Settings.Default.PageUrlLastUsedValue);
+            TitleTextBox.Text = GetTokenFromSchema(Schema.Token.Title, Settings.Default.TitleLastUsedValue);
+            LocationTextBox.Text = GetTokenFromSchema(Schema.Token.Location, Settings.Default.LocationLastUsedValue);
+            MonthTextBox.Text = GetTokenFromSchema(Schema.Token.Month, Settings.Default.MonthLastUsedValue);
+            YearTextBox.Text = GetTokenFromSchema(Schema.Token.Year, Settings.Default.YearLastUsedValue);
+            AuthorTextBox.Text = GetTokenFromSchema(Schema.Token.Author, Settings.Default.AuthorLastUsedValue);
+            CameraTextBox.Text = GetTokenFromSchema(Schema.Token.Camera, Settings.Default.CameraLastUsedValue);
+
+            // Populate the grid
+            GridFlowLayoutPanel.Controls.Clear();
+            foreach (ImageSection section in _workingSchema.ImageSections)
+            {
+                Type sectionType = section.GetType();
+                if (sectionType == typeof(StandaloneImageSection))
+                {
+                    StandaloneImageSection? standaloneSection = section as StandaloneImageSection;
+                    if (standaloneSection != null)
+                    {
+                        string fileName = standaloneSection.PreviewImage;
+
+                        AddLocalImageToGridLayout(standaloneSection.PreviewImage, standaloneSection.DetailedImage, true);
+                    }
+                }
+                else if (sectionType == typeof(ColumnImageSection))
+                {
+                    ColumnImageSection columnSection = (ColumnImageSection)section;
+                    if (columnSection == null)
+                    {
+                        continue;
+                    }
+
+                    if (_pictureBoxBuffer.Count > 0)
+                    {
+                        foreach (StandaloneImageSection standaloneImage in columnSection.Sections)
+                        {
+                            GridPictureBox pictureBox = null;
+                            if (_pictureBoxBuffer.Count > 0)
+                            {
+                                pictureBox = _pictureBoxBuffer.Dequeue();
+                            }
+
+                            AddLocalImageToGridLayout(standaloneImage.PreviewImage, standaloneImage.DetailedImage, false, pictureBox);
+                        }
+
+                        // Clear anything left in the buffer (this isn't great)
+                        _pictureBoxBuffer.Clear();
+                    }
+                    else
+                    {
+                        foreach (StandaloneImageSection standaloneImage in columnSection.Sections)
+                        {
+                            if (standaloneImage != null)
+                            {
+                                AddLocalImageToGridLayout(standaloneImage.PreviewImage, standaloneImage.DetailedImage, false);
+
+                                // Add the picturebox for the other column items
+                                GridPictureBox pictureBox = new();
+                                pictureBox.SizeMode = PictureBoxSizeMode.AutoSize;
+                                GridFlowLayoutPanel.Controls.Add(pictureBox);
+                                _pictureBoxBuffer.Enqueue(pictureBox);
+                            }
+                        }
+                    }
+                }
+            }
+
+            AddTextboxCallbacks();
         }
 
         // TODO: Move to utils 
-        private void GeneratePreview()
+        private void GeneratePreviewWebpage()
         {
-            if (_modifiedSchema == null || _template == null)
+            if (_workingSchema == null || _template == null)
             {
                 return;
             }
@@ -860,9 +700,9 @@ namespace PageDesigner.Forms
             UpdateSchemaFromForm();
 
             // Generate preview page
-            if (_template.Generate(_modifiedSchema, _workingPath, true))
+            if (_template.Generate(_workingSchema, _workingPath, true))
             {
-                string originalOutputFile = _modifiedSchema.OptionValues[Schema.Option.OutputFilename];
+                string originalOutputFile = _workingSchema.OptionValues[Schema.Option.OutputFilename];
                 string previewName = Path.GetFileNameWithoutExtension(originalOutputFile) + "_preview";
                 string previewPath = Path.Combine(_workingPath, previewName + Path.GetExtension(originalOutputFile));
 
@@ -877,39 +717,121 @@ namespace PageDesigner.Forms
             }
         }
 
-        // TODO: rename
-        private void SaveSchema()
+        private void LoadAvailableImagePreviews()
         {
-            if (_originalSchema != null && _modifiedSchema == _originalSchema)
+            if (string.IsNullOrEmpty(_workingPath) || Directory.Exists(_workingPath) == false)
             {
                 return;
             }
 
-            UpdateSchemaFromForm();
-
-            if (File.Exists(_schemaPath))
+            string[] imageFilesAtPath = Directory.GetFiles(_workingPath, "*.jpg");
+            if (imageFilesAtPath.Length == 0)
             {
-                if (ShowConfirmSaveDialog() == false)
+                return;
+            }
+
+            // Failed attempt to get thumbnails from the JpegParser
+            // This works when you save the thumbnail to a file first... but as a MemoryStream it doesn't work
+
+            //foreach (string imagePath in imageFilesAtPath)
+            //{
+            //    data.Add(JpegParser.GetRawMetadata(imagePath));
+
+            //    using (Image previewImage = Image.FromStream(new MemoryStream(data[data.Count - 1].ThumbnailData)))
+            //    {
+            //        // TODO: Wish we didn't have to force aspectratio but CalculateAspectRatio is broken
+            //        //AspectRatio ar = new AspectRatio(3, 4);//ImageUtils.CalculateAspectRatio(originalImage);
+
+            //        //int desiredWidth = 120;
+            //        //int desiredHeight = ar.CalculateHeight(desiredWidth);
+
+            //        //// TODO: Use DrawImage to properly resize
+            //        //Image previewImage2 = previewImage.GetThumbnailImage(desiredWidth, desiredHeight, () => false, IntPtr.Zero);
+
+            //        var width = previewImage.Width;
+            //        _previewImages.Add(Path.GetFileName(imagePath), previewImage);
+
+            //        //_previewImages.Add(Path.GetFileName(imagePath), previewImage2);
+
+            //        // Cache in temp directory
+            //        // TODO: Fix with aspect ratio
+            //        PreviewImageBox previewImageBox = new PreviewImageBox(
+            //            Path.GetFileName(imagePath), previewImage);
+            //        //FetchOrCatchPreviewImage(Path.GetFileName(filename), inputtedPath));  //
+
+            //        //previewImageBox.MouseClick += ImagePreviewFlowLayoutPanel_MouseClick;
+            //        previewImageBox.ControlClicked += ImagePreviewFlowLayoutPanel_Control_Clicked;
+            //        previewImageBox.ControlDoubleClicked += ImagePreviewFlowLayoutPanel_Control_DoubleClicked;
+            //        previewImageBox.AddContextItemClicked += ImagePreviewFlowLayoutPanel_Control_DoubleClicked;
+            //        previewImageBox.InsertContextItemClicked += ImagePreviewFlowPanel_InsertContextItem_Clicked;
+            //        previewImageBox.ReplaceContextItemClicked += ImagePreviewFlowPanel_ReplaceContextItem_Clicked;
+
+            //        ImagePreviewFlowLayoutPanel.Controls.Add(previewImageBox);
+            //    }
+
+
+            foreach (string imagePath in imageFilesAtPath)
+            {
+                using (Image originalImage = Image.FromFile(imagePath))
                 {
-                    return;
+                    // TODO: Wish we didn't have to force aspectratio but CalculateAspectRatio is broken
+                    AspectRatio ar = new AspectRatio(1, 1);//ImageUtils.CalculateAspectRatio(originalImage);
+
+                    int desiredWidth = 120;
+                    int desiredHeight = ar.CalculateHeight(desiredWidth);
+
+                    // TODO: Use DrawImage to properly resize
+                    Image previewImage = originalImage.GetThumbnailImage(desiredWidth, desiredHeight, () => false, IntPtr.Zero);
+
+                    _previewImages.Add(Path.GetFileName(imagePath), previewImage);
+
+                    // Cache in temp directory
+                    // TODO: Fix with aspect ratio
+                    PreviewImageBox previewImageBox = new PreviewImageBox(
+                        Path.GetFileName(imagePath), previewImage);
+                    //FetchOrCatchPreviewImage(Path.GetFileName(filename), inputtedPath));  //
+
+                    //previewImageBox.MouseClick += ImagePreviewFlowLayoutPanel_MouseClick;
+                    previewImageBox.ControlClicked += ImagePreviewFlowLayoutPanel_Control_Clicked;
+                    previewImageBox.ControlDoubleClicked += ImagePreviewFlowLayoutPanel_Control_DoubleClicked;
+                    previewImageBox.AddContextItemClicked += ImagePreviewFlowLayoutPanel_Control_DoubleClicked;
+                    previewImageBox.InsertContextItemClicked += ImagePreviewFlowPanel_InsertContextItem_Clicked;
+                    previewImageBox.ReplaceContextItemClicked += ImagePreviewFlowPanel_ReplaceContextItem_Clicked;
+
+                    ImagePreviewFlowLayoutPanel.Controls.Add(previewImageBox);
                 }
             }
-
-            if (_modifiedSchema.Save(Path.GetDirectoryName(_schemaPath)))
-            {
-                MessageBox.Show("Schema successfully saved.", "File saved");
-            }
-
-            // TODO: Update original schema?
         }
 
-        // TODO: Cleanup
-        private void GenerateButton_Click(object sender, EventArgs e)
+        private void UpdateSelectedPreviewPictureControl(PreviewImageBox previewImageControl)
         {
-            // TODO: Save schema
-            SaveSchema();
-            // Generate html file
+            if (previewImageControl == null)
+            {
+                return;
+            }
 
+            if (_selectedPreviewImageControl != null)
+            {
+                _selectedPreviewImageControl.BackColor = BackColor;
+                _selectedPreviewImageControl.SetSelected(false);
+                _selectedPreviewImageControl.Invalidate();
+            }
+
+            previewImageControl.SetSelected(true);
+            previewImageControl.Invalidate();
+
+
+            _selectedPreviewImageControl = previewImageControl;
+        }
+
+        private bool ShowConfirmSaveDialog()
+        {
+            DialogResult result = MessageBox.Show(
+                "Schema file already exists.\nDo you want to replace it?",
+                "File exists",
+                MessageBoxButtons.YesNo);
+
+            return result == DialogResult.Yes;
         }
 
         private void TryAddColumnsBuffer(ref List<StandaloneImageSection>[] buffer, ref List<ImageSection> destination)
@@ -939,6 +861,122 @@ namespace PageDesigner.Forms
             }
         }
 
+        private void PageDesignerForm_Load(object sender, EventArgs e)
+        {
+            if (LoadSchemaFromFile(_workingPath) == false)
+            {
+                CreateBlankForm();
+            }
+        }
+
+        private void ImagePreviewFlowLayoutPanel_Control_Clicked(object? sender, ImageEventArgs e)
+        {
+            if (sender is PreviewImageBox previewImageControl)
+            {
+                UpdateSelectedPreviewPictureControl(previewImageControl);
+            }
+        }
+
+        private void ImagePreviewFlowPanel_InsertContextItem_Clicked(object? sender, ImageEventArgs e)
+        {
+            List<Control> newControlCollection = new();
+
+            foreach (Control control in GridFlowLayoutPanel.Controls)
+            {
+                if (control is GridPictureBox pictureBox)
+                {
+                    newControlCollection.Add(control);
+
+                    if (control == _selectedGridImage)
+                    {
+                        GridPictureBox newPictureBox = CreateGridPictureBox(
+                            TEMP_CreatePreviewImageName(e.ImageName),
+                            TEMP_CreateDetailedImageName(e.ImageName),
+                            false);
+                        newControlCollection.Add(newPictureBox);
+                    }
+                }
+            }
+
+            GridFlowLayoutPanel.Controls.Clear();
+            GridFlowLayoutPanel.Controls.AddRange(newControlCollection.ToArray());
+
+            SignalSchemaChange();
+        }
+
+        private void ImagePreviewFlowLayoutPanel_Control_DoubleClicked(object? sender, ImageEventArgs e)
+        {
+            string imageName = e.ImageName;
+
+            if (sender is PreviewImageBox previewImageControl)
+            {
+                UpdateSelectedPreviewPictureControl(previewImageControl);
+                AddLocalImageToGridLayout(imageName, imageName, false);
+                SignalSchemaChange();
+                //// Load the preview straight into the flow panel
+                //if (_previewImages.ContainsKey(imageName))
+                //{
+                //    PictureBox picture = new();
+                //    picture.Image = _previewImages[imageName];
+                //    // picture.Size = new Size(picture.Width, picture.Height);
+                //    picture.SizeMode = PictureBoxSizeMode.AutoSize;
+                //    GridFlowLayoutPanel.Controls.Add(picture);
+
+                //    _lastControlInGrid = picture;
+                //}
+            }
+        }
+
+        private void ImagePreviewFlowPanel_AddContextItem_Clicked(object? sender, ImageEventArgs e)
+        {
+
+        }
+
+        private void ImagePreviewFlowPanel_ReplaceContextItem_Clicked(object? sender, ImageEventArgs e)
+        {
+            if (sender is PreviewImageBox previewImageControl)
+            {
+                if (_selectedGridImage == null)
+                {
+                    return;
+                }
+
+                Image image = LoadImage(previewImageControl.GetImageName(), _selectedGridImage.IsStandaloneImage());
+                if (image == null)
+                {
+                    // TODO: Show error
+                    return;
+                }
+
+                _selectedGridImage.SetImage(
+                    image,
+                    TEMP_CreatePreviewImageName(previewImageControl.GetImageName()),
+                    TEMP_CreateDetailedImageName(previewImageControl.GetImageName()),
+                    _selectedGridImage.IsStandaloneImage());
+
+                SignalSchemaChange();
+
+            }
+        }
+
+        private void ImagePreviewFlowLayoutPanel_Click(object sender, EventArgs e)
+        {
+            if (_selectedPreviewImageControl != null)
+            {
+                _selectedPreviewImageControl.BackColor = BackColor;
+            }
+        }
+
+        private void PreviewButton_Click(object sender, EventArgs e)
+        {
+            GeneratePreviewWebpage();
+        }
+
+        private void GenerateButton_Click(object sender, EventArgs e)
+        {
+            SaveSchemaToFile();
+        }
+
         private void PreviewImageTextBox_TextChanged(object sender, EventArgs e)
         {
             if (_selectedGridImage != null)
@@ -961,32 +999,55 @@ namespace PageDesigner.Forms
 
         private void SaveButton_Click(object sender, EventArgs e)
         {
-            SaveSchema();
-        }
-
-        private bool ShowConfirmSaveDialog()
-        {
-            DialogResult result = MessageBox.Show(
-                "Schema file already exists.\nDo you want to replace it?",
-                "File exists",
-                MessageBoxButtons.YesNo);
-
-            return result == DialogResult.Yes;
+            SaveSchemaToFile();
         }
 
         private void newToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            using (FolderBrowserDialog folderDialog = new())
+            {
+                folderDialog.Description = "Pick a directory to create a new page";
+                folderDialog.UseDescriptionForTitle = true;
+                folderDialog.ShowNewFolderButton = true;
+                folderDialog.InitialDirectory = Directory.Exists(_workingPath) ? _workingPath : Environment.CurrentDirectory;
 
+                DialogResult result = folderDialog.ShowDialog();
+                if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(folderDialog.SelectedPath))
+                {
+                    if (File.Exists(Path.Combine(folderDialog.SelectedPath, "SCHEMA")))
+                    {
+                        MessageBox.Show(
+                            $"Can't create new page in directory, SCHEMA file already exists.",
+                            "Carpenter",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    _workingPath = folderDialog.SelectedPath;
+                    CreateBlankForm();
+                }
+            }
         }
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
+            SaveSchemaToFile();
         }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
+            using (OpenFileDialog fileDialog = new OpenFileDialog())
+            {
+                fileDialog.Title = "Load Carpenter SCHEMA file";
+                fileDialog.InitialDirectory = Directory.Exists(_workingPath) ? _workingPath : Environment.CurrentDirectory;
+                fileDialog.RestoreDirectory = true;
+                fileDialog.CheckFileExists = true;
+                fileDialog.CheckPathExists = true;
+                fileDialog.Filter = "Carpenter Schema File (SCHEMA)|SCHEMA";
+                if (fileDialog.ShowDialog(this) == DialogResult.OK)
+                    LoadSchemaFromFile(Path.GetDirectoryName(fileDialog.FileName));
+            }
         }
 
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1001,7 +1062,148 @@ namespace PageDesigner.Forms
 
         private void previewToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            GeneratePreviewWebpage();
+        }
 
+        private void GridPictureBox_SwapMenuItemClicked(object? sender, EventArgs e)
+        {
+            if (sender is GridPictureBox currentGridPictureBox)
+            {
+                if (_selectedGridImage == null)
+                {
+                    return;
+                }
+
+                Image image = _selectedGridImage.Image;
+                string previewImageName = _selectedGridImage.PreviewImageName;
+                string detailedImageName = _selectedGridImage.DetailedImageName;
+                bool standalone = _selectedGridImage.IsStandaloneImage();
+
+                _selectedGridImage.SetImage(
+                    currentGridPictureBox.Image,
+                    currentGridPictureBox.PreviewImageName,
+                    currentGridPictureBox.DetailedImageName,
+                    currentGridPictureBox.IsStandaloneImage());
+
+                currentGridPictureBox.SetImage(
+                    image,
+                    previewImageName,
+                    detailedImageName,
+                    standalone);
+
+                SignalSchemaChange();
+            }
+        }
+
+        private void GridPictureBox_StandaloneMenuItemClicked(object? sender, EventArgs e)
+        {
+            if (sender is GridPictureBox gridPictureBox)
+            {
+                bool newStandaloneValue = !gridPictureBox.IsStandaloneImage();
+
+                UpdateGridPictureBox(gridPictureBox, gridPictureBox.PreviewImageName, gridPictureBox.DetailedImageName, newStandaloneValue);
+                gridPictureBox.SetStandaloneImage(newStandaloneValue);
+                SignalSchemaChange();
+            }
+        }
+
+        private void GridPictureBox_RemoveMenuItemClicked(object? sender, EventArgs e)
+        {
+            if (sender is GridPictureBox gridPictureBox)
+            {
+                GridFlowLayoutPanel.Controls.Remove(gridPictureBox);
+                SignalSchemaChange();
+            }
+        }
+
+        private void GridPictureBox_Click(object? sender, EventArgs e)
+        {
+            if (sender is GridPictureBox gridPictureBox)
+            {
+                // Update currently selected image
+                if (_selectedGridImage != null)
+                {
+                    //_selectedGridImage.BackColor = Color.LightGray;
+                    //_selectedGridImage.BorderStyle = BorderStyle.None;
+
+                    _selectedGridImage.Invalidate();
+                }
+                _selectedGridImage = gridPictureBox;
+
+                // Retrieve details from selected image
+                PreviewImageTextBox.Text = gridPictureBox.PreviewImageName;
+                DetailedImageTextBox.Text = gridPictureBox.DetailedImageName;
+
+                // Highlight image
+                //gridPictureBox.BorderStyle = BorderStyle.FixedSingle;
+                //gridPictureBox.BackColor = Color.Blue;
+
+                gridPictureBox.Invalidate();
+            }
+        }
+
+        private void GridPictureBox_Paint(object? sender, PaintEventArgs e)
+        {
+            if (sender is GridPictureBox gridPictureBox)
+            {
+                if (gridPictureBox == _selectedGridImage)
+                {
+                    //Rectangle rect = new Rectangle()
+                    using (Brush b = new SolidBrush(Color.FromArgb(100, Color.Blue)))
+                    {
+                        e.Graphics.FillRectangle(b, gridPictureBox.DisplayRectangle);
+                    }
+
+                }
+            }
+        }
+
+        // TODO: No, remove this, handle preview and detailed images better than hack hardcoding them
+        private string TEMP_CreateDetailedImageName(string originalName)
+        {
+            //if (originalName.Contains('_') == false)
+            //{
+            //    return $"{originalName}_Detailed";
+            //}
+            //else
+            //{
+            //    return $"{originalName.Split('_').Last()}_Detailed";
+
+            //}
+
+            // LOL
+            return originalName;
+
+        }
+
+        private string TEMP_CreatePreviewImageName(string originalName)
+        {
+            return originalName;
+            //if (originalName.Contains('_') == false)
+            //{
+            //    return $"{originalName}_Preview";
+            //}
+            //else
+            //{
+            //    return $"{originalName.Split('_').Last()}_Preview";
+
+            //}
+
+        }
+
+        private void FormTextBox_TextChanged(object sender, EventArgs e)
+        {
+            SignalSchemaChange();
+        }
+
+        private void undoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            UndoSchemaChanges();
+        }
+
+        private void redoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            RedoSchemaChanges();
         }
     }
 }

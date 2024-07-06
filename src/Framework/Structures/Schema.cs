@@ -6,6 +6,7 @@ using System.IO;
 
 namespace Carpenter
 {
+    // TODO: Struct
     public class Schema : IDisposable, IEquatable<Schema>
     {
         public const float kSchemaVersion = 2.0f;
@@ -98,9 +99,43 @@ namespace Carpenter
                 return;
             }
 
-            TokenValues = otherSchema.TokenValues;
-            OptionValues = otherSchema.OptionValues;
-            ImageSections = otherSchema.ImageSections;
+            TokenValues = new Dictionary<Token, string>(otherSchema.TokenValues);
+            OptionValues = new Dictionary<Option, string>(otherSchema.OptionValues);
+            ImageSections = new List<ImageSection>();
+            
+            // Need to actually populate the ImageSections manually to avoid copying a reference
+            foreach (ImageSection section in otherSchema.ImageSections)
+            {
+                if (section is StandaloneImageSection standaloneSection)
+                {
+                    StandaloneImageSection newSection = new StandaloneImageSection();
+                    newSection.DetailedImage = standaloneSection.DetailedImage;
+                    newSection.PreviewImage = standaloneSection.PreviewImage;
+                    ImageSections.Add(newSection);
+                }
+                else if (section is ColumnImageSection columnSection)
+                {
+                    ColumnImageSection newColumnSection = new ColumnImageSection();
+                    newColumnSection.Sections = new List<StandaloneImageSection>();
+                    foreach (ImageSection innerSection in columnSection.Sections)
+                    {
+                        if (innerSection is StandaloneImageSection innerStandaloneSection)
+                        {
+                            StandaloneImageSection newSection = new StandaloneImageSection();
+                            newSection.DetailedImage = innerStandaloneSection.DetailedImage;
+                            newSection.PreviewImage = innerStandaloneSection.PreviewImage;
+                            newColumnSection.Sections.Add(newSection);
+                        }
+                    }
+                    ImageSections.Add(newColumnSection);
+                }
+                else if (section is TitleImageSection titleSection)
+                {
+                    TitleImageSection newSection = new TitleImageSection();
+                    newSection.TitleText = titleSection.TitleText;
+                    ImageSections.Add(newSection);
+                }
+            }
         }
 
         // TODO: Throw exception
@@ -471,6 +506,11 @@ namespace Carpenter
 
         public bool Equals(Schema? other)
         {
+            if (other == null)
+            {
+                return false;
+            }
+
             bool equal = false;
             equal &= TokenValues == other.TokenValues;
             equal &= OptionValues == other.OptionValues;

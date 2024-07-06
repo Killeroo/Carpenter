@@ -100,14 +100,14 @@ namespace SiteViewer.Controls
 
         private void EditButton_Click(object sender, EventArgs e)
         {
-            //#if DEBUG
-            //PageDesignerForm form = new(_directoryPath, _template.FilePath);
-            //form.Show();
-            //#else
+#if DEBUG
+            PageDesignerForm form = new(_directoryPath, _template.FilePath);
+            form.Show();
+#else
             ProcessStartInfo startInfo = new(kPageDesignerAppName);
             startInfo.Arguments = $"\"{_directoryPath}\" \"{_template.FilePath}\"";
             Process.Start(startInfo);
-            //#endif
+#endif
         }
 
         private void PreviewButton_Click(object sender, EventArgs e)

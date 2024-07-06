@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Collections.Specialized.BitVector32;
 
 namespace Carpenter
 {
-    public abstract class ImageSection
+    public abstract class ImageSection : IEquatable<ImageSection>
     {
         public abstract void ReplacePreviewImage(string oldImageName, string newImageName);
         public abstract void ReplaceDetailedImage(string oldImageName, string newImageName);
+        public abstract bool Equals(ImageSection? other);
     }
 
     public class StandaloneImageSection : ImageSection
@@ -31,6 +33,20 @@ namespace Carpenter
             {
                 DetailedImage = newImageName;
             }
+        }
+
+        public override bool Equals(ImageSection? other)
+        {
+            if (other == null)
+                return false;
+
+            if (other is StandaloneImageSection otherStandaloneImage)
+            {
+                return PreviewImage == otherStandaloneImage.PreviewImage 
+                    && DetailedImage == otherStandaloneImage.DetailedImage;
+            }
+
+            return false;
         }
     }
 
@@ -61,6 +77,19 @@ namespace Carpenter
                 }
             }
         }
+
+        public override bool Equals(ImageSection? other)
+        {
+            if (other == null)
+                return false;
+
+            if (other is ColumnImageSection otherColumnImages)
+            {
+                return Sections == otherColumnImages.Sections;
+            }
+
+            return false;
+        }
     }
 
     public class TitleImageSection : ImageSection
@@ -75,6 +104,19 @@ namespace Carpenter
         public override void ReplacePreviewImage(string oldImageName, string newImageName)
         {
             throw new NotImplementedException();
+        }
+
+        public override bool Equals(ImageSection? other)
+        {
+            if (other == null)
+                return false;
+
+            if (other is TitleImageSection otherTitleImageSection)
+            {
+                return TitleText == otherTitleImageSection.TitleText;
+            }
+
+            return false;
         }
     }
 }
