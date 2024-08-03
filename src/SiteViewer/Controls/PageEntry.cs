@@ -100,7 +100,7 @@ namespace SiteViewer.Controls
 
         private void EditButton_Click(object sender, EventArgs e)
         {
-#if DEBUG
+#if false
             PageDesignerForm form = new(_directoryPath, _template.FilePath);
             form.Show();
 #else
@@ -149,11 +149,13 @@ namespace SiteViewer.Controls
         // TODO: Don't repeat
         private void CreateButton_Click(object sender, EventArgs e)
         {
-#if DEBUG
-            PageDesignerForm form = new(_directoryPath, _template);
-            form.ShowDialog();
+#if true
+            PageDesignerForm form = new(_directoryPath, _template.FilePath);
+            form.Show();
 #else
-
+            ProcessStartInfo startInfo = new(kPageDesignerAppName);
+            startInfo.Arguments = $"\"{_directoryPath}\" \"{_template.FilePath}\"";
+            Process.Start(startInfo);
 #endif
 
             //Process.Start(kPageDesignerAppName);
