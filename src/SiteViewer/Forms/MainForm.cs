@@ -15,6 +15,7 @@ using Carpenter;
 
 using SiteViewer;
 using SiteViewer.Controls;
+using PageDesigner.Forms;
 
 namespace SiteViewer.Forms
 {
@@ -30,15 +31,35 @@ namespace SiteViewer.Forms
         }
 
         private const string kTemplateFilename = "template.html";
+        private const string kPageDesignerAppName = "PageDesigner.exe";
 
         private FileSystemWatcher _fileSystemWatcher = null;
         private Template _template = new Template();
         private string _rootPath = string.Empty;
         private string _templatePath = string.Empty;
+        private string _lastCreatedPageName = string.Empty;
 
         public MainForm()
         {
             InitializeComponent();
+        }
+
+        public void RunPageDesigner(string path)
+        {
+            if (_template == null)
+            {
+                Debug.Write("Could not open designer, template not loaded");
+                return;
+            }
+
+#if false
+            PageDesignerForm form = new(path, _template);
+            form.ShowDialog();
+#else
+            ProcessStartInfo startInfo = new(kPageDesignerAppName);
+            startInfo.Arguments = $"\"{path}\" \"{_template.FilePath}\"";
+            Process.Start(startInfo);
+#endif
         }
 
         private void SetupFileSystemWatcher(string path)
@@ -130,13 +151,46 @@ namespace SiteViewer.Forms
         private void NewFolderButton_Click(object sender, EventArgs e)
         {
             // TODO: Put into method
-            FolderBrowser.InitialDirectory = _rootPath;
-            FolderBrowser.ShowNewFolderButton = true;
-            FolderBrowser.Description = "Create new folder";
-            FolderBrowser.UseDescriptionForTitle = true;
+            //FolderBrowser.InitialDirectory = _rootPath;
+            //FolderBrowser.ShowNewFolderButton = true;
+            //FolderBrowser.Description = "Create new folder";
+            //FolderBrowser.UseDescriptionForTitle = true;
 
-            if (FolderBrowser.ShowDialog() == DialogResult.OK)
+            //if (FolderBrowser.ShowDialog() == DialogResult.OK)
+            //{
+            //    RefreshPageList();
+            //}
+
+            PageCreateDialog pageCreateDialog = new(_rootPath, _lastCreatedPageName);
+            pageCreateDialog.StartPosition = FormStartPosition.CenterParent;
+            //pageCreateDialog.MdiParent = this;
+            //pageCreateDialog.Location = new Point(Location.X + (Size.Width - (pageCreateDialog.Width/2)), Location.Y - (Size.Height - (pageCreateDialog.Height/2)));
+            pageCreateDialog.ShowDialog(Owner);
+
+            if (pageCreateDialog.CreateButtonPressed)
             {
+                _lastCreatedPageName = pageCreateDialog.CurrentPageName;
+
+                string newDirectory = Path.Combine(_rootPath, pageCreateDialog.CurrentPageName);
+                try
+                {
+                    Directory.CreateDirectory(newDirectory);
+                }
+                catch 
+                {
+                    MessageBox.Show(
+                        $"Could not create new page {_lastCreatedPageName}",
+                        "Carpenter",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return;
+                }
+
+                if (pageCreateDialog.OpenInDesigner)
+                {
+                    RunPageDesigner(newDirectory);
+                }
+
                 RefreshPageList();
             }
         }
@@ -229,11 +283,6 @@ namespace SiteViewer.Forms
         {
             ToolStripProgressBar.Value = 100;
             EnablePageEntryButtons(true);
-        }
-
-        private void GenerateWebpages()
-        {
-
         }
 
         private void ResetStatusButtons()

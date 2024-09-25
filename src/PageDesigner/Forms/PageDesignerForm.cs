@@ -81,6 +81,7 @@ namespace PageDesigner.Forms
     public partial class PageDesignerForm : Form
     {
         private const string kUnsavedTitleString = " *";
+        private const string kImageFileFilter = "Image Files(*.JPG;*.JPEG)|*.JPG;*.JPEG|All files (*.*)|*.*";
 
         private string _workingPath;
         private string _schemaPath;
@@ -187,11 +188,15 @@ namespace PageDesigner.Forms
             UpdateSchemaFromForm();
 
             // Generate preview page
+            Stopwatch stopwatch = Stopwatch.StartNew();
             if (_template.Generate(_workingSchema, _workingPath, true))
             {
                 string originalOutputFile = _workingSchema.OptionValues[Schema.Option.OutputFilename];
                 string previewName = Path.GetFileNameWithoutExtension(originalOutputFile) + "_preview";
                 string previewPath = Path.Combine(_workingPath, previewName + Path.GetExtension(originalOutputFile));
+
+                stopwatch.Stop();
+                statusToolStripStatusLabel.Text = string.Format("Generated Preview in {0}ms", stopwatch.ElapsedMilliseconds);
 
                 // Open it with default app
                 if (File.Exists(previewPath))
@@ -231,6 +236,15 @@ namespace PageDesigner.Forms
             LoadAvailableImagePreviews();
             SignalSchemaChange();
             this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
+
+            if (ImagePreviewFlowLayoutPanel.Controls.Count == 0)
+            {
+                DialogResult result = MessageBox.Show("Seems you have loaded a blank page, would you like to import images to the page?", "Import images", MessageBoxButtons.YesNo);
+                if (result == DialogResult.Yes)
+                {
+                    ShowImportImageDialog();
+                }
+            }
         }
 
         private bool LoadSchemaFromFile(string path)
@@ -276,13 +290,13 @@ namespace PageDesigner.Forms
 
             UpdateSchemaFromForm();
 
-            if (File.Exists(_schemaPath))
-            {
-                if (ShowConfirmSaveDialog() == false)
-                {
-                    return;
-                }
-            }
+            //if (File.Exists(_schemaPath))
+            //{
+            //    if (ShowConfirmSaveDialog() == false)
+            //    {
+            //        return;
+            //    }
+            //}
 
             if (_workingSchema.Save(Path.GetDirectoryName(_schemaPath)))
             {
@@ -615,6 +629,12 @@ namespace PageDesigner.Forms
 
             foreach (string imagePath in imageFilesAtPath)
             {
+                if (Path.GetFileName(imagePath).Contains("_Detailed"))
+                {
+                    // We don't want to load the bigger image files that won't be used directly on the webpage
+                    continue;
+                }
+
                 using (Image originalImage = Image.FromFile(imagePath))
                 {
                     // TODO: Wish we didn't have to force aspectratio but CalculateAspectRatio is broken
@@ -1218,6 +1238,67 @@ namespace PageDesigner.Forms
             RedoSchemaChanges();
         }
 
+        private void importToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowImportImageDialog();
+        }
+
+        private void ShowImportImageDialog()
+        {
+            using (OpenFileDialog fileDialog = new OpenFileDialog())
+            {
+                fileDialog.Title = "Load SC4Cartographer map properties";
+                fileDialog.InitialDirectory = Directory.GetCurrentDirectory();
+                fileDialog.RestoreDirectory = true;
+                fileDialog.CheckFileExists = true;
+                fileDialog.CheckPathExists = true;
+                fileDialog.Multiselect = true;
+                fileDialog.Filter = kImageFileFilter;
+
+                if (fileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    List<string> exceptions = new();
+                    foreach (string filePath in fileDialog.FileNames)
+                    {
+                        if (File.Exists(filePath))
+                        {
+                            string fileName = Path.GetFileName(filePath);
+                            try
+                            {
+                                File.Copy(filePath, Path.Combine(_workingPath, fileName));
+                            }
+                            catch (Exception copyException)
+                            {
+                                exceptions.Add(e.GetType().Name);
+                            }
+                        }
+                    }
+
+                    if (exceptions.Count > 0)
+                    {
+                        MessageBox.Show(
+                            $"Could not find import {exceptions.Count} files.",
+                            "Carpenter",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
+                    }
+
+                    LoadAvailableImagePreviews();
+                }
+            }
+        }
+
         #endregion
+
+        private void adddetailedPrefixToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            foreach (Control control in GridFlowLayoutPanel.Controls)
+            {
+                if (control is GridPictureBox gridPictureBox)
+                {
+                    gridPictureBox.DetailedImageName = gridPictureBox.PreviewImageName.Replace("_Preview", "_Detailed");
+                }
+            }
+        }
     }
 }

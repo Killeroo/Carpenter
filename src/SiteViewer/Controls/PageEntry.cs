@@ -110,6 +110,7 @@ namespace SiteViewer.Controls
 #endif
         }
 
+        // TODO: Move to main form
         private void PreviewButton_Click(object sender, EventArgs e)
         {
             string schemaPath = Path.Combine(_directoryPath, "SCHEMA");
@@ -146,7 +147,7 @@ namespace SiteViewer.Controls
             }
         }
 
-        // TODO: Don't repeat
+        // TODO: TODO: Move to main form
         private void CreateButton_Click(object sender, EventArgs e)
         {
 #if true
@@ -157,8 +158,6 @@ namespace SiteViewer.Controls
             startInfo.Arguments = $"\"{_directoryPath}\" \"{_template.FilePath}\"";
             Process.Start(startInfo);
 #endif
-
-            //Process.Start(kPageDesignerAppName);
         }
     }
 }
