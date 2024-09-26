@@ -6,7 +6,16 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Platforms>x64;x86</Platforms>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+
+    <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
+    <SelfContained Condition="'$(SelfContained)' == ''">false</SelfContained>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="app.manifest" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Framework\Framework.csproj" />

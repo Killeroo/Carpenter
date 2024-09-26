@@ -1,4 +1,5 @@
 ﻿using Carpenter;
+using CefSharp.DevTools.Network;
 using JpegMetadataExtractor;
 using PageDesigner.Controls;
 using PageDesigner.Properties;
@@ -95,12 +96,18 @@ namespace PageDesigner.Forms
         private Queue<GridPictureBox> _pictureBoxBuffer = new();
         private ChangesStack<Schema> _schemaChanges = new();
 
+        private LivePreviewForm _livePreviewForm = null;
+        private bool _isLivePreviewFormActive = false;
+
         // TODO: DRY
         public PageDesignerForm()
         {
             InitializeComponent();
 
             _workingPath = Environment.CurrentDirectory;
+
+            // TODO: Move to designer
+            LivePreviewGenerateTimer.Tick += LivePreviewGenerateTimer_Tick;
         }
         public PageDesignerForm(string path, Template template) : this()
         {
@@ -178,14 +185,15 @@ namespace PageDesigner.Forms
         }
 
         // TODO: Move to utils 
-        private void GeneratePreviewWebpage()
+        private string GeneratePreviewWebpage()
         {
             if (_workingSchema == null || _template == null)
             {
-                return;
+                return string.Empty;
             }
 
-            UpdateSchemaFromForm();
+            // TODO: Check if schema has changed before loading
+            UpdateWorkingSchemaFromForm();
 
             // Generate preview page
             Stopwatch stopwatch = Stopwatch.StartNew();
@@ -198,14 +206,24 @@ namespace PageDesigner.Forms
                 stopwatch.Stop();
                 statusToolStripStatusLabel.Text = string.Format("Generated Preview in {0}ms", stopwatch.ElapsedMilliseconds);
 
-                // Open it with default app
-                if (File.Exists(previewPath))
+                return previewPath;
+            }
+
+            // TODO: Log error
+            return string.Empty;
+        }
+
+        private void DisplayPreviewInNewProcess()
+        {
+            string previewPath = GeneratePreviewWebpage();
+
+            // Open it with default app
+            if (File.Exists(previewPath))
+            {
+                Process.Start(new ProcessStartInfo(previewPath)
                 {
-                    Process.Start(new ProcessStartInfo(previewPath)
-                    {
-                        UseShellExecute = true
-                    });
-                }
+                    UseShellExecute = true
+                });
             }
         }
 
@@ -271,7 +289,7 @@ namespace PageDesigner.Forms
             _savedSchema = schema;
             _workingSchema = new Schema(_savedSchema);
 
-            UpdateFormFromSchema();
+            UpdateFormFromWorkingSchema();
 
             // Load available images in the directory
             LoadAvailableImagePreviews();
@@ -288,7 +306,7 @@ namespace PageDesigner.Forms
                 return;
             }
 
-            UpdateSchemaFromForm();
+            UpdateWorkingSchemaFromForm();
 
             //if (File.Exists(_schemaPath))
             //{
@@ -298,10 +316,11 @@ namespace PageDesigner.Forms
             //    }
             //}
 
-            if (_workingSchema.Save(Path.GetDirectoryName(_schemaPath)))
-            {
-                MessageBox.Show("Schema successfully saved.", "File saved");
-            }
+            // TODO: Show an error when schema save fails
+            //if (_workingSchema.Save(Path.GetDirectoryName(_schemaPath)))
+            //{
+            //    MessageBox.Show("Schema successfully saved.", "File saved");
+            //}
 
             this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
 
@@ -317,7 +336,7 @@ namespace PageDesigner.Forms
             Settings.Default.Save();
         }
 
-        private void UpdateSchemaFromForm()
+        private void UpdateWorkingSchemaFromForm()
         {
             if (_workingSchema == null)
             {
@@ -413,31 +432,14 @@ namespace PageDesigner.Forms
             _workingSchema.ImageSections = sections;
         }
 
-        // TODO: Don't update if they haven't changed
-        private void UpdateFormFromSchema()
+        private void UpdateFormFromWorkingSchema()
         {
-            RemoveTextboxCallbacks();
+            PopulateTextboxesFromWorkingSchema();
+            PopulateGridFromWorkingSchema();
+        }
 
-            // Populate text fields first
-            string GetTokenFromSchema(Schema.Token token, string defaultValue)
-            {
-                if (_workingSchema == null || _workingSchema.TokenValues.ContainsKey(token) == false)
-                {
-                    return defaultValue;
-                }
-
-                return _workingSchema.TokenValues[token];
-            }
-            BaseUrlTextBox.Text = GetTokenFromSchema(Schema.Token.BaseUrl, Settings.Default.BaseUrlLastUsedValue);
-            PageUrlTextBox.Text = GetTokenFromSchema(Schema.Token.PageUrl, Settings.Default.PageUrlLastUsedValue);
-            TitleTextBox.Text = GetTokenFromSchema(Schema.Token.Title, Settings.Default.TitleLastUsedValue);
-            LocationTextBox.Text = GetTokenFromSchema(Schema.Token.Location, Settings.Default.LocationLastUsedValue);
-            MonthTextBox.Text = GetTokenFromSchema(Schema.Token.Month, Settings.Default.MonthLastUsedValue);
-            YearTextBox.Text = GetTokenFromSchema(Schema.Token.Year, Settings.Default.YearLastUsedValue);
-            AuthorTextBox.Text = GetTokenFromSchema(Schema.Token.Author, Settings.Default.AuthorLastUsedValue);
-            CameraTextBox.Text = GetTokenFromSchema(Schema.Token.Camera, Settings.Default.CameraLastUsedValue);
-
-            // Populate the grid
+        private void PopulateGridFromWorkingSchema()
+        {
             GridFlowLayoutPanel.Controls.Clear();
             foreach (ImageSection section in _workingSchema.ImageSections)
             {
@@ -494,6 +496,31 @@ namespace PageDesigner.Forms
                     }
                 }
             }
+        }
+
+        private void PopulateTextboxesFromWorkingSchema()
+        {
+            // We don't want any callbacks triggering when we populate them
+            // We only want them to trigger when the user edits them
+            RemoveTextboxCallbacks();
+
+            string GetTokenFromSchema(Schema.Token token, string defaultValue)
+            {
+                if (_workingSchema == null || _workingSchema.TokenValues.ContainsKey(token) == false)
+                {
+                    return defaultValue;
+                }
+
+                return _workingSchema.TokenValues[token];
+            }
+            BaseUrlTextBox.Text = GetTokenFromSchema(Schema.Token.BaseUrl, Settings.Default.BaseUrlLastUsedValue);
+            PageUrlTextBox.Text = GetTokenFromSchema(Schema.Token.PageUrl, Settings.Default.PageUrlLastUsedValue);
+            TitleTextBox.Text = GetTokenFromSchema(Schema.Token.Title, Settings.Default.TitleLastUsedValue);
+            LocationTextBox.Text = GetTokenFromSchema(Schema.Token.Location, Settings.Default.LocationLastUsedValue);
+            MonthTextBox.Text = GetTokenFromSchema(Schema.Token.Month, Settings.Default.MonthLastUsedValue);
+            YearTextBox.Text = GetTokenFromSchema(Schema.Token.Year, Settings.Default.YearLastUsedValue);
+            AuthorTextBox.Text = GetTokenFromSchema(Schema.Token.Author, Settings.Default.AuthorLastUsedValue);
+            CameraTextBox.Text = GetTokenFromSchema(Schema.Token.Camera, Settings.Default.CameraLastUsedValue);
 
             AddTextboxCallbacks();
         }
@@ -505,10 +532,36 @@ namespace PageDesigner.Forms
                 return;
             }
 
-            UpdateSchemaFromForm();
+            UpdateWorkingSchemaFromForm();
             _schemaChanges.Commit(new Schema(_workingSchema));
             if (this.Text.Contains(kUnsavedTitleString) == false)
                 this.Text += kUnsavedTitleString;
+
+            if (_isLivePreviewFormActive)
+            {
+                // We don't want to constantly be generating previews, wait a bit before actually generating the preview
+                // TODO: Make an instant preview and then wait for a bit before generating another
+                if (LivePreviewGenerateTimer.Enabled == false)
+                {
+                    //if (_livePreviewForm == null)
+                    //{
+                    //    return;
+                    //}
+                    //_livePreviewForm.LoadUrl(GeneratePreviewWebpage());
+                    LivePreviewGenerateTimer.Start();
+                }
+            }
+        }
+
+        private void LivePreviewGenerateTimer_Tick(object? sender, EventArgs e)
+        {
+            if (_livePreviewForm == null)
+            {
+                return;
+            }
+
+            _livePreviewForm.LoadUrl(GeneratePreviewWebpage());
+            LivePreviewGenerateTimer.Stop();
         }
 
         private void UndoSchemaChanges()
@@ -517,7 +570,14 @@ namespace PageDesigner.Forms
             if (lastSchemaChange != _workingSchema)
             {
                 _workingSchema = lastSchemaChange;
-                UpdateFormFromSchema();
+
+                // Only re-populate the grid if it has actually changed 
+                if (_workingSchema.ImageSections != lastSchemaChange.ImageSections)
+                {
+                    PopulateGridFromWorkingSchema();
+                }
+                PopulateTextboxesFromWorkingSchema();
+
 
                 // Remove unsaved character from title bar if we are at parity with the last saved schema
                 if (_workingSchema == _savedSchema)
@@ -533,7 +593,13 @@ namespace PageDesigner.Forms
             if (schemaChange != _workingSchema)
             {
                 _workingSchema = schemaChange;
-                UpdateFormFromSchema();
+
+                if (_workingSchema.ImageSections != schemaChange.ImageSections)
+                {
+                    PopulateGridFromWorkingSchema();
+                }
+                PopulateTextboxesFromWorkingSchema();
+
 
                 // Remove unsaved character from title bar if we are at parity with the last saved schema
                 if (_workingSchema == _savedSchema)
@@ -695,6 +761,12 @@ namespace PageDesigner.Forms
                 targetWidth -= 20;// 10; 
                 int targetHeight = ar.CalculateHeight(targetWidth);
 
+                //ImageMetadata metadata = JpegParser.GetMetadata(localImagePath);
+                if (sourceImage.Height > sourceImage.Width)// || metadata.Orientation != OrientationType.Horizontal)
+                {
+                    targetHeight *= 2;
+                }
+
                 Image resizedImage = ImageUtils.ResizeImage(localImagePath, sourceImage, targetWidth, targetHeight);
 
                 GridPictureBox gridPictureBox = new();
@@ -796,6 +868,12 @@ namespace PageDesigner.Forms
                 targetWidth -= 20;// 10; 
                 int targetHeight = ar.CalculateHeight(targetWidth);
 
+                // Increase the vertical space an image can take if it is portrait
+                if (sourceImage.Height > sourceImage.Width)// || metadata.Orientation != OrientationType.Horizontal)
+                {
+                    targetHeight *= 2;
+                }
+
                 Image resizedImage = ImageUtils.ResizeImage(localImagePath, sourceImage, targetWidth, targetHeight);
 
                 // Create image (or re-use image) and add it to the grid
@@ -811,6 +889,13 @@ namespace PageDesigner.Forms
                     gridPictureBox = new GridPictureBox();
                     GridFlowLayoutPanel.Controls.Add(gridPictureBox);
 
+                    // Add callbacks
+                    //gridPictureBox.Click += GridPictureBox_Click;
+                    //gridPictureBox.Paint += GridPictureBox_Paint;
+                    //gridPictureBox.SwapMenuItemClicked += GridPictureBox_SwapMenuItemClicked;
+                    //gridPictureBox.RemoveMenuItemClicked += GridPictureBox_RemoveMenuItemClicked;
+                    //gridPictureBox.StandaloneMenuItemClicked += GridPictureBox_StandaloneMenuItemClicked;
+
                 }
 
                 // Setup image
@@ -822,7 +907,8 @@ namespace PageDesigner.Forms
                 gridPictureBox.PreviewImageName = TEMP_CreatePreviewImageName(previewImageName);
                 gridPictureBox.SetStandaloneImage(standaloneImage);
 
-                // Add callbacks
+                //// Add callbacks
+                ///// TODO: This really show be above not here
                 gridPictureBox.Click += GridPictureBox_Click;
                 gridPictureBox.Paint += GridPictureBox_Paint;
                 gridPictureBox.SwapMenuItemClicked += GridPictureBox_SwapMenuItemClicked;
@@ -952,10 +1038,11 @@ namespace PageDesigner.Forms
 
                     if (control == _selectedGridImage)
                     {
-                        GridPictureBox newPictureBox = CreateGridPictureBox(
+                        GridPictureBox? newPictureBox = AddLocalImageToGridLayout(
                             TEMP_CreatePreviewImageName(e.ImageName),
                             TEMP_CreateDetailedImageName(e.ImageName),
                             false);
+
                         newControlCollection.Add(newPictureBox);
                     }
                 }
@@ -1018,7 +1105,6 @@ namespace PageDesigner.Forms
                     _selectedGridImage.IsStandaloneImage());
 
                 SignalSchemaChange();
-
             }
         }
 
@@ -1031,8 +1117,8 @@ namespace PageDesigner.Forms
         }
 
         private void PreviewButton_Click(object sender, EventArgs e)
-        {
-            GeneratePreviewWebpage();
+        { 
+            DisplayPreviewInNewProcess();
         }
 
         private void GenerateButton_Click(object sender, EventArgs e)
@@ -1225,7 +1311,7 @@ namespace PageDesigner.Forms
 
         private void previewToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            GeneratePreviewWebpage();
+            DisplayPreviewInNewProcess();
         }
 
         private void undoToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1269,7 +1355,7 @@ namespace PageDesigner.Forms
                             }
                             catch (Exception copyException)
                             {
-                                exceptions.Add(e.GetType().Name);
+                                exceptions.Add(copyException.GetType().Name);
                             }
                         }
                     }
@@ -1300,5 +1386,39 @@ namespace PageDesigner.Forms
                 }
             }
         }
+
+        private void livePreviewToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_isLivePreviewFormActive)
+            {
+                return;
+            }
+
+            if (_livePreviewForm == null)
+            {
+                _livePreviewForm = new();
+                _livePreviewForm.ShowInTaskbar = true;
+                _livePreviewForm.ShowIcon = false;
+
+                _livePreviewForm.Shown += livePreviewForm_Shown;
+                _livePreviewForm.FormClosed += livePreviewForm_FormClosed;
+            }
+
+            _livePreviewForm.StartPosition = FormStartPosition.CenterParent;
+            _livePreviewForm.Show(Owner);
+        }
+
+        private void livePreviewForm_Shown(object? sender, EventArgs e)
+        {
+            _isLivePreviewFormActive = true;
+            _livePreviewForm.LoadUrl(GeneratePreviewWebpage());
+        }
+
+        private void livePreviewForm_FormClosed(object? sender, FormClosedEventArgs e)
+        {
+            _isLivePreviewFormActive = false;
+        }
+
+
     }
 }

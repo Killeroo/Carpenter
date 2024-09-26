@@ -100,7 +100,7 @@ namespace SiteViewer.Controls
 
         private void EditButton_Click(object sender, EventArgs e)
         {
-#if false
+#if true
             PageDesignerForm form = new(_directoryPath, _template.FilePath);
             form.Show();
 #else
