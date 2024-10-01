@@ -13,7 +13,8 @@ namespace Carpenter
 
         public enum Option
         {
-            OutputFilename
+            OutputFilename,
+            PageImage // TODO: Rename to thumbnail and move to token
         }
 
         public enum Token
@@ -69,6 +70,7 @@ namespace Carpenter
         private readonly Dictionary<string, Option> _optionsTable = new()
         {
             { "output_file", Option.OutputFilename },
+            { "page_image", Option.PageImage }
         };
 
         private readonly Dictionary<string, ImageTag> _imageTagTable = new()

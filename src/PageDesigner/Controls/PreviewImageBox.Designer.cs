@@ -28,92 +28,102 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.Panel = new System.Windows.Forms.Panel();
-            this.Label = new System.Windows.Forms.Label();
-            this.PictureBox = new System.Windows.Forms.PictureBox();
-            this.ImageContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.AddImageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.InsertToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.ReplaceImageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.Panel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.PictureBox)).BeginInit();
-            this.ImageContextMenuStrip.SuspendLayout();
-            this.SuspendLayout();
+            components = new System.ComponentModel.Container();
+            Panel = new Panel();
+            Label = new Label();
+            PictureBox = new PictureBox();
+            ImageContextMenuStrip = new ContextMenuStrip(components);
+            AddImageToolStripMenuItem = new ToolStripMenuItem();
+            InsertToolStripMenuItem = new ToolStripMenuItem();
+            ReplaceImageToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator1 = new ToolStripSeparator();
+            pageImageToolStripMenuItem = new ToolStripMenuItem();
+            Panel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)PictureBox).BeginInit();
+            ImageContextMenuStrip.SuspendLayout();
+            SuspendLayout();
             // 
             // Panel
             // 
-            this.Panel.Controls.Add(this.Label);
-            this.Panel.Controls.Add(this.PictureBox);
-            this.Panel.Location = new System.Drawing.Point(3, 3);
-            this.Panel.Name = "Panel";
-            this.Panel.Size = new System.Drawing.Size(144, 144);
-            this.Panel.TabIndex = 0;
+            Panel.Controls.Add(Label);
+            Panel.Controls.Add(PictureBox);
+            Panel.Location = new Point(3, 3);
+            Panel.Name = "Panel";
+            Panel.Size = new Size(144, 144);
+            Panel.TabIndex = 0;
             // 
             // Label
             // 
-            this.Label.AutoSize = true;
-            this.Label.Location = new System.Drawing.Point(-3, 129);
-            this.Label.MinimumSize = new System.Drawing.Size(150, 0);
-            this.Label.Name = "Label";
-            this.Label.Size = new System.Drawing.Size(150, 15);
-            this.Label.TabIndex = 1;
-            this.Label.Text = "label1";
-            this.Label.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            Label.AutoSize = true;
+            Label.Location = new Point(-3, 129);
+            Label.MinimumSize = new Size(150, 0);
+            Label.Name = "Label";
+            Label.Size = new Size(150, 15);
+            Label.TabIndex = 1;
+            Label.Text = "label1";
+            Label.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // PictureBox
             // 
-            this.PictureBox.ContextMenuStrip = this.ImageContextMenuStrip;
-            this.PictureBox.Location = new System.Drawing.Point(3, 3);
-            this.PictureBox.Name = "PictureBox";
-            this.PictureBox.Size = new System.Drawing.Size(141, 123);
-            this.PictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
-            this.PictureBox.TabIndex = 0;
-            this.PictureBox.TabStop = false;
+            PictureBox.ContextMenuStrip = ImageContextMenuStrip;
+            PictureBox.Location = new Point(3, 3);
+            PictureBox.Name = "PictureBox";
+            PictureBox.Size = new Size(141, 123);
+            PictureBox.SizeMode = PictureBoxSizeMode.CenterImage;
+            PictureBox.TabIndex = 0;
+            PictureBox.TabStop = false;
             // 
             // ImageContextMenuStrip
             // 
-            this.ImageContextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.AddImageToolStripMenuItem,
-            this.InsertToolStripMenuItem,
-            this.ReplaceImageToolStripMenuItem});
-            this.ImageContextMenuStrip.Name = "contextMenuStrip1";
-            this.ImageContextMenuStrip.Size = new System.Drawing.Size(116, 70);
+            ImageContextMenuStrip.Items.AddRange(new ToolStripItem[] { AddImageToolStripMenuItem, InsertToolStripMenuItem, ReplaceImageToolStripMenuItem, toolStripSeparator1, pageImageToolStripMenuItem });
+            ImageContextMenuStrip.Name = "contextMenuStrip1";
+            ImageContextMenuStrip.Size = new Size(181, 120);
             // 
             // AddImageToolStripMenuItem
             // 
-            this.AddImageToolStripMenuItem.Name = "AddImageToolStripMenuItem";
-            this.AddImageToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
-            this.AddImageToolStripMenuItem.Text = "Add";
-            this.AddImageToolStripMenuItem.Click += new System.EventHandler(this.AddImageToolStripMenuItem_Click);
+            AddImageToolStripMenuItem.Name = "AddImageToolStripMenuItem";
+            AddImageToolStripMenuItem.Size = new Size(180, 22);
+            AddImageToolStripMenuItem.Text = "Add";
+            AddImageToolStripMenuItem.Click += AddImageToolStripMenuItem_Click;
             // 
             // InsertToolStripMenuItem
             // 
-            this.InsertToolStripMenuItem.Name = "InsertToolStripMenuItem";
-            this.InsertToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
-            this.InsertToolStripMenuItem.Text = "Insert";
-            this.InsertToolStripMenuItem.Click += new System.EventHandler(this.InsertToolStripMenuItem_Click);
+            InsertToolStripMenuItem.Name = "InsertToolStripMenuItem";
+            InsertToolStripMenuItem.Size = new Size(180, 22);
+            InsertToolStripMenuItem.Text = "Insert";
+            InsertToolStripMenuItem.Click += InsertToolStripMenuItem_Click;
             // 
             // ReplaceImageToolStripMenuItem
             // 
-            this.ReplaceImageToolStripMenuItem.Name = "ReplaceImageToolStripMenuItem";
-            this.ReplaceImageToolStripMenuItem.Size = new System.Drawing.Size(115, 22);
-            this.ReplaceImageToolStripMenuItem.Text = "Replace";
-            this.ReplaceImageToolStripMenuItem.Click += new System.EventHandler(this.ReplaceImageToolStripMenuItem_Click);
+            ReplaceImageToolStripMenuItem.Name = "ReplaceImageToolStripMenuItem";
+            ReplaceImageToolStripMenuItem.Size = new Size(180, 22);
+            ReplaceImageToolStripMenuItem.Text = "Replace";
+            ReplaceImageToolStripMenuItem.Click += ReplaceImageToolStripMenuItem_Click;
+            // 
+            // toolStripSeparator1
+            // 
+            toolStripSeparator1.Name = "toolStripSeparator1";
+            toolStripSeparator1.Size = new Size(177, 6);
+            // 
+            // pageImageToolStripMenuItem
+            // 
+            pageImageToolStripMenuItem.Name = "pageImageToolStripMenuItem";
+            pageImageToolStripMenuItem.Size = new Size(180, 22);
+            pageImageToolStripMenuItem.Text = "Page Image";
+            pageImageToolStripMenuItem.Click += pageImageToolStripMenuItem_Click;
             // 
             // PreviewImageBox
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.Panel);
-            this.Name = "PreviewImageBox";
-            this.Load += new System.EventHandler(this.PreviewImageBox_Load);
-            this.Panel.ResumeLayout(false);
-            this.Panel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.PictureBox)).EndInit();
-            this.ImageContextMenuStrip.ResumeLayout(false);
-            this.ResumeLayout(false);
-
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            Controls.Add(Panel);
+            Name = "PreviewImageBox";
+            Load += PreviewImageBox_Load;
+            Panel.ResumeLayout(false);
+            Panel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)PictureBox).EndInit();
+            ImageContextMenuStrip.ResumeLayout(false);
+            ResumeLayout(false);
         }
 
         #endregion
@@ -125,5 +135,7 @@
         private ToolStripMenuItem AddImageToolStripMenuItem;
         private ToolStripMenuItem ReplaceImageToolStripMenuItem;
         private ToolStripMenuItem InsertToolStripMenuItem;
+        private ToolStripSeparator toolStripSeparator1;
+        private ToolStripMenuItem pageImageToolStripMenuItem;
     }
 }

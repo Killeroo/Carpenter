@@ -92,12 +92,14 @@ namespace PageDesigner.Forms
 
         private PreviewImageBox _selectedPreviewImageControl;
         private GridPictureBox _selectedGridImage;
+        private PreviewImageBox _pageImagePreviewImageBox;
         private Dictionary<string, Image> _previewImages = new();
         private Queue<GridPictureBox> _pictureBoxBuffer = new();
         private ChangesStack<Schema> _schemaChanges = new();
 
         private LivePreviewForm _livePreviewForm = null;
         private bool _isLivePreviewFormActive = false;
+        private string _pageImageName;
 
         // TODO: DRY
         public PageDesignerForm()
@@ -289,6 +291,11 @@ namespace PageDesigner.Forms
             _savedSchema = schema;
             _workingSchema = new Schema(_savedSchema);
 
+            if (_workingSchema.OptionValues.TryGetValue(Schema.Option.PageImage, out string pageImageName))
+            {
+                _pageImageName = pageImageName;
+            }
+
             UpdateFormFromWorkingSchema();
 
             // Load available images in the directory
@@ -306,7 +313,22 @@ namespace PageDesigner.Forms
                 return;
             }
 
+            // Temp: Add _detailed prefix to all images in the grid
+            //foreach (Control control in GridFlowLayoutPanel.Controls)
+            //{
+            //    if (control is GridPictureBox gridPictureBox)
+            //    {
+            //        gridPictureBox.DetailedImageName = gridPictureBox.PreviewImageName.Replace("_Preview", "_Detailed");
+            //    }
+            //}
+
+            if (string.IsNullOrEmpty(_pageImageName) == false)
+            {
+                _workingSchema.OptionValues.AddOrUpdate(Schema.Option.PageImage, _pageImageName);
+            }
+
             UpdateWorkingSchemaFromForm();
+            
 
             //if (File.Exists(_schemaPath))
             //{
@@ -572,10 +594,12 @@ namespace PageDesigner.Forms
                 _workingSchema = lastSchemaChange;
 
                 // Only re-populate the grid if it has actually changed 
-                if (_workingSchema.ImageSections != lastSchemaChange.ImageSections)
-                {
-                    PopulateGridFromWorkingSchema();
-                }
+                // NOTE: Equality check isn't working
+                //if (_workingSchema.ImageSections != lastSchemaChange.ImageSections)
+                //{
+                //    PopulateGridFromWorkingSchema();
+                //}
+                PopulateGridFromWorkingSchema();
                 PopulateTextboxesFromWorkingSchema();
 
 
@@ -718,6 +742,11 @@ namespace PageDesigner.Forms
                     // TODO: Fix with aspect ratio
                     PreviewImageBox previewImageBox = new PreviewImageBox(
                         Path.GetFileName(imagePath), previewImage);
+
+                    if (_pageImageName == Path.GetFileName(imagePath))
+                    {
+                        previewImageBox.SetPageImageChecked(true);
+                    }
                     //FetchOrCatchPreviewImage(Path.GetFileName(filename), inputtedPath));  //
 
                     //previewImageBox.MouseClick += ImagePreviewFlowLayoutPanel_MouseClick;
@@ -726,6 +755,7 @@ namespace PageDesigner.Forms
                     previewImageBox.AddContextItemClicked += ImagePreviewFlowLayoutPanel_Control_DoubleClicked;
                     previewImageBox.InsertContextItemClicked += ImagePreviewFlowPanel_InsertContextItem_Clicked;
                     previewImageBox.ReplaceContextItemClicked += ImagePreviewFlowPanel_ReplaceContextItem_Clicked;
+                    previewImageBox.ImagePageContextItemClicked += ImagePreviewFlowPanel_ImagePageContextItem_Clicked;
 
                     ImagePreviewFlowLayoutPanel.Controls.Add(previewImageBox);
                 }
@@ -1105,6 +1135,22 @@ namespace PageDesigner.Forms
                     _selectedGridImage.IsStandaloneImage());
 
                 SignalSchemaChange();
+            }
+        }
+
+        private void ImagePreviewFlowPanel_ImagePageContextItem_Clicked(object? sender, ImageEventArgs e)
+        {
+            if (sender is PreviewImageBox previewImageControl)
+            {
+                if (_pageImagePreviewImageBox != null && _pageImagePreviewImageBox != previewImageControl)
+                {
+                    _pageImagePreviewImageBox.SetPageImageChecked(false);
+                }
+
+                _pageImageName = previewImageControl.GetImageName();
+
+                previewImageControl.SetPageImageChecked(true);
+                _pageImagePreviewImageBox = previewImageControl;
             }
         }
 

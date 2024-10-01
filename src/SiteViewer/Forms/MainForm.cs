@@ -16,6 +16,7 @@ using Carpenter;
 using SiteViewer;
 using SiteViewer.Controls;
 using PageDesigner.Forms;
+using JpegMetadataExtractor;
 
 namespace SiteViewer.Forms
 {
@@ -385,7 +386,7 @@ namespace SiteViewer.Forms
             const string kHtmlTemplate = @"
 <div class=""container"">
     <a href=""%BASE_URL/%PAGE_URL/"">
-        <img class=""preview_image"" src=""%BASE_URL/%PAGE_URL/IMG_5336_Preview.jpg"" width=""2592"" height=""1728"" style=""width:100%"">
+        <img class=""preview_image"" src=""%BASE_URL/%PAGE_URL/%THUMBNAIL"" width=""%T_WIDTH"" height=""%T_HEIGHT"" style=""width:100%"">
 
         <div style=""margin-left: 1em;"">
             <h3 style=""margin-top: 0; margin-bottom: 0;"">%TITLE</h3>
@@ -435,10 +436,38 @@ namespace SiteViewer.Forms
             foreach (KeyValuePair<DateTime, Schema> entry in schemasOrderedByDate)
             {
                 Schema schema = entry.Value;
+
+                string thumbnailName = string.Empty;
+                int thumbnailWidth = 0;
+                int thumbnailHeight = 0;
+                if (schema.OptionValues.TryGetValue(Schema.Option.PageImage, out string pageImage)) 
+                {
+                    thumbnailName = pageImage;
+                    foreach (string file in Directory.EnumerateFiles(PathTextBox.Text, "*.jpg", SearchOption.AllDirectories))
+                    {
+                        if (Path.GetFileName(file) == pageImage)
+                        {
+                            var imageMetadata = JpegParser.GetMetadata(file);
+                            thumbnailWidth = imageMetadata.Width;
+                            thumbnailHeight = imageMetadata.Height;
+                            break;
+                        }
+                    }
+                }
+
                 string generatedHtmlSnippet = string.Empty;
                 foreach (string line in kHtmlTemplate.Split(Environment.NewLine))
                 {
                     string processedLine = line;
+
+                    // HACK: Remove once we change thumbnail to be a token
+                    if (string.IsNullOrEmpty(thumbnailName) == false)
+                    {
+                        processedLine = processedLine.Replace(@"%THUMBNAIL", thumbnailName);
+                        processedLine = processedLine.Replace(@"%T_WIDTH", thumbnailWidth.ToString());
+                        processedLine = processedLine.Replace(@"%T_HEIGHT", thumbnailHeight.ToString());
+                    }
+
                     foreach (KeyValuePair<string, Schema.Token> tokenEntry in schema.TokenTable)
                     {
                         processedLine = processedLine.Replace(tokenEntry.Key, schema.TokenValues[tokenEntry.Value]);
@@ -448,11 +477,10 @@ namespace SiteViewer.Forms
                 generatedPageEntries.Add(generatedHtmlSnippet);
             }
 
-            bool singleColumnMode = false;
             List<string> columns = new() { string.Empty, string.Empty };
             for (int index = 0; index < generatedPageEntries.Count; index++)
             {
-                int columnIndex = singleColumnMode ? 1 : index % 2;
+                int columnIndex = singleColumn ? 0 : index % 2;
                 columns[columnIndex] += generatedPageEntries[index];
             }
 
@@ -476,6 +504,8 @@ namespace SiteViewer.Forms
 
         private void generateHeaders1ColumnToolStripMenuItem_Click(object sender, EventArgs e)
         {
+
+            // TODO: Merge these into one
             GeneratePageHeaders(true);
         }
 

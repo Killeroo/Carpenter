@@ -20,18 +20,20 @@ namespace PageDesigner
         public event EventHandler<ImageEventArgs> AddContextItemClicked;
         public event EventHandler<ImageEventArgs> InsertContextItemClicked;
         public event EventHandler<ImageEventArgs> ReplaceContextItemClicked;
+        public event EventHandler<ImageEventArgs> ImagePageContextItemClicked;
 
         public void SetSelected(bool isSelected) => _isPreviewSelected = isSelected;
         public bool GetSelected() => _isPreviewSelected;
 
         public string GetImageName() => _imageName;
 
+        public void SetPageImageChecked(bool isChecked) => pageImageToolStripMenuItem.Checked = isChecked;
+
 
         private string _imageName;
         private bool _isPreviewSelected = false;
 
         private ImageEventArgs _eventArgs;
-
 
 
         public PreviewImageBox()
@@ -128,6 +130,12 @@ namespace PageDesigner
             }
         }
 
-
+        private void pageImageToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (ImagePageContextItemClicked != null)
+            {
+                ImagePageContextItemClicked(this, _eventArgs);
+            }
+        }
     }
 }
