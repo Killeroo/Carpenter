@@ -317,10 +317,10 @@ namespace PageDesigner.Forms
             //}
 
             // TODO: Show an error when schema save fails
-            //if (_workingSchema.Save(Path.GetDirectoryName(_schemaPath)))
-            //{
-            //    MessageBox.Show("Schema successfully saved.", "File saved");
-            //}
+            if (_workingSchema.Save(Path.GetDirectoryName(_schemaPath)))
+            {
+                MessageBox.Show("Schema successfully saved.", "File saved");
+            }
 
             this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
 

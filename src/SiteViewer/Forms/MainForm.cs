@@ -150,6 +150,11 @@ namespace SiteViewer.Forms
 
         private void NewFolderButton_Click(object sender, EventArgs e)
         {
+            ShowNewFolderDialog();
+        }
+
+        private void ShowNewFolderDialog()
+        {
             // TODO: Put into method
             //FolderBrowser.InitialDirectory = _rootPath;
             //FolderBrowser.ShowNewFolderButton = true;
@@ -176,7 +181,7 @@ namespace SiteViewer.Forms
                 {
                     Directory.CreateDirectory(newDirectory);
                 }
-                catch 
+                catch
                 {
                     MessageBox.Show(
                         $"Could not create new page {_lastCreatedPageName}",
@@ -309,6 +314,16 @@ namespace SiteViewer.Forms
 
         private void CleanButton_Click(object sender, EventArgs e)
         {
+
+        }
+
+        private void OrderButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        void RemoveUnusedImages()
+        {
             string[] localDirectories = Directory.GetDirectories(_rootPath);
             int count = 0;
             for (int i = 0; i < localDirectories.Length; i++)
@@ -320,7 +335,7 @@ namespace SiteViewer.Forms
                     // try and load the schema in the directory
                     string currentDirectoryPath = Path.GetDirectoryName(localSchemaPath);
                     using Schema localSchema = new(localSchemaPath);
-                    
+
                     // Construct a list of all referenced images in the schema so we can
                     // work out what files aren't referenced
                     List<string> referencedImages = new List<string>();
@@ -357,6 +372,136 @@ namespace SiteViewer.Forms
             }
 
             StateToolStripStatusLabel.Text = count + " files removed";
+        }
+
+        void GeneratePageHeaders(bool singleColumn)
+        {
+            if (Directory.Exists(PathTextBox.Text) == false)
+            {
+                return;
+            }
+
+            // TODO: Should probably put this somewhere else
+            const string kHtmlTemplate = @"
+<div class=""container"">
+    <a href=""%BASE_URL/%PAGE_URL/"">
+        <img class=""preview_image"" src=""%BASE_URL/%PAGE_URL/IMG_5336_Preview.jpg"" width=""2592"" height=""1728"" style=""width:100%"">
+
+        <div style=""margin-left: 1em;"">
+            <h3 style=""margin-top: 0; margin-bottom: 0;"">%TITLE</h3>
+            <p style=""color: black"">%MONTH %YEAR - %CAMERA - Digital</p>
+        </div>
+    </a>
+</div>
+";
+
+            Dictionary<string, int> MonthStringToInt = new()
+            {
+                { "january", 1 },
+                { "february", 2 },
+                { "march", 3 },
+                { "april", 4 },
+                { "may", 5 },
+                { "june", 6 },
+                { "july", 7 },
+                { "august", 8 },
+                { "september", 9 },
+                { "october", 10 },
+                { "november", 11 },
+                { "december", 12 }
+            };
+
+            Dictionary<DateTime, Schema> schemasWithDate = new();
+            foreach (string directory in Directory.EnumerateDirectories(PathTextBox.Text))
+            {
+                Schema schema = new();
+                if (schema.Load(Path.Combine(directory, "SCHEMA")))
+                {
+                    DateTime date = new(
+                        Convert.ToInt32(schema.TokenValues[Schema.Token.Year]),
+                        MonthStringToInt[schema.TokenValues[Schema.Token.Month].ToLower()],
+                        1);
+
+                    while (schemasWithDate.ContainsKey(date))
+                    {
+                        date = date.AddDays(1);
+                    }
+                    schemasWithDate.Add(date, schema);
+                }
+            }
+            List<KeyValuePair<DateTime, Schema>> schemasOrderedByDate = schemasWithDate.OrderByDescending(x => x.Key).ToList();
+
+            List<string> generatedPageEntries = new();
+            foreach (KeyValuePair<DateTime, Schema> entry in schemasOrderedByDate)
+            {
+                Schema schema = entry.Value;
+                string generatedHtmlSnippet = string.Empty;
+                foreach (string line in kHtmlTemplate.Split(Environment.NewLine))
+                {
+                    string processedLine = line;
+                    foreach (KeyValuePair<string, Schema.Token> tokenEntry in schema.TokenTable)
+                    {
+                        processedLine = processedLine.Replace(tokenEntry.Key, schema.TokenValues[tokenEntry.Value]);
+                    }
+                    generatedHtmlSnippet += processedLine + Environment.NewLine;
+                }
+                generatedPageEntries.Add(generatedHtmlSnippet);
+            }
+
+            bool singleColumnMode = false;
+            List<string> columns = new() { string.Empty, string.Empty };
+            for (int index = 0; index < generatedPageEntries.Count; index++)
+            {
+                int columnIndex = singleColumnMode ? 1 : index % 2;
+                columns[columnIndex] += generatedPageEntries[index];
+            }
+
+            string finalGeneratedText = string.Empty;
+            foreach (string column in columns)
+            {
+                finalGeneratedText += column;
+                finalGeneratedText += "-----------------------" + Environment.NewLine;
+            }
+
+            GeneratedTextForm generatedTextForm = new GeneratedTextForm();
+            generatedTextForm.SetText(finalGeneratedText);
+            generatedTextForm.StartPosition = FormStartPosition.CenterParent;
+            generatedTextForm.Show(this);
+        }
+
+        private void removeUnusedImagesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            RemoveUnusedImages();
+        }
+
+        private void generateHeaders1ColumnToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GeneratePageHeaders(true);
+        }
+
+        private void generateHeaders2ColumnsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GeneratePageHeaders(false);
+        }
+
+        private void openInExplorerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (Directory.Exists(PathTextBox.Text) == false)
+            {
+                return;
+            }
+
+            Process.Start("explorer.exe", PathTextBox.Text);
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void newPageToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowNewFolderDialog();
         }
     }
 }
