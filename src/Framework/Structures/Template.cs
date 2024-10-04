@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using JpegMetadataExtractor;
+using System.Diagnostics;
 
 namespace Carpenter
 {
@@ -377,24 +378,24 @@ namespace Carpenter
             {
                 string line = _fileContents[i];
 
-                if (line.Contains($"class=\"{schema.TokenValues[Schema.Token.ClassIdImageGrid]}\""))
+                if (line.Contains($"class=") && line.Contains(schema.TokenValues[Schema.Token.ClassIdImageGrid]))
                 {
                     // First we need to find of the template that corresponds to our photo grid
                     _imageGridSection = new TemplateSection(this, i);
                     Logger.Log(LogLevel.Verbose, $"Found ImageGrid element (id={schema.TokenValues[Schema.Token.ClassIdImageGrid]})");
                 }
-                else if (line.Contains($"class=\"{schema.TokenValues[Schema.Token.ClassIdImageElement]}\""))
+                else if (line.Contains($"class=") && line.Contains(schema.TokenValues[Schema.Token.ClassIdImageElement]))
                 {
                     // Next we need to find the second of the template that makes up the element for our image
                     _imageSection = new TemplateSection(this, i);
                     Logger.Log(LogLevel.Verbose, $"Found ImageSection element (id={schema.TokenValues[Schema.Token.ClassIdImageElement]})");
                 }
-                else if (line.Contains($"class=\"{schema.TokenValues[Schema.Token.ClassIdImageColumn]}\""))
+                else if (line.Contains($"class=") && line.Contains(schema.TokenValues[Schema.Token.ClassIdImageColumn]))
                 {
                     _imageColumnSection = new TemplateSection(this, i);
                     Logger.Log(LogLevel.Verbose, $"Found ImageColumn element (id={schema.TokenValues[Schema.Token.ClassIdImageColumn]})");
                 }
-                else if (schema.TokenValues.ContainsKey(Schema.Token.ClassIdImageTitle) && line.Contains($"class=\"{schema.TokenValues[Schema.Token.ClassIdImageTitle]}\""))
+                else if (schema.TokenValues.ContainsKey(Schema.Token.ClassIdImageTitle) && line.Contains($"class=") && line.Contains(schema.TokenValues[Schema.Token.ClassIdImageTitle]))
                 {
                     _imageTitleSection = new TemplateSection(this, i);
                     Logger.Log(LogLevel.Verbose, $"Found ImageTitle element (id={schema.TokenValues[Schema.Token.ClassIdImageTitle]})");
@@ -404,6 +405,7 @@ namespace Carpenter
             if (_imageSection == null || _imageColumnSection == null || _imageGridSection == null || _imageTitleSection == null)
             {
                 Logger.Log(LogLevel.Error, "Did not parse all sections of template file");
+                Debug.Assert(true); // TODO: Not great really
             }
             else
             {

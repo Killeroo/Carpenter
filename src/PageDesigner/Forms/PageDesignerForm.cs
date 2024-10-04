@@ -23,64 +23,64 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace PageDesigner.Forms
 {
-    public class ChangesStack<T> where T : class
-    {
-        private List<T> _changes;
-        private int _current = 0;
-        private int _head = 0;
-
-        public ChangesStack()
-        {
-            _changes = new List<T>();
-        }
-
-        public void Commit(T change)
-        {
-            if (change == GetCurrentChange())
-            {
-                return;
-            }
-
-            if (_current != _head)
-            {
-                _changes.RemoveRange(_current, _head - _current);
-            }
-
-            _changes.Add(change);
-            _head = _current = _changes.Count - 1;
-        }
-
-        public T GetCurrentChange()
-        {
-            if (_changes.Count == 0)
-            {
-                return null;
-            }
-
-            return _changes[_current];
-        }
-
-        public T Undo()
-        {
-            _current = Math.Max(--_current, 0);
-            return _changes[_current];
-        }
-
-        public T Redo()
-        {
-            _current = Math.Min(++_current, _head);
-            return _changes[_current];
-        }
-
-        public void Reset()
-        {
-            _changes.Clear();
-            _current = _head = 0;
-        }
-    }
-
     public partial class PageDesignerForm : Form
     {
+        public class ChangesStack<T> where T : class
+        {
+            private List<T> _changes;
+            private int _current = 0;
+            private int _head = 0;
+
+            public ChangesStack()
+            {
+                _changes = new List<T>();
+            }
+
+            public void Commit(T change)
+            {
+                if (change == GetCurrentChange())
+                {
+                    return;
+                }
+
+                if (_current != _head)
+                {
+                    _changes.RemoveRange(_current, _head - _current);
+                }
+
+                _changes.Add(change);
+                _head = _current = _changes.Count - 1;
+            }
+
+            public T GetCurrentChange()
+            {
+                if (_changes.Count == 0)
+                {
+                    return null;
+                }
+
+                return _changes[_current];
+            }
+
+            public T Undo()
+            {
+                _current = Math.Max(--_current, 0);
+                return _changes[_current];
+            }
+
+            public T Redo()
+            {
+                _current = Math.Min(++_current, _head);
+                return _changes[_current];
+            }
+
+            public void Reset()
+            {
+                _changes.Clear();
+                _current = _head = 0;
+            }
+        }
+
         private const string kUnsavedTitleString = " *";
         private const string kImageFileFilter = "Image Files(*.JPG;*.JPEG)|*.JPG;*.JPEG|All files (*.*)|*.*";
 

@@ -26,7 +26,7 @@
     <Compile Update="Controls\PageEntry.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Update="Forms\MainForm.cs">
+    <Compile Update="Forms\SiteViewerForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Update="Settings.Designer.cs">
