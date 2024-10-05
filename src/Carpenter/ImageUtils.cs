@@ -5,11 +5,11 @@ using System.Text;
 using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Drawing.Drawing2D;
+using System.Diagnostics;
 
 using Encoder = System.Drawing.Imaging.Encoder;
 using InterpolationMode = System.Drawing.Drawing2D.InterpolationMode;
-using System.Drawing.Drawing2D;
-using System.Diagnostics;
 
 namespace Carpenter
 {

@@ -1,8 +1,8 @@
 ﻿using Carpenter;
+using Carpenter.PageDesigner;
 using CefSharp.DevTools.Network;
 using JpegMetadataExtractor;
 using PageDesigner.Controls;
-using PageDesigner.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -89,7 +89,7 @@ namespace PageDesigner.Forms
         private Schema _workingSchema;
         private Schema _savedSchema;
         private Template _template;
-
+        private Site _site;
         private PreviewImageBox _selectedPreviewImageControl;
         private GridPictureBox _selectedGridImage;
         private PreviewImageBox _pageImagePreviewImageBox;
@@ -111,7 +111,7 @@ namespace PageDesigner.Forms
             // TODO: Move to designer
             LivePreviewGenerateTimer.Tick += LivePreviewGenerateTimer_Tick;
         }
-        public PageDesignerForm(string path, Template template) : this()
+        public PageDesignerForm(string path, Template template, Site site) : this()
         {
             if (Directory.Exists(path) == false)
             {
@@ -123,17 +123,38 @@ namespace PageDesigner.Forms
                 return;
             }
 
+            if (template == null)
+            {
+                MessageBox.Show(
+                    $"Not provided valid Template, please check and try again",
+                    "Carpenter",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
+            if (site == null || site.IsLoaded() == false)
+            {
+                MessageBox.Show(
+                    $"Not provided valid Site, please check and try again",
+                    "Carpenter",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
             _template = template;
+            _site = site;
             _workingPath = path;
             _schemaPath = Path.Combine(_workingPath, "SCHEMA");
             this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
         }
-        public PageDesignerForm(string path, string templatePath) : this()
+        public PageDesignerForm(string path, string siteRootPath) : this()
         {
-            if (Directory.Exists(path) == false || File.Exists(templatePath) == false)
+            if (Directory.Exists(path) == false || Directory.Exists(siteRootPath) == false)
             {
                 MessageBox.Show(
-                    $"Could not find directory path or page path, please check and try again",
+                    $"Could not find page path or site root path, please check and try again",
                     "Carpenter",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
@@ -142,7 +163,24 @@ namespace PageDesigner.Forms
 
             try
             {
-                _template = new Template(templatePath);
+                _site = new Site(siteRootPath);
+                if (_site.IsLoaded() == false)
+                {
+                    throw new Exception();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Could not parse site ({ex.GetType()}). Check format and try again.",
+                    "Carpenter",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+
+            try
+            {
+                _template = new Template(_site.TemplatePath);
             }
             catch (Exception ex)
             {
@@ -199,11 +237,9 @@ namespace PageDesigner.Forms
 
             // Generate preview page
             Stopwatch stopwatch = Stopwatch.StartNew();
-            if (_template.Generate(_workingSchema, _workingPath, true))
+            if (_template.GeneratePreviewHtmlForSchema(_workingSchema, _site, _workingPath, out string previewFileName))
             {
-                string originalOutputFile = _workingSchema.OptionValues[Schema.Options.OutputFilename];
-                string previewName = Path.GetFileNameWithoutExtension(originalOutputFile) + "_preview";
-                string previewPath = Path.Combine(_workingPath, previewName + Path.GetExtension(originalOutputFile));
+                string previewPath = Path.Combine(_workingPath, previewFileName);
 
                 stopwatch.Stop();
                 statusToolStripStatusLabel.Text = string.Format("Generated Preview in {0}ms", stopwatch.ElapsedMilliseconds);
@@ -366,33 +402,13 @@ namespace PageDesigner.Forms
             }
 
             // Update tokens values from page
-            _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.BaseUrl, BaseUrlTextBox.Text);
-            _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.PageUrl, PageUrlTextBox.Text);
-            _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.Title, TitleTextBox.Text);
-            _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.Location, LocationTextBox.Text);
-            _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.Month, MonthTextBox.Text);
-            _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.Year, YearTextBox.Text);
-            _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.Author, AuthorTextBox.Text);
-            _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.Camera, CameraTextBox.Text);
-
-            // Copy or add class id and option base values
-            if (_savedSchema.TokenValues != _workingSchema.TokenValues && _savedSchema.TokenValues.Count != 0)
-            {
-                // TODO: HACK: Copy values from original (WHICH WON'T ALWAYS EXIST)
-                _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.ClassIdImageColumn, _savedSchema.TokenValues[Schema.Tokens.ClassIdImageColumn]);
-                _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.ClassIdImageElement, _savedSchema.TokenValues[Schema.Tokens.ClassIdImageElement]);
-                _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.ClassIdImageGrid, _savedSchema.TokenValues[Schema.Tokens.ClassIdImageGrid]);
-                _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.ClassIdImageTitle, _savedSchema.TokenValues[Schema.Tokens.ClassIdImageTitle]);
-            }
-            else
-            {
-                // Create some default values
-                // TODO: Have these set via a form on the main form or have them stored somewhere else
-                _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.ClassIdImageColumn, "photo_column");
-                _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.ClassIdImageElement, "photo_image");
-                _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.ClassIdImageGrid, "photo_grid");
-                _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.ClassIdImageTitle, "photo_title");
-            }
+            _workingSchema.PageUrl = PageUrlTextBox.Text;
+            _workingSchema.Title = TitleTextBox.Text;
+            _workingSchema.Location = LocationTextBox.Text;
+            _workingSchema.Month = MonthTextBox.Text;
+            _workingSchema.Year = YearTextBox.Text;
+            _workingSchema.Author = AuthorTextBox.Text;
+            _workingSchema.Camera = CameraTextBox.Text;
 
             if (_savedSchema.OptionValues != _workingSchema.OptionValues)
             {
@@ -401,7 +417,7 @@ namespace PageDesigner.Forms
             }
             else
             {
-                _workingSchema.OptionValues.AddOrUpdate(Schema.Options.OutputFilename, "index.html");
+                _workingSchema.GeneratedFilename = Config.kDefaultGeneratedFilename;
             }
 
             // Parse grid layout

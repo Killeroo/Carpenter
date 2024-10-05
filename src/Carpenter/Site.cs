@@ -7,7 +7,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Carpenter.Structures
+namespace Carpenter
 {
     /// <summary>
     /// Defines a website or part of a website, stores common options that all SCHEMAs in the child directories of the Site's root directory (Aka Site file location) will use during page generation
@@ -46,32 +46,32 @@ namespace Carpenter.Structures
         public string Url 
         { 
             get { return _optionValues.TryGetValue(Options.Url, out string value) ? value : string.Empty; } 
-            set { _optionValues.TryAdd(Options.Url, value); }
+            set { _optionValues.AddOrUpdate(Options.Url, value); }
         }
         public string TemplatePath 
         {
             get { return _optionValues.TryGetValue(Options.TemplatePath, out string value) ? value : string.Empty; }
-            set { _optionValues.TryAdd(Options.TemplatePath, value); }
+            set { _optionValues.AddOrUpdate(Options.TemplatePath, value); }
         }
         public string GridClass 
         {
             get { return _optionValues.TryGetValue(Options.GridClass, out string value) ? value : string.Empty; }
-            set { _optionValues.TryAdd(Options.GridClass, value); }
+            set { _optionValues.AddOrUpdate(Options.GridClass, value); }
         }
         public string ColumnClass 
         {
             get { return _optionValues.TryGetValue(Options.ColumnClass, out string value) ? value : string.Empty; }
-            set { _optionValues.TryAdd(Options.ColumnClass, value); }
+            set { _optionValues.AddOrUpdate(Options.ColumnClass, value); }
         }
         public string ImageClass 
         {
             get { return _optionValues.TryGetValue(Options.ImageClass, out string value) ? value : string.Empty; }
-            set { _optionValues.TryAdd(Options.ImageClass, value); }
+            set { _optionValues.AddOrUpdate(Options.ImageClass, value); }
         }
         public string TitleClass 
         {
             get { return _optionValues.TryGetValue(Options.TitleClass, out string value) ? value : string.Empty; }
-            set { _optionValues.TryAdd(Options.TitleClass, value); }
+            set { _optionValues.AddOrUpdate(Options.TitleClass, value); }
         }
 
         /// <summary>
@@ -89,6 +89,15 @@ namespace Carpenter.Structures
         /// </summary>
         private bool _loaded = false;
 
+
+        /// <summary>
+        /// Was the Site file was successfully read and loaded
+        /// </summary>
+        /// <returns></returns>
+        public bool IsLoaded() => _loaded;
+
+        public Site() { }
+        public Site(string rootPath) => TryLoad(rootPath);
 
         /// <summary>
         /// Gets the current root path of the Site
@@ -138,6 +147,12 @@ namespace Carpenter.Structures
 
             _loaded = true;
             return true;
+        }
+
+        private bool SanityCheck()
+        {
+            // TODO: implement plz
+            throw new NotImplementedException();
         }
 
         /// <summary>

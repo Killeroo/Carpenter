@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 
+using JpegMetadataExtractor;
+
 namespace Carpenter
 {
     public class Template
@@ -101,12 +103,11 @@ namespace Carpenter
         public string FilePath => _path;
         public bool IsLoaded => _loaded;
 
-        private TemplateSection _imageGridSection;
-        private TemplateSection _imageSection;
-        private TemplateSection _imageColumnSection;
-        private TemplateSection _imageTitleSection;
+        private TemplateSection? _imageGridSection;
+        private TemplateSection? _imageSection;
+        private TemplateSection? _imageColumnSection;
+        private TemplateSection? _imageTitleSection;
         private string[] _fileContents;
-        private string _path = string.Empty;
         private bool _loaded = false;
 
         public Template() 
@@ -115,32 +116,44 @@ namespace Carpenter
             JpegParser.UseInternalCache = true;
             JpegParser.CacheSize = 1;
         }
-        public Template(string path) : this() => Load(path);
+        public Template(string path) : this() => TryLoad(path);
 
-        public void Load(string path)
+        public bool TryLoad(string path)
         {
-            _fileContents = File.ReadAllLines(path);
-            _path = path;
-            Logger.Log(LogLevel.Verbose, $"Template file loaded (\"{path}\")");
-            _loaded = true;
+            try
+            {
+                _fileContents = File.ReadAllLines(path);
+                Logger.Log(LogLevel.Verbose, $"Template file loaded (\"{path}\")");
+
+                _loaded = true;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
         }
 
-        public bool GeneratePreviewHtmlForSchema(Schema schema, string outputPath)
+        public bool GeneratePreviewHtmlForSchema(Schema schema, Site site, string outputPath, out string previewFilename)
         {
-            if (schema.OptionValues.TryGetValue(Schema.Options.OutputFilename, out string outputFilename))
+            previewFilename = string.Empty;
+
+            string generatedFilename = schema.GeneratedFilename;
+            if (generatedFilename != string.Empty) // TODO: Should probably use a fallback
             {
-                outputFilename = string.Format("{0}_preview.html", Path.GetFileNameWithoutExtension(outputFilename));
-                return GenerateHtml(schema, outputPath, outputFilename, true);
+                previewFilename = string.Format("{0}{1}.html", Path.GetFileNameWithoutExtension(generatedFilename), Config.kGeneratedPreviewPostfix);
+                return GenerateHtml(schema, site, outputPath, previewFilename, true);
             }
 
             return false;
         }
 
-        public bool GenerateHtmlForSchema(Schema schema, string outputPath)
+        public bool GenerateHtmlForSchema(Schema schema, Site site, string outputPath)
         {
-            if (schema.OptionValues.TryGetValue(Schema.Options.OutputFilename, out string outputFilename))
+            string generatedFilename = schema.GeneratedFilename;
+            if (generatedFilename != string.Empty)
             {
-                return GenerateHtml(schema, outputPath, outputFilename, false);
+                return GenerateHtml(schema, site, outputPath, generatedFilename, false);
             }
 
             return false;
@@ -148,11 +161,23 @@ namespace Carpenter
 
         // TODO: Throw some exceptions
         Dictionary<string, (int height, int width)> _schemaImages = new Dictionary<string, (int height, int width)>();
-        private bool GenerateHtml(Schema schema, string outputPath, string outputFilename, bool isPreview)
+        private bool GenerateHtml(Schema schema, Site site, string outputPath, string outputFilename, bool isPreview)
         {
             if (!_loaded)
             {
                 Logger.Log(LogLevel.Error, "Cannot generate page without template loaded. Call load() first.");
+                return false;
+            }
+
+            if (schema == null || schema.IsLoaded() == false)
+            {
+                Logger.Log(LogLevel.Error, "Schema object not loaded, cannot generate page.");
+                return false;
+            }
+
+            if (site == null || site.IsLoaded() == false)
+            {
+                Logger.Log(LogLevel.Error, "Site object not loaded, cannot generate page.");
                 return false;
             }
 
@@ -186,9 +211,10 @@ namespace Carpenter
                 _schemaImages.Add(Path.GetFileName(imagePath), (height, width));
             }
 
-            // Parse first to understand the template using the schema 
+            // Parse first to understand the template using the site config 
             // We need to do this before we can generate the file
-            Parse(schema);
+            // TODO: Skip this if we previously parsed the site 
+            Parse(site);
 
             // Ok next we need to modify the template and remove the sections we have just passed
             // TODO: Don't assume sections are nested and that photo grid is first...
@@ -209,9 +235,9 @@ namespace Carpenter
                 if (string.IsNullOrEmpty(line))
                     continue;
 
-                foreach (var token in schema.TokenTable)
+                foreach (var token in Schema.TokenTable)
                 {
-                    line = line.Replace(token.Key, schema._tokenValues[token.Value]);
+                    line = line.Replace(token.Key, schema.GetTokenValues()[token.Value]);
                 }
 
                 templateCopy[i] = line;
@@ -235,7 +261,7 @@ namespace Carpenter
                     }
 
                     // Replace page url
-                    string pageUrl = string.Format("{0}/{1}/", schema._tokenValues[Schema.Tokens.BaseUrl], schema._tokenValues[Schema.Tokens.PageUrl]);
+                    string pageUrl = string.Format("{0}/{1}/", site.Url, schema.PageUrl);
                     line = line.Replace(pageUrl, "");
 
                     templateCopy[index] = line;
@@ -266,7 +292,7 @@ namespace Carpenter
             _processedImages = 0;
 
             photoGridContents.Add(_imageGridSection.StartLine);
-            foreach (ImageSection section in schema.ImageSections)
+            foreach (ImageSection section in schema.GetImageSections())
             {
                 if (section.GetType() == typeof(StandaloneImageSection))
                 {
@@ -307,7 +333,7 @@ namespace Carpenter
                 string line = imageTemplate[i];
 
                 // Replace all image tokens with the values in the StandaloneImageSection
-                foreach (var imageTokenEntry in schema.ImageTokenTable)
+                foreach (var imageTokenEntry in Schema.ImageTokenTable)
                 {
                     switch (imageTokenEntry.Value)
                     {
@@ -354,7 +380,7 @@ namespace Carpenter
                 string line = titleTemplate[i];
 
                 // Replace all image tokens with the values in the StandaloneImageSection
-                foreach (var imageTokenEntry in schema.ImageTokenTable)
+                foreach (var imageTokenEntry in Schema.ImageTokenTable)
                 {
                     if (imageTokenEntry.Value == Schema.Tokens.ImageTitle)
                     {
@@ -368,10 +394,10 @@ namespace Carpenter
         }
 
         /// <summary>
-        /// We need to parse the template using the schema to understand some basics about how things
-        /// will be laid out
+        /// We need to parse the template using the site data to understand some basics about how things
+        /// will be laid out and what elements in the template are what
         /// </summary>
-        private void Parse(Schema schema)
+        private void Parse(Site site)
         {
             // Reset everything so we don't end up having data from another schema
             _imageSection = null;
@@ -385,27 +411,27 @@ namespace Carpenter
             {
                 string line = _fileContents[i];
 
-                if (line.Contains($"class=") && line.Contains(schema._tokenValues[Schema.Tokens.ClassIdImageGrid]))
+                if (line.Contains($"class=") && line.Contains(site.GridClass))
                 {
                     // First we need to find of the template that corresponds to our photo grid
                     _imageGridSection = new TemplateSection(this, i);
-                    Logger.Log(LogLevel.Verbose, $"Found ImageGrid element (id={schema._tokenValues[Schema.Tokens.ClassIdImageGrid]})");
+                    Logger.Log(LogLevel.Verbose, $"Found ImageGrid element (id={site.GridClass})");
                 }
-                else if (line.Contains($"class=") && line.Contains(schema._tokenValues[Schema.Tokens.ClassIdImageElement]))
+                else if (line.Contains($"class=") && line.Contains(site.ImageClass))
                 {
                     // Next we need to find the second of the template that makes up the element for our image
                     _imageSection = new TemplateSection(this, i);
-                    Logger.Log(LogLevel.Verbose, $"Found ImageSection element (id={schema._tokenValues[Schema.Tokens.ClassIdImageElement]})");
+                    Logger.Log(LogLevel.Verbose, $"Found ImageSection element (id={site.ImageClass})");
                 }
-                else if (line.Contains($"class=") && line.Contains(schema._tokenValues[Schema.Tokens.ClassIdImageColumn]))
+                else if (line.Contains($"class=") && line.Contains(site.ColumnClass))
                 {
                     _imageColumnSection = new TemplateSection(this, i);
-                    Logger.Log(LogLevel.Verbose, $"Found ImageColumn element (id={schema._tokenValues[Schema.Tokens.ClassIdImageColumn]})");
+                    Logger.Log(LogLevel.Verbose, $"Found ImageColumn element (id={site.ColumnClass})");
                 }
-                else if (schema.TokenValues.ContainsKey(Schema.Tokens.ClassIdImageTitle) && line.Contains($"class=") && line.Contains(schema._tokenValues[Schema.Tokens.ClassIdImageTitle]))
+                else if (line.Contains($"class=") && line.Contains(site.TitleClass))
                 {
                     _imageTitleSection = new TemplateSection(this, i);
-                    Logger.Log(LogLevel.Verbose, $"Found ImageTitle element (id={schema._tokenValues[Schema.Tokens.ClassIdImageTitle]})");
+                    Logger.Log(LogLevel.Verbose, $"Found ImageTitle element (id={site.TitleClass})");
                 }
             }
 

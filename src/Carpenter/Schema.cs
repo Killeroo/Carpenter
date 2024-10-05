@@ -21,24 +21,22 @@ namespace Carpenter
 
         public enum Options
         {
-            OutputFilename, 
+            OutputFilename, // TODO: Rename to generatdfilename
             PageImage // TODO: Rename to thumbnail and move to token
         }
 
         public enum Tokens
         {
-            BaseUrl,
-            PageUrl,
+            // Page tokens
+            PageUrl, // TODO: Rename to url
             Location,
             Title,
             Month,
             Year,
             Author,
             Camera,
-            ClassIdImageGrid,
-            ClassIdImageColumn,
-            ClassIdImageElement,
-            ClassIdImageTitle,
+
+            // Image specific tokens
             Image,
             DetailedImage,
             ImageTitle
@@ -54,18 +52,13 @@ namespace Carpenter
 
         public static readonly Dictionary<string, Tokens> TokenTable = new()
         {
-            { "%BASE_URL", Tokens.BaseUrl },
             { "%PAGE_URL", Tokens.PageUrl },
             { "%LOCATION", Tokens.Location },
             { "%TITLE", Tokens.Title },
             { "%MONTH", Tokens.Month },
             { "%YEAR", Tokens.Year },
             { "%CAMERA", Tokens.Camera },
-            { "%AUTHOR", Tokens.Author },
-            { "image_grid", Tokens.ClassIdImageGrid },
-            { "image_column", Tokens.ClassIdImageColumn },
-            { "image_element", Tokens.ClassIdImageElement },
-            { "image_title",  Tokens.ClassIdImageTitle }
+            { "%AUTHOR", Tokens.Author }
         };
 
         public static readonly Dictionary<string, Options> OptionsTable = new()
@@ -74,7 +67,7 @@ namespace Carpenter
             { "page_image", Options.PageImage }
         };
 
-        private static readonly Dictionary<string, Tokens> ImageTokenTable = new()
+        public static readonly Dictionary<string, Tokens> ImageTokenTable = new()
         {
             { "%IMAGE_URL", Tokens.Image },
             { "%DETAILED_IMAGE_URL", Tokens.DetailedImage },
@@ -89,13 +82,67 @@ namespace Carpenter
             { "[IMAGE_TITLE]", ElementTags.Title },
         };
 
-        public List<ImageSection> ImageSections = new();
+
+        /// <summary>
+        /// Accessors for Token values
+        /// </summary>
+        public string PageUrl 
+        {
+            get { return _tokenValues.TryGetValue(Tokens.PageUrl, out string value) ? value : string.Empty; }
+            set { _tokenValues.AddOrUpdate(Tokens.PageUrl, value); }
+        }
+        public string Location 
+        {
+            get { return _tokenValues.TryGetValue(Tokens.Location, out string value) ? value : string.Empty; }
+            set { _tokenValues.AddOrUpdate(Tokens.Location, value); }
+        }
+        public string Title 
+        {
+            get { return _tokenValues.TryGetValue(Tokens.Title, out string value) ? value : string.Empty; }
+            set { _tokenValues.AddOrUpdate(Tokens.Title, value); }
+        }
+        public string Month 
+        {
+            get { return _tokenValues.TryGetValue(Tokens.Month, out string value) ? value : string.Empty; }
+            set { _tokenValues.AddOrUpdate(Tokens.Month, value); }
+        }
+        public string Year 
+        {
+            get { return _tokenValues.TryGetValue(Tokens.Year, out string value) ? value : string.Empty; }
+            set { _tokenValues.AddOrUpdate(Tokens.Year, value); }
+        }
+        public string Author 
+        {
+            get { return _tokenValues.TryGetValue(Tokens.Location, out string value) ? value : string.Empty; }
+            set { _tokenValues.AddOrUpdate(Tokens.Location, value); }
+        }
+        public string Camera 
+        {
+            get { return _tokenValues.TryGetValue(Tokens.Title, out string value) ? value : string.Empty; }
+            set { _tokenValues.AddOrUpdate(Tokens.Title, value); }
+        }
+
+        /// <summary>
+        /// Accessors for Option values
+        /// </summary>
+        public string GeneratedFilename
+        {
+            get { return _optionValues.TryGetValue(Options.OutputFilename, out string value) ? value : string.Empty; }
+            set { _optionValues.AddOrUpdate(Options.OutputFilename, value); }
+        }
+
+        public Dictionary<Tokens, string> GetTokenValues() { return _tokenValues; }
+        public List<ImageSection> GetImageSections() { return _imageSections; }
+        public bool IsLoaded() => _loaded;
 
         private Dictionary<Tokens, string> _tokenValues = new();
         private Dictionary<Options, string> _optionValues = new();
+        private List<ImageSection> _imageSections = new();
 
-
-
+        /// <summary>
+        /// Denotes if the Schema file was loaded correctly
+        /// </summary>
+        private bool _loaded = false;
 
         public Schema() { }
         public Schema(string path) => TryLoad(path);
@@ -108,17 +155,17 @@ namespace Carpenter
 
             _tokenValues = new Dictionary<Tokens, string>(otherSchema._tokenValues);
             _optionValues = new Dictionary<Options, string>(otherSchema._optionValues);
-            ImageSections = new List<ImageSection>();
+            _imageSections = new List<ImageSection>();
             
             // Need to actually populate the ImageSections manually to avoid copying a reference
-            foreach (ImageSection section in otherSchema.ImageSections)
+            foreach (ImageSection section in otherSchema._imageSections)
             {
                 if (section is StandaloneImageSection standaloneSection)
                 {
                     StandaloneImageSection newSection = new StandaloneImageSection();
                     newSection.DetailedImage = standaloneSection.DetailedImage;
                     newSection.PreviewImage = standaloneSection.PreviewImage;
-                    ImageSections.Add(newSection);
+                    _imageSections.Add(newSection);
                 }
                 else if (section is ColumnImageSection columnSection)
                 {
@@ -134,13 +181,13 @@ namespace Carpenter
                             newColumnSection.Sections.Add(newSection);
                         }
                     }
-                    ImageSections.Add(newColumnSection);
+                    _imageSections.Add(newColumnSection);
                 }
                 else if (section is TitleImageSection titleSection)
                 {
                     TitleImageSection newSection = new TitleImageSection();
                     newSection.TitleText = titleSection.TitleText;
-                    ImageSections.Add(newSection);
+                    _imageSections.Add(newSection);
                 }
             }
         }
@@ -259,19 +306,19 @@ namespace Carpenter
                         {
                             case ElementTags.Standalone:
                                 currentSectionIndex++;
-                                ImageSections.Add(new StandaloneImageSection());
+                                _imageSections.Add(new StandaloneImageSection());
                                 Logger.Log(LogLevel.Verbose, "Adding standalone image section to photo grid");
                                 break;
 
                             case ElementTags.Column:
                                 currentSectionIndex++;
-                                ImageSections.Add(new ColumnImageSection());
+                                _imageSections.Add(new ColumnImageSection());
                                 Logger.Log(LogLevel.Verbose, "Adding column section to photo grid");
                                 break;
 
                             case ElementTags.Title:
                                 currentSectionIndex++;
-                                ImageSections.Add(new TitleImageSection());
+                                _imageSections.Add(new TitleImageSection());
                                 Logger.Log(LogLevel.Verbose, "Adding title section to photo grid");
                                 break;
 
@@ -320,19 +367,19 @@ namespace Carpenter
                         // TODO: Don't assume this will be ordered image_url then detailed_image_url
                         if (imageTitle != string.Empty || imageUrl != string.Empty && detailedImageUrl != string.Empty)
                         {
-                            if (ImageSections[currentSectionIndex].GetType().Equals(typeof(StandaloneImageSection)))
+                            if (_imageSections[currentSectionIndex].GetType().Equals(typeof(StandaloneImageSection)))
                             {
                                 // If we are dealing with a standalone section
-                                var standaloneSection = ImageSections[currentSectionIndex] as StandaloneImageSection;
+                                var standaloneSection = _imageSections[currentSectionIndex] as StandaloneImageSection;
                                 standaloneSection.PreviewImage = imageUrl;
                                 standaloneSection.DetailedImage = detailedImageUrl;
 
                                 Logger.Log(LogLevel.Verbose, $"Added single image section to photo grid (image_url={imageUrl} detailed_image_url={imageUrl})");
                             }
-                            else if (ImageSections[currentSectionIndex].GetType().Equals(typeof(ColumnImageSection)))
+                            else if (_imageSections[currentSectionIndex].GetType().Equals(typeof(ColumnImageSection)))
                             {
                                 // If we are dealing with a column section
-                                var columnSection = ImageSections[currentSectionIndex] as ColumnImageSection;
+                                var columnSection = _imageSections[currentSectionIndex] as ColumnImageSection;
                                 columnSection.Sections.Add(new StandaloneImageSection
                                 {
                                     PreviewImage = imageUrl,
@@ -341,9 +388,9 @@ namespace Carpenter
 
                                 Logger.Log(LogLevel.Verbose, $"Added image to column section (image_url={imageUrl} detailed_image_url={imageUrl})");
                             }
-                            else if (ImageSections[currentSectionIndex].GetType().Equals(typeof(TitleImageSection)))
+                            else if (_imageSections[currentSectionIndex].GetType().Equals(typeof(TitleImageSection)))
                             {
-                                var titleSection = ImageSections[currentSectionIndex] as TitleImageSection;
+                                var titleSection = _imageSections[currentSectionIndex] as TitleImageSection;
                                 titleSection.TitleText = imageTitle;
 
                                 Logger.Log(LogLevel.Verbose, $"Added image title section to photo grid (titile={imageTitle})");
@@ -368,7 +415,7 @@ namespace Carpenter
         public bool TrySave(string path)
         {
             // TODO: Sanity check that we have everything setup in the values tables 
-            if (!SanityCheckSchema())
+            if (!SanityCheck())
             {
                 return false;
             }
@@ -450,7 +497,7 @@ namespace Carpenter
             string columnTag = _titleTagTable.GetKeyOfValue(ElementTags.Column);
             string titleTag = _titleTagTable.GetKeyOfValue(ElementTags.Title);
 
-            foreach (ImageSection section in ImageSections)
+            foreach (ImageSection section in _imageSections)
             {
                 if (section == null)
                 {
@@ -493,9 +540,10 @@ namespace Carpenter
             return true;
         }
 
-        private bool SanityCheckSchema()
+        private bool SanityCheck()
         {
             // TODO: Check table contents etc
+            // TODO: Check everything is set
             return true;
         }
 
@@ -515,7 +563,7 @@ namespace Carpenter
             bool equal = false;
             equal &= _tokenValues == other._tokenValues;
             equal &= _optionValues == other._optionValues;
-            equal &= ImageSections == other.ImageSections;
+            equal &= _imageSections == other._imageSections;
             return equal;
         }
 
@@ -526,7 +574,7 @@ namespace Carpenter
             {
                 _tokenValues.Clear();
                 _optionValues.Clear();
-                ImageSections.Clear();
+                _imageSections.Clear();
 
                 _disposed = true;
             }

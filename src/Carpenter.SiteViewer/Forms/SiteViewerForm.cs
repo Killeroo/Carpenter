@@ -16,6 +16,7 @@ using Carpenter;
 using SiteViewer;
 using SiteViewer.Controls;
 using PageDesigner.Forms;
+using Carpenter.SiteViewer;
 
 namespace SiteViewer.Forms
 {
@@ -36,18 +37,64 @@ namespace SiteViewer.Forms
             public string ProgressMessage = string.Empty;
         }
 
-        private const string kTemplateFilename = "template.html";
         private const string kPageDesignerAppName = "PageDesigner.exe";
 
         private FileSystemWatcher _fileSystemWatcher = null;
         private Template _template = new Template();
+        private Site _site = new Site();
         private string _rootPath = string.Empty;
-        private string _templatePath = string.Empty;
         private string _lastCreatedPageName = string.Empty;
 
         public SiteViewerForm()
         {
             InitializeComponent();
+        }
+
+        /// <summary>
+        /// Try and load pages and template file at a path, silently fail otherwise.
+        /// This is because this is called everytime new path text is added 
+        /// </summary>
+        /// <param name="path"></param>
+        private void TryLoadDirectory(string path)
+        {
+            // Sanity check path
+            if (Directory.Exists(path) == false)
+            {
+                return;
+            }
+
+            _rootPath = path;
+
+            // Try and load the site file first
+            _site = new Site();
+            if (_site.TryLoad(_rootPath) == false)
+            {
+                return;
+            }
+
+            // The site file contains the template file location
+            _template = new Template();
+            if (_template.TryLoad(_site.TemplatePath) == false)
+            {
+                return;
+            }
+
+            // We have loaded everything we need! Render the pages in the root dir
+            RefreshPageList();
+
+            // Save path to settings
+            Settings.Default.LastLoadedRootPath = path;
+            Settings.Default.Save();
+
+            // Monitor root for any changes so we can update the page list
+            if (_fileSystemWatcher == null)
+            {
+                SetupFileSystemWatcher(path);
+            }
+            else
+            {
+                _fileSystemWatcher.Path = path;
+            }
         }
 
         /// <summary>
@@ -384,42 +431,6 @@ namespace SiteViewer.Forms
             _fileSystemWatcher.Renamed += FileSystemWatcher_Modification;
             _fileSystemWatcher.Deleted += FileSystemWatcher_Modification;
             //_fileSystemWatcher.IncludeSubdirectories = true;
-        }
-
-        // Try and load pages and template file at a path, silently fail otherwise.
-        // This is because this is called everytime new path text is added 
-        private void TryLoadDirectory(string path)
-        {
-            // Sanity check path
-            if (Directory.Exists(path) == false)
-            {
-                return;
-            }
-
-            _rootPath = path;
-
-            // We only want to try and load the template if it actually exits
-            _templatePath = Path.Combine(_rootPath, kTemplateFilename);
-            if (File.Exists(_templatePath))
-            {
-                _template = new Template(_templatePath);
-            }
-
-            RefreshPageList();
-
-            // Save path to settings
-            Settings.Default.LastLoadedRootPath = path;
-            Settings.Default.Save();
-
-            // Change path for system watcher to monitor
-            if (_fileSystemWatcher == null)
-            {
-                SetupFileSystemWatcher(path);
-            }
-            else
-            {
-                _fileSystemWatcher.Path = path;
-            }
         }
 
         private void RefreshPageList()
