@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace SiteViewer {
+namespace Carpenter.SiteViewer {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

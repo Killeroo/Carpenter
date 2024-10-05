@@ -6,30 +6,34 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Platforms>x64;x86</Platforms>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x64</Platforms>
 
     <RuntimeIdentifier Condition="'$(RuntimeIdentifier)' == ''">win-x64</RuntimeIdentifier>
     <SelfContained Condition="'$(SelfContained)' == ''">false</SelfContained>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="app.manifest" />
+    <Compile Remove="Models\**" />
+    <EmbeddedResource Remove="Models\**" />
+    <None Remove="Models\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Framework\Carpenter.csproj" />
-    <ProjectReference Include="..\PageDesigner\PageDesigner.csproj" />
+    <PackageReference Include="CefSharp.WinForms.NETCore" Version="128.4.90" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Controls\PageEntryControl.cs">
-      <SubType>UserControl</SubType>
+    <ProjectReference Include="..\Carpenter\Carpenter.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Update="Forms\SiteViewerForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Settings.Designer.cs">
+    <Compile Update="Properties\Settings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
@@ -37,7 +41,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Settings.settings">
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>

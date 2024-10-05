@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace PageDesigner.Properties {
+namespace Carpenter.PageDesigner.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

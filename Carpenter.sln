@@ -3,13 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32328.378
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Carpenter", "src\Framework\Carpenter.csproj", "{4692333A-11FA-47F7-9DC7-CC388CB2DC07}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Carpenter", "src\Carpenter\Carpenter.csproj", "{4692333A-11FA-47F7-9DC7-CC388CB2DC07}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommandLine", "src\CommandLine\CommandLine.csproj", "{9D4116A0-95D0-4CAA-9BD7-E273E649EC82}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Carpenter.CommandLine", "src\Carpenter.CommandLine\Carpenter.CommandLine.csproj", "{9D4116A0-95D0-4CAA-9BD7-E273E649EC82}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SiteViewer", "src\SiteViewer\SiteViewer.csproj", "{C3379CFC-1A5A-4E86-9A27-D7A01E75CE9E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Carpenter.SiteViewer", "src\Carpenter.SiteViewer\Carpenter.SiteViewer.csproj", "{C3379CFC-1A5A-4E86-9A27-D7A01E75CE9E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PageDesigner", "src\PageDesigner\PageDesigner.csproj", "{82AA01CD-2FAF-474B-87F8-4AAFC8A17217}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Carpenter.PageDesigner", "src\Carpenter.PageDesigner\Carpenter.PageDesigner.csproj", "{82AA01CD-2FAF-474B-87F8-4AAFC8A17217}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JpegMetadataExtractor", "src\JpegMetadataExtractor\JpegMetadataExtractor.csproj", "{C6AB61EC-CF85-4657-B3D6-AC504E9FC26C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,6 +71,18 @@ Global
 		{82AA01CD-2FAF-474B-87F8-4AAFC8A17217}.Release|x64.Build.0 = Release|x64
 		{82AA01CD-2FAF-474B-87F8-4AAFC8A17217}.Release|x86.ActiveCfg = Release|x64
 		{82AA01CD-2FAF-474B-87F8-4AAFC8A17217}.Release|x86.Build.0 = Release|x64
+		{C6AB61EC-CF85-4657-B3D6-AC504E9FC26C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6AB61EC-CF85-4657-B3D6-AC504E9FC26C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6AB61EC-CF85-4657-B3D6-AC504E9FC26C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C6AB61EC-CF85-4657-B3D6-AC504E9FC26C}.Debug|x64.Build.0 = Debug|Any CPU
+		{C6AB61EC-CF85-4657-B3D6-AC504E9FC26C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C6AB61EC-CF85-4657-B3D6-AC504E9FC26C}.Debug|x86.Build.0 = Debug|Any CPU
+		{C6AB61EC-CF85-4657-B3D6-AC504E9FC26C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6AB61EC-CF85-4657-B3D6-AC504E9FC26C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6AB61EC-CF85-4657-B3D6-AC504E9FC26C}.Release|x64.ActiveCfg = Release|Any CPU
+		{C6AB61EC-CF85-4657-B3D6-AC504E9FC26C}.Release|x64.Build.0 = Release|Any CPU
+		{C6AB61EC-CF85-4657-B3D6-AC504E9FC26C}.Release|x86.ActiveCfg = Release|Any CPU
+		{C6AB61EC-CF85-4657-B3D6-AC504E9FC26C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

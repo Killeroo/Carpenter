@@ -16,7 +16,6 @@ using Carpenter;
 using SiteViewer;
 using SiteViewer.Controls;
 using PageDesigner.Forms;
-using JpegMetadataExtractor;
 
 namespace SiteViewer.Forms
 {
