@@ -71,14 +71,14 @@ namespace Carpenter.CommandLine
                 // Load the schema file
                 string pathToSchemaFile = Path.Combine(directory, "SCHEMA");
                 Schema schema = new Schema();
-                if (!schema.Load(pathToSchemaFile))
+                if (!schema.TryLoad(pathToSchemaFile))
                 {
                     Logger.Log(LogLevel.Error, $"Encountered an error parsing schema, skipping..");
                     continue;
                 }
 
                 // Finally generate the webpage
-                template.Generate(schema, directory);
+                template.GenerateHtmlForSchema(schema, directory);
 
                 count++;
             }

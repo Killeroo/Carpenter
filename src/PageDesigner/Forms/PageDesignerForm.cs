@@ -201,7 +201,7 @@ namespace PageDesigner.Forms
             Stopwatch stopwatch = Stopwatch.StartNew();
             if (_template.Generate(_workingSchema, _workingPath, true))
             {
-                string originalOutputFile = _workingSchema.OptionValues[Schema.Option.OutputFilename];
+                string originalOutputFile = _workingSchema.OptionValues[Schema.Options.OutputFilename];
                 string previewName = Path.GetFileNameWithoutExtension(originalOutputFile) + "_preview";
                 string previewPath = Path.Combine(_workingPath, previewName + Path.GetExtension(originalOutputFile));
 
@@ -276,7 +276,7 @@ namespace PageDesigner.Forms
             }
 
             Schema schema = new Schema();
-            if (schema.Load(schemaPath) == false)
+            if (schema.TryLoad(schemaPath) == false)
             {
                 // TODO: Raise an error or something
                 return false;
@@ -291,7 +291,7 @@ namespace PageDesigner.Forms
             _savedSchema = schema;
             _workingSchema = new Schema(_savedSchema);
 
-            if (_workingSchema.OptionValues.TryGetValue(Schema.Option.PageImage, out string pageImageName))
+            if (_workingSchema.OptionValues.TryGetValue(Schema.Options.PageImage, out string pageImageName))
             {
                 _pageImageName = pageImageName;
             }
@@ -324,7 +324,7 @@ namespace PageDesigner.Forms
 
             if (string.IsNullOrEmpty(_pageImageName) == false)
             {
-                _workingSchema.OptionValues.AddOrUpdate(Schema.Option.PageImage, _pageImageName);
+                _workingSchema.OptionValues.AddOrUpdate(Schema.Options.PageImage, _pageImageName);
             }
 
             UpdateWorkingSchemaFromForm();
@@ -339,7 +339,7 @@ namespace PageDesigner.Forms
             //}
 
             // TODO: Show an error when schema save fails
-            if (_workingSchema.Save(Path.GetDirectoryName(_schemaPath)))
+            if (_workingSchema.TrySave(Path.GetDirectoryName(_schemaPath)))
             {
                 MessageBox.Show("Schema successfully saved.", "File saved");
             }
@@ -366,32 +366,32 @@ namespace PageDesigner.Forms
             }
 
             // Update tokens values from page
-            _workingSchema.TokenValues.AddOrUpdate(Schema.Token.BaseUrl, BaseUrlTextBox.Text);
-            _workingSchema.TokenValues.AddOrUpdate(Schema.Token.PageUrl, PageUrlTextBox.Text);
-            _workingSchema.TokenValues.AddOrUpdate(Schema.Token.Title, TitleTextBox.Text);
-            _workingSchema.TokenValues.AddOrUpdate(Schema.Token.Location, LocationTextBox.Text);
-            _workingSchema.TokenValues.AddOrUpdate(Schema.Token.Month, MonthTextBox.Text);
-            _workingSchema.TokenValues.AddOrUpdate(Schema.Token.Year, YearTextBox.Text);
-            _workingSchema.TokenValues.AddOrUpdate(Schema.Token.Author, AuthorTextBox.Text);
-            _workingSchema.TokenValues.AddOrUpdate(Schema.Token.Camera, CameraTextBox.Text);
+            _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.BaseUrl, BaseUrlTextBox.Text);
+            _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.PageUrl, PageUrlTextBox.Text);
+            _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.Title, TitleTextBox.Text);
+            _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.Location, LocationTextBox.Text);
+            _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.Month, MonthTextBox.Text);
+            _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.Year, YearTextBox.Text);
+            _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.Author, AuthorTextBox.Text);
+            _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.Camera, CameraTextBox.Text);
 
             // Copy or add class id and option base values
             if (_savedSchema.TokenValues != _workingSchema.TokenValues && _savedSchema.TokenValues.Count != 0)
             {
                 // TODO: HACK: Copy values from original (WHICH WON'T ALWAYS EXIST)
-                _workingSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageColumn, _savedSchema.TokenValues[Schema.Token.ClassIdImageColumn]);
-                _workingSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageElement, _savedSchema.TokenValues[Schema.Token.ClassIdImageElement]);
-                _workingSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageGrid, _savedSchema.TokenValues[Schema.Token.ClassIdImageGrid]);
-                _workingSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageTitle, _savedSchema.TokenValues[Schema.Token.ClassIdImageTitle]);
+                _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.ClassIdImageColumn, _savedSchema.TokenValues[Schema.Tokens.ClassIdImageColumn]);
+                _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.ClassIdImageElement, _savedSchema.TokenValues[Schema.Tokens.ClassIdImageElement]);
+                _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.ClassIdImageGrid, _savedSchema.TokenValues[Schema.Tokens.ClassIdImageGrid]);
+                _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.ClassIdImageTitle, _savedSchema.TokenValues[Schema.Tokens.ClassIdImageTitle]);
             }
             else
             {
                 // Create some default values
                 // TODO: Have these set via a form on the main form or have them stored somewhere else
-                _workingSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageColumn, "photo_column");
-                _workingSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageElement, "photo_image");
-                _workingSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageGrid, "photo_grid");
-                _workingSchema.TokenValues.AddOrUpdate(Schema.Token.ClassIdImageTitle, "photo_title");
+                _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.ClassIdImageColumn, "photo_column");
+                _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.ClassIdImageElement, "photo_image");
+                _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.ClassIdImageGrid, "photo_grid");
+                _workingSchema.TokenValues.AddOrUpdate(Schema.Tokens.ClassIdImageTitle, "photo_title");
             }
 
             if (_savedSchema.OptionValues != _workingSchema.OptionValues)
@@ -401,7 +401,7 @@ namespace PageDesigner.Forms
             }
             else
             {
-                _workingSchema.OptionValues.AddOrUpdate(Schema.Option.OutputFilename, "index.html");
+                _workingSchema.OptionValues.AddOrUpdate(Schema.Options.OutputFilename, "index.html");
             }
 
             // Parse grid layout
@@ -526,7 +526,7 @@ namespace PageDesigner.Forms
             // We only want them to trigger when the user edits them
             RemoveTextboxCallbacks();
 
-            string GetTokenFromSchema(Schema.Token token, string defaultValue)
+            string GetTokenFromSchema(Schema.Tokens token, string defaultValue)
             {
                 if (_workingSchema == null || _workingSchema.TokenValues.ContainsKey(token) == false)
                 {
@@ -535,14 +535,14 @@ namespace PageDesigner.Forms
 
                 return _workingSchema.TokenValues[token];
             }
-            BaseUrlTextBox.Text = GetTokenFromSchema(Schema.Token.BaseUrl, Settings.Default.BaseUrlLastUsedValue);
-            PageUrlTextBox.Text = GetTokenFromSchema(Schema.Token.PageUrl, Settings.Default.PageUrlLastUsedValue);
-            TitleTextBox.Text = GetTokenFromSchema(Schema.Token.Title, Settings.Default.TitleLastUsedValue);
-            LocationTextBox.Text = GetTokenFromSchema(Schema.Token.Location, Settings.Default.LocationLastUsedValue);
-            MonthTextBox.Text = GetTokenFromSchema(Schema.Token.Month, Settings.Default.MonthLastUsedValue);
-            YearTextBox.Text = GetTokenFromSchema(Schema.Token.Year, Settings.Default.YearLastUsedValue);
-            AuthorTextBox.Text = GetTokenFromSchema(Schema.Token.Author, Settings.Default.AuthorLastUsedValue);
-            CameraTextBox.Text = GetTokenFromSchema(Schema.Token.Camera, Settings.Default.CameraLastUsedValue);
+            BaseUrlTextBox.Text = GetTokenFromSchema(Schema.Tokens.BaseUrl, Settings.Default.BaseUrlLastUsedValue);
+            PageUrlTextBox.Text = GetTokenFromSchema(Schema.Tokens.PageUrl, Settings.Default.PageUrlLastUsedValue);
+            TitleTextBox.Text = GetTokenFromSchema(Schema.Tokens.Title, Settings.Default.TitleLastUsedValue);
+            LocationTextBox.Text = GetTokenFromSchema(Schema.Tokens.Location, Settings.Default.LocationLastUsedValue);
+            MonthTextBox.Text = GetTokenFromSchema(Schema.Tokens.Month, Settings.Default.MonthLastUsedValue);
+            YearTextBox.Text = GetTokenFromSchema(Schema.Tokens.Year, Settings.Default.YearLastUsedValue);
+            AuthorTextBox.Text = GetTokenFromSchema(Schema.Tokens.Author, Settings.Default.AuthorLastUsedValue);
+            CameraTextBox.Text = GetTokenFromSchema(Schema.Tokens.Camera, Settings.Default.CameraLastUsedValue);
 
             AddTextboxCallbacks();
         }

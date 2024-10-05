@@ -1,0 +1,12 @@
+Terminology
+
+Token - A value that is defined in a config file (SCHEMA or SITE file) and used in the template file. Replaced during page generation with the value specified in the schema
+Option - A value that is read from a config file that is used during page generation but it's value does not end up in the generated page but will instead be used during page generation (for example an option may store the generated file name)
+
+Site - A file that defines a website or part of a website, stores common options that all SCHEMAs in the child directories of the site will use during page generation
+Schema - Defines a page in a site, contains values can be used with a template file to generate a finished webpage
+Template - A piece of html that contains Token values that will be replaced with values from a schema file to create a finished webpage
+
+Need work:
+Page Generation - When a schema is combined with a template file to generate a piece of HTML file that can be uploaded and used
+Preview - A generated piece of HTML created in the same way as normal page generation but generated without a URL so it can be displayed correctly locally

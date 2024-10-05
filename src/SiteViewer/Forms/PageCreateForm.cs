@@ -10,18 +10,18 @@ using System.Windows.Forms;
 
 namespace SiteViewer.Forms
 {
-    public partial class PageCreateDialog : Form
+    public partial class PageCreateForm : Form
     {
         public string WorkingDirectory = string.Empty;
         public string CurrentPageName = string.Empty;
         public bool OpenInDesigner = false;
         public bool CreateButtonPressed = false;
 
-        public PageCreateDialog()
+        public PageCreateForm()
         {
             InitializeComponent();
         }
-        public PageCreateDialog(string workingDirectory, string startingPageName)
+        public PageCreateForm(string workingDirectory, string startingPageName)
         {
             InitializeComponent();
 

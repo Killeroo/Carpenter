@@ -12,65 +12,100 @@ using System.Windows.Forms;
 using PageDesigner.Forms;
 
 using Carpenter;
+using SiteViewer.Forms;
+using Accessibility;
 
 namespace SiteViewer.Controls
 {
-    public partial class PageEntry : UserControl
+    /// <summary>
+    /// Form control that represents a single page in a list, allows the users to generate a preview or edit the current page
+    /// </summary>
+    public partial class PageEntryControl : UserControl
     {
         private const string kPageDesignerAppName = "PageDesigner.exe";
 
-        public enum Status
+        public enum BuildState
         {
-            SUCCESS,
-            FAILURE,
-            PENDING
+            Success,
+            Failure,
+            Pending
         }
 
+        public enum ButtonTypes
+        {
+            Create,
+            Edit
+        }
+
+        /// <summary>
+        /// A copy of the root template used to generate all pages
+        /// </summary>
         private Template _template;
+
+        /// <summary>
+        /// Path to the directory of the page that this control represents
+        /// </summary>
         private string _directoryPath;
-        private Status _status;
 
-        public PageEntry()
+        /// <summary>
+        /// The state of the last page webpage build
+        /// </summary>
+        private BuildState _buildState;
+
+        /// <summary>
+        /// A reference to the SiteViwerForm that owns this control
+        /// </summary>
+        private SiteViewerForm _owner;
+
+        public PageEntryControl(string directoryPath, bool showCreateButton, Template template)
         {
             InitializeComponent();
-        }
 
-        public PageEntry(string directoryPath, bool createButton, Template template)
-        {
-            InitializeComponent();
+            Debug.Assert(template != null);
+            Debug.Assert(Directory.Exists(directoryPath));
+            Debug.Assert(ParentForm is SiteViewerForm);
 
-            // TODO: Check yeah yeah yeah check some stuff...
             _directoryPath = directoryPath;
             _template = template;
-
+            _owner = ParentForm as SiteViewerForm;
             DirectoryLabel.Text = Path.GetFileName(directoryPath);
-            DirectoryName = Path.GetFileName(directoryPath);
 
-            ToggleButtons(createButton);
+            SetControlButtonType(ButtonTypes.Create);
         }
 
-        private string DirectoryName;
-        // TODO: Null check
-        public string GetDirectoryName() { return DirectoryLabel.Text; }
-        public string GetDirectoryPath() { return _directoryPath; }
+        /// <summary>
+        /// Some simple accessors for the paths that this control represents
+        /// </summary>
+        public string GetDirectoryName() => Path.GetFileName(_directoryPath);
+        public string GetDirectoryPath() => _directoryPath;
 
-        public void SetStatus(Status newStatus)
+        public BuildState GetBuildState() => _buildState;
+
+        /// <summary>
+        /// Sets the webpage build status for this control
+        /// </summary>
+        /// <param name="newState">The state to display</param>
+        public void SetBuildStatus(BuildState newState)
         {
-            if (_status == newStatus)
+            if (_buildState == newState)
             {
                 return;
             }
 
-            switch (newStatus)
+            switch (newState)
             {
-                case Status.SUCCESS: StatusButton.BackColor = Color.LightGreen; break;
-                case Status.FAILURE: StatusButton.BackColor = Color.Red; break;
-                case Status.PENDING: StatusButton.BackColor = Color.Yellow; break;
+                case BuildState.Success: StatusButton.BackColor = Color.LightGreen; break;
+                case BuildState.Failure: StatusButton.BackColor = Color.Red; break;
+                case BuildState.Pending: StatusButton.BackColor = Color.Yellow; break;
             }
 
-            _status = newStatus;
+            _buildState = newState;
         }
 
+        /// <summary>
+        /// Enable or disable all the buttons on this control
+        /// </summary>
+        /// <remarks></remarks>
         public void EnableButtons(bool shouldEnable)
         {
             EditButton.Enabled = shouldEnable;
@@ -78,21 +113,20 @@ namespace SiteViewer.Controls
             PreviewButton.Enabled = shouldEnable;
         }
 
-        public Status GetStatus() => _status;
-
-        private void ToggleButtons(bool showCreateButton)
+        /// <summary>
+        /// Sets which set of buttons should be show on the control
+        /// </summary>
+        private void SetControlButtonType(ButtonTypes buttonType)
         {
-            if (showCreateButton)
+            if (buttonType == ButtonTypes.Create)
             {
                 CreateButton.Visible = true;
-
                 EditButton.Visible = false;
                 PreviewButton.Visible = false;
             }
             else
             {
                 CreateButton.Visible = false;
-
                 EditButton.Visible = true;
                 PreviewButton.Visible = true;
             }
@@ -130,7 +164,7 @@ namespace SiteViewer.Controls
                 // Generate preview page
                 if (_template.Generate(pageSchema, _directoryPath, true))
                 {
-                    string originalOutputFile = pageSchema.OptionValues[Schema.Option.OutputFilename];
+                    string originalOutputFile = pageSchema.OptionValues[Schema.Options.OutputFilename];
                     string previewName = Path.GetFileNameWithoutExtension(originalOutputFile) + "_preview";
                     string previewPath = Path.Combine(_directoryPath, previewName + Path.GetExtension(originalOutputFile));
 

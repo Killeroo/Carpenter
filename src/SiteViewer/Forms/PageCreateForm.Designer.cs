@@ -1,6 +1,6 @@
 ﻿namespace SiteViewer.Forms
 {
-    partial class PageCreateDialog
+    partial class PageCreateForm
     {
         /// <summary>
         /// Required designer variable.

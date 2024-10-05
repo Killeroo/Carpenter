@@ -33,6 +33,11 @@ namespace Carpenter
             return str;
         }
 
+        public static string GetTokenOrOptionValue(this string line)
+        {
+            return line.Split('=').Last().Split("``").First().StripWhitespaces();
+        }
+
         public static int FindClosestKey(this Dictionary<int, string> dict, int value)
         {
             int closestKey = int.MaxValue;

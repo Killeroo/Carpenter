@@ -26,7 +26,7 @@ namespace SiteViewer.Forms
     public partial class SiteViewerForm : Form
     {
         /// <summary>
-        /// The current state of site generation, used to display generation progress to the user on the form
+        /// The current state of site generation, used to display progress to the user on the site viewer form
         /// </summary>
         private class SiteGenerationState
         {
@@ -51,6 +51,10 @@ namespace SiteViewer.Forms
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Opens the PageDesigner form/process in a specific directory with a SCHEMA file
+        /// </summary>
+        /// <param name="path">Path to run page designer in, will attempt to open a SCHEMA file in the path if one is available or will create a new one</param>
         public void RunPageDesigner(string path)
         {
             if (_template == null)
@@ -69,13 +73,16 @@ namespace SiteViewer.Forms
 #endif
         }
 
+        /// <summary>
+        /// Generates html for all pages in site in a background worker (ensures that the form is still responsive while generation is running)
+        /// </summary>
         private void GenerateAllPagesInBackgroundWorker()
         {
             foreach (Control control in TableLayoutPanel.Controls)
             {
-                if (control is PageEntry entry)
+                if (control is PageEntryControl entry)
                 {
-                    entry.SetStatus(PageEntry.Status.PENDING);
+                    entry.SetBuildStatus(PageEntryControl.BuildState.Pending);
                 }
             }
 
@@ -83,6 +90,9 @@ namespace SiteViewer.Forms
             GenerateSiteBackgroundWorker.RunWorkerAsync();
         }
 
+        /// <summary>
+        /// Generate webpages for each schema in root path, progress is reported via a BackgroundWorker
+        /// </summary>
         private void GenerateAllPages()
         {
             if (_template == null)
@@ -126,6 +136,9 @@ namespace SiteViewer.Forms
             GenerateSiteBackgroundWorker.ReportProgress(100, $"Site generated in {progressStopwatch.ElapsedMilliseconds}ms");
         }
 
+        /// <summary>
+        /// Loop through each directory in the rootPath and remove jpg files that aren't referenced in a schema
+        /// </summary>
         private void RemoveUnusedImages()
         {
             string[] localDirectories = Directory.GetDirectories(_rootPath);
@@ -178,6 +191,12 @@ namespace SiteViewer.Forms
             StateToolStripStatusLabel.Text = count + " files removed";
         }
 
+        /// <summary>
+        /// Generate headers for each page in the rootPath/site.
+        /// </summary>
+        /// <remarks>
+        /// A header in this context is a small snippet of HTML for each page that can be used on a landing page.
+        /// </remarks>
         private void GeneratePageHeaders()
         {
             if (Directory.Exists(PathTextBox.Text) == false)
@@ -219,11 +238,11 @@ namespace SiteViewer.Forms
             foreach (string directory in Directory.EnumerateDirectories(PathTextBox.Text))
             {
                 Schema schema = new();
-                if (schema.Load(Path.Combine(directory, "SCHEMA")))
+                if (schema.TryLoad(Path.Combine(directory, "SCHEMA")))
                 {
                     DateTime date = new(
-                        Convert.ToInt32(schema.TokenValues[Schema.Token.Year]),
-                        MonthStringToInt[schema.TokenValues[Schema.Token.Month].ToLower()],
+                        Convert.ToInt32(schema.TokenValues[Schema.Tokens.Year]),
+                        MonthStringToInt[schema.TokenValues[Schema.Tokens.Month].ToLower()],
                         1);
 
                     while (schemasWithDate.ContainsKey(date))
@@ -233,8 +252,8 @@ namespace SiteViewer.Forms
                     schemasWithDate.Add(date, schema);
                 }
             }
-            List<KeyValuePair<DateTime, Schema>> schemasOrderedByDate = schemasWithDate.OrderByDescending(x => x.Key).ToList();
 
+            List<KeyValuePair<DateTime, Schema>> schemasOrderedByDate = schemasWithDate.OrderByDescending(x => x.Key).ToList();
             List<string> generatedPageEntries = new();
             foreach (KeyValuePair<DateTime, Schema> entry in schemasOrderedByDate)
             {
@@ -243,7 +262,7 @@ namespace SiteViewer.Forms
                 string thumbnailName = string.Empty;
                 int thumbnailWidth = 0;
                 int thumbnailHeight = 0;
-                if (schema.OptionValues.TryGetValue(Schema.Option.PageImage, out string pageImage))
+                if (schema.OptionValues.TryGetValue(Schema.Options.PageImage, out string pageImage))
                 {
                     thumbnailName = pageImage;
                     foreach (string file in Directory.EnumerateFiles(PathTextBox.Text, "*.jpg", SearchOption.AllDirectories))
@@ -271,11 +290,11 @@ namespace SiteViewer.Forms
                         processedLine = processedLine.Replace(@"%T_HEIGHT", thumbnailHeight.ToString());
                     }
 
-                    foreach (KeyValuePair<string, Schema.Token> tokenEntry in schema.TokenTable)
+                    foreach (KeyValuePair<string, Schema.Tokens> tokenEntry in schema.TokenTable)
                     {
                         processedLine = processedLine.Replace(tokenEntry.Key, schema.TokenValues[tokenEntry.Value]);
                     }
-                    generatedHtmlSnippet += processedLine + "\r\n";// Environment.NewLine;
+                    generatedHtmlSnippet += processedLine + Environment.NewLine;
                 }
                 generatedPageEntries.Add(generatedHtmlSnippet);
             }
@@ -310,7 +329,7 @@ namespace SiteViewer.Forms
 
         private void ShowNewPageDialog()
         {
-            PageCreateDialog pageCreateDialog = new(_rootPath, _lastCreatedPageName);
+            PageCreateForm pageCreateDialog = new(_rootPath, _lastCreatedPageName);
             pageCreateDialog.StartPosition = FormStartPosition.CenterParent;
             //pageCreateDialog.MdiParent = this;
             //pageCreateDialog.Location = new Point(Location.X + (Size.Width - (pageCreateDialog.Width/2)), Location.Y - (Size.Height - (pageCreateDialog.Height/2)));
@@ -348,7 +367,7 @@ namespace SiteViewer.Forms
         {
             foreach (Control control in TableLayoutPanel.Controls)
             {
-                if (control is PageEntry entry)
+                if (control is PageEntryControl entry)
                 {
                     entry.EnableButtons(shouldEnable);
                 }
@@ -407,11 +426,11 @@ namespace SiteViewer.Forms
         private void RefreshPageList()
         {
             // Create entries from the directory and order them
-            List<PageEntry> pageEntries = new List<PageEntry>();
+            List<PageEntryControl> pageEntries = new List<PageEntryControl>();
             foreach (string directory in Directory.GetDirectories(_rootPath))
             {
                 bool schemaPresent = File.Exists(Path.Combine(_rootPath, directory, "SCHEMA"));
-                pageEntries.Add(new PageEntry(directory, !schemaPresent, _template));
+                pageEntries.Add(new PageEntryControl(directory, !schemaPresent, _template));
             }
             pageEntries.Sort((x, y) => x.GetDirectoryName().CompareTo(y.GetDirectoryName()));
 
@@ -475,22 +494,22 @@ namespace SiteViewer.Forms
             {
                 foreach (Control control in TableLayoutPanel.Controls)
                 {
-                    if (control is PageEntry entry)
+                    if (control is PageEntryControl entry)
                     {
                         // Status has already been set, we don't need to reset it
-                        if (entry.GetStatus() != PageEntry.Status.PENDING)
+                        if (entry.GetBuildState() != PageEntryControl.BuildState.Pending)
                         {
                             continue;
                         }
 
                         if (progressState.SuccessfulPaths.Contains(entry.GetDirectoryPath()))
                         {
-                            entry.SetStatus(PageEntry.Status.SUCCESS);
+                            entry.SetBuildStatus(PageEntryControl.BuildState.Success);
                         }
 
                         if (progressState.FailedPaths.Contains(entry.GetDirectoryPath()))
                         {
-                            entry.SetStatus(PageEntry.Status.FAILURE);
+                            entry.SetBuildStatus(PageEntryControl.BuildState.Failure);
                         }
                     }
                 }

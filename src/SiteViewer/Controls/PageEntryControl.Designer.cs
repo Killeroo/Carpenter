@@ -1,6 +1,6 @@
 ﻿namespace SiteViewer.Controls
 {
-    partial class PageEntry
+    partial class PageEntryControl
     {
         /// <summary> 
         /// Required designer variable.

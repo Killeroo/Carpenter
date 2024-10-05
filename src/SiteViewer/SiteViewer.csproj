@@ -18,12 +18,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Framework\Framework.csproj" />
+    <ProjectReference Include="..\Framework\Carpenter.csproj" />
     <ProjectReference Include="..\PageDesigner\PageDesigner.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Controls\PageEntry.cs">
+    <Compile Update="Controls\PageEntryControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Update="Forms\SiteViewerForm.cs">
