@@ -26,12 +26,12 @@ namespace Carpenter.PageDesigner {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string BaseUrlLastUsedValue {
+        public string ThumbnailLastUsedValue {
             get {
-                return ((string)(this["BaseUrlLastUsedValue"]));
+                return ((string)(this["ThumbnailLastUsedValue"]));
             }
             set {
-                this["BaseUrlLastUsedValue"] = value;
+                this["ThumbnailLastUsedValue"] = value;
             }
         }
         

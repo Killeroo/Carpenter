@@ -11,12 +11,16 @@ using System.IO;
 using System.Threading;
 using System.Diagnostics;
 
+using JpegMetadataExtractor;
+
 using Carpenter;
+using Carpenter.SiteViewer;
 
 using SiteViewer;
 using SiteViewer.Controls;
+
 using PageDesigner.Forms;
-using Carpenter.SiteViewer;
+
 
 namespace SiteViewer.Forms
 {
@@ -26,7 +30,7 @@ namespace SiteViewer.Forms
     public partial class SiteViewerForm : Form
     {
         /// <summary>
-        /// The current state of site generation, used to display progress to the user on the site viewer form
+        /// The current state of site generation, used to display progress to the user on the site viewer form as site is generated
         /// </summary>
         private class SiteGenerationState
         {
@@ -110,11 +114,11 @@ namespace SiteViewer.Forms
             }
 
 #if false
-            PageDesignerForm form = new(path, _template);
+            PageDesignerForm form = new(path, _template, _site);
             form.ShowDialog();
 #else
             ProcessStartInfo startInfo = new(kPageDesignerAppName);
-            startInfo.Arguments = $"\"{path}\" \"{_template.FilePath}\"";
+            startInfo.Arguments = $"\"{path}\" \"{_rootPath}\"";
             Process.Start(startInfo);
 #endif
         }

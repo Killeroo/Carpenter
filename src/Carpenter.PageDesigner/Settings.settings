@@ -2,7 +2,7 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Carpenter.PageDesigner" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="BaseUrlLastUsedValue" Type="System.String" Scope="User">
+    <Setting Name="ThumbnailLastUsedValue" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="PageUrlLastUsedValue" Type="System.String" Scope="User">

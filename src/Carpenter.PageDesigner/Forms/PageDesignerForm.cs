@@ -107,9 +107,6 @@ namespace PageDesigner.Forms
             InitializeComponent();
 
             _workingPath = Environment.CurrentDirectory;
-
-            // TODO: Move to designer
-            LivePreviewGenerateTimer.Tick += LivePreviewGenerateTimer_Tick;
         }
         public PageDesignerForm(string path, Template template, Site site) : this()
         {
@@ -146,7 +143,7 @@ namespace PageDesigner.Forms
             _template = template;
             _site = site;
             _workingPath = path;
-            _schemaPath = Path.Combine(_workingPath, "SCHEMA");
+            _schemaPath = Path.Combine(_workingPath, Config.kSchemaFileName);
             this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
         }
         public PageDesignerForm(string path, string siteRootPath) : this()
@@ -176,6 +173,7 @@ namespace PageDesigner.Forms
                     "Carpenter",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+                return;
             }
 
             try
@@ -193,16 +191,14 @@ namespace PageDesigner.Forms
             }
 
             _workingPath = path;
-            _schemaPath = Path.Combine(_workingPath, "SCHEMA");
+            _schemaPath = Path.Combine(_workingPath, Config.kSchemaFileName);
         }
 
         private void AddTextboxCallbacks()
         {
-            //PreviewImageTextBox.TextChanged += FormTextBox_TextChanged;
-            //DetailedImageTextBox.TextChanged += FormTextBox_TextChanged;
             PageUrlTextBox.TextChanged += FormTextBox_TextChanged;
             TitleTextBox.TextChanged += FormTextBox_TextChanged;
-            BaseUrlTextBox.TextChanged += FormTextBox_TextChanged;
+            ThumbnailTextBox.TextChanged += FormTextBox_TextChanged;
             LocationTextBox.TextChanged += FormTextBox_TextChanged;
             MonthTextBox.TextChanged += FormTextBox_TextChanged;
             YearTextBox.TextChanged += FormTextBox_TextChanged;
@@ -212,11 +208,9 @@ namespace PageDesigner.Forms
 
         private void RemoveTextboxCallbacks()
         {
-            //PreviewImageTextBox.TextChanged -= FormTextBox_TextChanged;
-            //DetailedImageTextBox.TextChanged -= FormTextBox_TextChanged;
             PageUrlTextBox.TextChanged -= FormTextBox_TextChanged;
             TitleTextBox.TextChanged -= FormTextBox_TextChanged;
-            BaseUrlTextBox.TextChanged -= FormTextBox_TextChanged;
+            ThumbnailTextBox.TextChanged -= FormTextBox_TextChanged;
             LocationTextBox.TextChanged -= FormTextBox_TextChanged;
             MonthTextBox.TextChanged -= FormTextBox_TextChanged;
             YearTextBox.TextChanged -= FormTextBox_TextChanged;
@@ -272,7 +266,7 @@ namespace PageDesigner.Forms
             _workingSchema = new Schema();
             _schemaChanges.Reset();
 
-            BaseUrlTextBox.Text = Settings.Default.BaseUrlLastUsedValue;
+            ThumbnailTextBox.Text = Settings.Default.ThumbnailLastUsedValue;
             PageUrlTextBox.Text = Settings.Default.PageUrlLastUsedValue;
             TitleTextBox.Text = Settings.Default.TitleLastUsedValue;
             LocationTextBox.Text = Settings.Default.LocationLastUsedValue;
@@ -305,7 +299,7 @@ namespace PageDesigner.Forms
 
         private bool LoadSchemaFromFile(string path)
         {
-            string schemaPath = Path.Combine(path, "SCHEMA");
+            string schemaPath = Path.Combine(path, Config.kSchemaFileName);
             if (File.Exists(schemaPath) == false)
             {
                 return false;
@@ -327,10 +321,7 @@ namespace PageDesigner.Forms
             _savedSchema = schema;
             _workingSchema = new Schema(_savedSchema);
 
-            if (_workingSchema.OptionValues.TryGetValue(Schema.Options.PageImage, out string pageImageName))
-            {
-                _pageImageName = pageImageName;
-            }
+            _pageImageName = _workingSchema.Thumbnail;
 
             UpdateFormFromWorkingSchema();
 
@@ -358,14 +349,8 @@ namespace PageDesigner.Forms
             //    }
             //}
 
-            if (string.IsNullOrEmpty(_pageImageName) == false)
-            {
-                _workingSchema.OptionValues.AddOrUpdate(Schema.Options.PageImage, _pageImageName);
-            }
-
             UpdateWorkingSchemaFromForm();
             
-
             //if (File.Exists(_schemaPath))
             //{
             //    if (ShowConfirmSaveDialog() == false)
@@ -383,7 +368,7 @@ namespace PageDesigner.Forms
             this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
 
             // Save whatever values we entered for next time!
-            Settings.Default.BaseUrlLastUsedValue = BaseUrlTextBox.Text;
+            Settings.Default.ThumbnailLastUsedValue = ThumbnailTextBox.Text;
             Settings.Default.PageUrlLastUsedValue = PageUrlTextBox.Text;
             Settings.Default.TitleLastUsedValue = TitleTextBox.Text;
             Settings.Default.LocationLastUsedValue = LocationTextBox.Text;
@@ -551,7 +536,7 @@ namespace PageDesigner.Forms
 
                 return _workingSchema.TokenValues[token];
             }
-            BaseUrlTextBox.Text = GetTokenFromSchema(Schema.Tokens.BaseUrl, Settings.Default.BaseUrlLastUsedValue);
+
             PageUrlTextBox.Text = GetTokenFromSchema(Schema.Tokens.PageUrl, Settings.Default.PageUrlLastUsedValue);
             TitleTextBox.Text = GetTokenFromSchema(Schema.Tokens.Title, Settings.Default.TitleLastUsedValue);
             LocationTextBox.Text = GetTokenFromSchema(Schema.Tokens.Location, Settings.Default.LocationLastUsedValue);
@@ -1167,6 +1152,7 @@ namespace PageDesigner.Forms
 
                 previewImageControl.SetPageImageChecked(true);
                 _pageImagePreviewImageBox = previewImageControl;
+                ThumbnailTextBox.Text = _pageImageName;
             }
         }
 
@@ -1325,7 +1311,7 @@ namespace PageDesigner.Forms
                 DialogResult result = folderDialog.ShowDialog();
                 if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(folderDialog.SelectedPath))
                 {
-                    if (File.Exists(Path.Combine(folderDialog.SelectedPath, "SCHEMA")))
+                    if (File.Exists(Path.Combine(folderDialog.SelectedPath, Config.kDefaultGeneratedFilename)))
                     {
                         MessageBox.Show(
                             $"Can't create new page in directory, SCHEMA file already exists.",

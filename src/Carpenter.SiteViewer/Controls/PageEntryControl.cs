@@ -38,9 +38,14 @@ namespace SiteViewer.Controls
         }
 
         /// <summary>
-        /// A copy of the root template used to generate all pages
+        /// A reference of the root template used to generate all pages
         /// </summary>
         private Template _template;
+
+        /// <summary>
+        /// A reference to the site currently being used for all pages
+        /// </summary>
+        private Site _site;
 
         /// <summary>
         /// Path to the directory of the page that this control represents
@@ -57,11 +62,12 @@ namespace SiteViewer.Controls
         /// </summary>
         private SiteViewerForm _owner;
 
-        public PageEntryControl(string directoryPath, bool showCreateButton, Template template)
+        public PageEntryControl(string directoryPath, bool showCreateButton, Template template, Site site)
         {
             InitializeComponent();
 
             Debug.Assert(template != null);
+            Debug.Assert(site != null);
             Debug.Assert(Directory.Exists(directoryPath));
             Debug.Assert(ParentForm is SiteViewerForm);
 
@@ -135,11 +141,11 @@ namespace SiteViewer.Controls
         private void EditButton_Click(object sender, EventArgs e)
         {
 #if true
-            PageDesignerForm form = new(_directoryPath, _template.FilePath);
+            PageDesignerForm form = new(_directoryPath, _site.GetPath());
             form.Show();
 #else
             ProcessStartInfo startInfo = new(kPageDesignerAppName);
-            startInfo.Arguments = $"\"{_directoryPath}\" \"{_template.FilePath}\"";
+            startInfo.Arguments = $"\"{_directoryPath}\" \"{_site.GetPath()}\"";
             Process.Start(startInfo);
 #endif
         }
@@ -147,7 +153,7 @@ namespace SiteViewer.Controls
         // TODO: Move to main form
         private void PreviewButton_Click(object sender, EventArgs e)
         {
-            string schemaPath = Path.Combine(_directoryPath, "SCHEMA");
+            string schemaPath = Path.Combine(_directoryPath, Config.kSchemaFileName);
             if (File.Exists(schemaPath) == false)
             {
                 return;
@@ -162,13 +168,10 @@ namespace SiteViewer.Controls
             using (Schema pageSchema = new(schemaPath))
             {
                 // Generate preview page
-                if (_template.Generate(pageSchema, _directoryPath, true))
+                if (_template.GeneratePreviewHtmlForSchema(pageSchema, _site, _directoryPath, out string fileName))
                 {
-                    string originalOutputFile = pageSchema.OptionValues[Schema.Options.OutputFilename];
-                    string previewName = Path.GetFileNameWithoutExtension(originalOutputFile) + "_preview";
-                    string previewPath = Path.Combine(_directoryPath, previewName + Path.GetExtension(originalOutputFile));
-
                     // Open it with default app
+                    string previewPath = Path.Combine(_directoryPath, fileName);
                     if (File.Exists(previewPath))
                     {
                         Process.Start(new ProcessStartInfo(previewPath)
@@ -184,12 +187,12 @@ namespace SiteViewer.Controls
         // TODO: TODO: Move to main form
         private void CreateButton_Click(object sender, EventArgs e)
         {
-#if true
-            PageDesignerForm form = new(_directoryPath, _template.FilePath);
+#if false
+            PageDesignerForm form = new(_directoryPath, _site.GetPath());
             form.Show();
 #else
             ProcessStartInfo startInfo = new(kPageDesignerAppName);
-            startInfo.Arguments = $"\"{_directoryPath}\" \"{_template.FilePath}\"";
+            startInfo.Arguments = $"\"{_directoryPath}\" \"{_site.GetPath()}\"";
             Process.Start(startInfo);
 #endif
         }

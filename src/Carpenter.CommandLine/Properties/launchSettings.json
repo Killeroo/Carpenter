@@ -2,7 +2,7 @@
   "profiles": {
     "CommandLine": {
       "commandName": "Project",
-      "workingDirectory": "C:\\Users\\Kelpie\\My Drive\\Website\\photos"
+      "workingDirectory": "C:\\Users\\Kelpie\\Desktop\\WebsiteConversion\\photos"
     }
   }
 }

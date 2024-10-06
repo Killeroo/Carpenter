@@ -38,6 +38,13 @@ namespace Carpenter
             return line.Split('=').Last().Split("``").First().StripWhitespaces();
         }
 
+        public static string StripForwardSlashes(this string str)
+        {
+            int startIndex = str[0] == '/' ? 1 : 0;
+            int endIndexOffset = str[str.Length - 1] == '/' ? 1 : 0;
+            return str.Substring(startIndex, str.Length - endIndexOffset);
+        }
+
         public static int FindClosestKey(this Dictionary<int, string> dict, int value)
         {
             int closestKey = int.MaxValue;

@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
+using static Carpenter.Schema;
 
 namespace Carpenter
 {
@@ -14,6 +15,9 @@ namespace Carpenter
     /// </summary>
     public class Site
     {
+        private const string kOptionsTag = "[OPTIONS]";
+        private const string kClassesTag = "[CLASS_IDS]";
+
         /// <summary>
         /// All the options that a Site file can contain
         /// </summary>
@@ -50,7 +54,24 @@ namespace Carpenter
         }
         public string TemplatePath 
         {
-            get { return _optionValues.TryGetValue(Options.TemplatePath, out string value) ? value : string.Empty; }
+            get 
+            {
+                if (_optionValues.TryGetValue(Options.TemplatePath, out string value))
+                {
+                    string templatePath = Path.GetDirectoryName(value);
+                    if (templatePath == string.Empty)
+                    {
+                        // Template is in root directory, append site root so it makes sense to anything
+                        // that tries to fetch the template location
+                        templatePath = Path.Combine(GetPath(), value);
+                    }
+                    return templatePath;
+                }
+                else
+                {
+                    return string.Empty;
+                }
+            }
             set { _optionValues.AddOrUpdate(Options.TemplatePath, value); }
         }
         public string GridClass 
@@ -126,7 +147,7 @@ namespace Carpenter
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"Could not read site file ({ex.GetType()} exception occured)");
+                Logger.Log(LogLevel.Error, $"Could not read site file ({ex.GetType()} occured)");
                 return false;
             }
 
@@ -144,6 +165,9 @@ namespace Carpenter
                     }
                 }
             }
+
+            // We have to strip forward slashes from any urls so we can process them consistently 
+            _optionValues[Options.Url] = _optionValues[Options.Url].StripForwardSlashes();
 
             _loaded = true;
             return true;

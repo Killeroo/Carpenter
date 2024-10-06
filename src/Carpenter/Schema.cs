@@ -10,19 +10,13 @@ namespace Carpenter
     // TODO: Change to struct
     public class Schema : IDisposable, IEquatable<Schema>
     {
-        public const float kSchemaVersion = 2.0f;
-        
-        private const string kVersionToken = "schema_version";
-
         // Some cosmetic tags used in the schema file 
         private const string kTokensTag = "[TAGS]";
-        private const string kClassIdentifierTag = "[CLASS_IDENTIFIERS]";
         private const string kOptionsTag = "[OPTIONS]";
 
         public enum Options
         {
             OutputFilename, // TODO: Rename to generatdfilename
-            PageImage // TODO: Rename to thumbnail and move to token
         }
 
         public enum Tokens
@@ -35,6 +29,7 @@ namespace Carpenter
             Year,
             Author,
             Camera,
+            Thumbnail,
 
             // Image specific tokens
             Image,
@@ -58,28 +53,28 @@ namespace Carpenter
             { "%MONTH", Tokens.Month },
             { "%YEAR", Tokens.Year },
             { "%CAMERA", Tokens.Camera },
-            { "%AUTHOR", Tokens.Author }
+            { "%AUTHOR", Tokens.Author },
+            { "%THUMBNAIL", Tokens.Thumbnail }
         };
 
         public static readonly Dictionary<string, Options> OptionsTable = new()
         {
-            { "output_file", Options.OutputFilename },
-            { "page_image", Options.PageImage }
+            { "output_file", Options.OutputFilename }
         };
 
         public static readonly Dictionary<string, Tokens> ImageTokenTable = new()
         {
-            { "%IMAGE_URL", Tokens.Image },
+            { "%IMAGE_URL", Tokens.Image }, // TODO: Rename
             { "%DETAILED_IMAGE_URL", Tokens.DetailedImage },
             { "%IMAGE_TITLE", Tokens.ImageTitle },
         };
 
-        private static readonly Dictionary<string, ElementTags> _titleTagTable = new() // RENAME
+        private static readonly Dictionary<string, ElementTags> _layoutTagTable = new()
         {
-            { "[IMAGE_LAYOUT]", ElementTags.Grid }, // Remove IMAGE part of these sectons
-            { "[IMAGES_STANDALONE]", ElementTags.Standalone },
-            { "[IMAGES_COLUMN]", ElementTags.Column },
-            { "[IMAGE_TITLE]", ElementTags.Title },
+            { "[LAYOUT]", ElementTags.Grid }, // Remove IMAGE part of these sectons
+            { "[IMAGE]", ElementTags.Standalone },
+            { "[IMAGE_COLUMN]", ElementTags.Column },
+            { "[TITLE]", ElementTags.Title },
         };
 
 
@@ -88,38 +83,43 @@ namespace Carpenter
         /// </summary>
         public string PageUrl 
         {
-            get { return _tokenValues.TryGetValue(Tokens.PageUrl, out string value) ? value : string.Empty; }
-            set { _tokenValues.AddOrUpdate(Tokens.PageUrl, value); }
+            get { return TokenValues.TryGetValue(Tokens.PageUrl, out string value) ? value : string.Empty; }
+            set { TokenValues.AddOrUpdate(Tokens.PageUrl, value); }
         }
         public string Location 
         {
-            get { return _tokenValues.TryGetValue(Tokens.Location, out string value) ? value : string.Empty; }
-            set { _tokenValues.AddOrUpdate(Tokens.Location, value); }
+            get { return TokenValues.TryGetValue(Tokens.Location, out string value) ? value : string.Empty; }
+            set { TokenValues.AddOrUpdate(Tokens.Location, value); }
         }
         public string Title 
         {
-            get { return _tokenValues.TryGetValue(Tokens.Title, out string value) ? value : string.Empty; }
-            set { _tokenValues.AddOrUpdate(Tokens.Title, value); }
+            get { return TokenValues.TryGetValue(Tokens.Title, out string value) ? value : string.Empty; }
+            set { TokenValues.AddOrUpdate(Tokens.Title, value); }
         }
         public string Month 
         {
-            get { return _tokenValues.TryGetValue(Tokens.Month, out string value) ? value : string.Empty; }
-            set { _tokenValues.AddOrUpdate(Tokens.Month, value); }
+            get { return TokenValues.TryGetValue(Tokens.Month, out string value) ? value : string.Empty; }
+            set { TokenValues.AddOrUpdate(Tokens.Month, value); }
         }
         public string Year 
         {
-            get { return _tokenValues.TryGetValue(Tokens.Year, out string value) ? value : string.Empty; }
-            set { _tokenValues.AddOrUpdate(Tokens.Year, value); }
+            get { return TokenValues.TryGetValue(Tokens.Year, out string value) ? value : string.Empty; }
+            set { TokenValues.AddOrUpdate(Tokens.Year, value); }
         }
         public string Author 
         {
-            get { return _tokenValues.TryGetValue(Tokens.Location, out string value) ? value : string.Empty; }
-            set { _tokenValues.AddOrUpdate(Tokens.Location, value); }
+            get { return TokenValues.TryGetValue(Tokens.Author, out string value) ? value : string.Empty; }
+            set { TokenValues.AddOrUpdate(Tokens.Author, value); }
         }
         public string Camera 
         {
-            get { return _tokenValues.TryGetValue(Tokens.Title, out string value) ? value : string.Empty; }
-            set { _tokenValues.AddOrUpdate(Tokens.Title, value); }
+            get { return TokenValues.TryGetValue(Tokens.Camera, out string value) ? value : string.Empty; }
+            set { TokenValues.AddOrUpdate(Tokens.Camera, value); }
+        }
+        public string Thumbnail 
+        {
+            get { return TokenValues.TryGetValue(Tokens.Thumbnail, out string value) ? value : string.Empty; }
+            set { TokenValues.AddOrUpdate(Tokens.Thumbnail, value); }
         }
 
         /// <summary>
@@ -127,17 +127,15 @@ namespace Carpenter
         /// </summary>
         public string GeneratedFilename
         {
-            get { return _optionValues.TryGetValue(Options.OutputFilename, out string value) ? value : string.Empty; }
-            set { _optionValues.AddOrUpdate(Options.OutputFilename, value); }
+            get { return OptionValues.TryGetValue(Options.OutputFilename, out string value) ? value : string.Empty; }
+            set { OptionValues.AddOrUpdate(Options.OutputFilename, value); }
         }
 
-        public Dictionary<Tokens, string> GetTokenValues() { return _tokenValues; }
-        public List<ImageSection> GetImageSections() { return _imageSections; }
         public bool IsLoaded() => _loaded;
 
-        private Dictionary<Tokens, string> _tokenValues = new();
-        private Dictionary<Options, string> _optionValues = new();
-        private List<ImageSection> _imageSections = new();
+        public Dictionary<Tokens, string> TokenValues      { get; private set; } = new();
+        public Dictionary<Options, string> OptionValues    { get; private set; } = new();
+        public List<ImageSection> ImageSections             { get; set; } = new();
 
         /// <summary>
         /// Denotes if the Schema file was loaded correctly
@@ -153,19 +151,19 @@ namespace Carpenter
                 return;
             }
 
-            _tokenValues = new Dictionary<Tokens, string>(otherSchema._tokenValues);
-            _optionValues = new Dictionary<Options, string>(otherSchema._optionValues);
-            _imageSections = new List<ImageSection>();
+            TokenValues = new Dictionary<Tokens, string>(otherSchema.TokenValues);
+            OptionValues = new Dictionary<Options, string>(otherSchema.OptionValues);
+            ImageSections = new List<ImageSection>();
             
             // Need to actually populate the ImageSections manually to avoid copying a reference
-            foreach (ImageSection section in otherSchema._imageSections)
+            foreach (ImageSection section in otherSchema.ImageSections)
             {
                 if (section is StandaloneImageSection standaloneSection)
                 {
                     StandaloneImageSection newSection = new StandaloneImageSection();
                     newSection.DetailedImage = standaloneSection.DetailedImage;
                     newSection.PreviewImage = standaloneSection.PreviewImage;
-                    _imageSections.Add(newSection);
+                    ImageSections.Add(newSection);
                 }
                 else if (section is ColumnImageSection columnSection)
                 {
@@ -181,20 +179,21 @@ namespace Carpenter
                             newColumnSection.Sections.Add(newSection);
                         }
                     }
-                    _imageSections.Add(newColumnSection);
+                    ImageSections.Add(newColumnSection);
                 }
                 else if (section is TitleImageSection titleSection)
                 {
                     TitleImageSection newSection = new TitleImageSection();
                     newSection.TitleText = titleSection.TitleText;
-                    _imageSections.Add(newSection);
+                    ImageSections.Add(newSection);
                 }
             }
         }
 
-        // TODO: Throw exception
         public bool TryLoad(string path)
         {
+            _loaded = false;
+
             // Read the file
             string[] schemaFileContents;
             try
@@ -215,7 +214,7 @@ namespace Carpenter
             }
 
             // Version check
-            if (schemaFileContents[0].Contains(kVersionToken) == false || schemaFileContents[0].Contains('=') == false)
+            if (schemaFileContents[0].Contains(Config.kVersionOption) == false || schemaFileContents[0].Contains('=') == false)
             {
                 Logger.Log(LogLevel.Error, $"Could not read schema file version");
                 return false;
@@ -231,9 +230,9 @@ namespace Carpenter
                 Logger.Log(LogLevel.Error, $"[] Could not parse schema version string (\'{versionValue}\') ({e.GetType()} exception occured)");
                 return false;
             }
-            if (version != kSchemaVersion)
+            if (version != Config.kVersion)
             {
-                Logger.Log(LogLevel.Error, $"Incompabitable schema version, found v{version} but can only parse v{kSchemaVersion}. Please update.");
+                Logger.Log(LogLevel.Error, $"Incompabitable schema version, found v{version} but can only parse v{Config.kVersion}. Please update.");
                 return false;
             }
 
@@ -246,12 +245,15 @@ namespace Carpenter
                 {
                     if (line.Contains(token))
                     {
-                        _tokenValues[TokenTable[token]] = line.GetTokenOrOptionValue();
-                        Logger.Log(LogLevel.Verbose, $"Schema token {TokenTable[token]}={_tokenValues[TokenTable[token]]}");
+                        TokenValues[TokenTable[token]] = line.GetTokenOrOptionValue();
+                        Logger.Log(LogLevel.Verbose, $"Schema token {TokenTable[token]}={TokenValues[TokenTable[token]]}");
                         break;
                     }
                 }
             }
+
+            // We have to strip forward slashes from any urls so we can process them consistently 
+            TokenValues[Tokens.PageUrl] = TokenValues[Tokens.PageUrl].StripForwardSlashes();
 
             // Parse options in file
             for (int i = 0; i < schemaFileContents.Length; i++)
@@ -262,8 +264,8 @@ namespace Carpenter
                 {
                     if (line.Contains(option))
                     {
-                        _optionValues[OptionsTable[option]] = line.GetTokenOrOptionValue();
-                        Logger.Log(LogLevel.Verbose, $"Schema option {OptionsTable[option]}={_optionValues[OptionsTable[option]]}");
+                        OptionValues[OptionsTable[option]] = line.GetTokenOrOptionValue();
+                        Logger.Log(LogLevel.Verbose, $"Schema option {OptionsTable[option]}={OptionValues[OptionsTable[option]]}");
                         break;
                     }
                 }
@@ -271,7 +273,7 @@ namespace Carpenter
 
             // Parse photo grid layout
             string gridTag = string.Empty;
-            foreach (var item in _titleTagTable)
+            foreach (var item in _layoutTagTable)
             {
                 if (item.Value == ElementTags.Grid)
                 {
@@ -298,27 +300,27 @@ namespace Carpenter
                 string line = schemaFileContents[i];
 
                 // If the line contains a tag
-                foreach (string tag in _titleTagTable.Keys)
+                foreach (string tag in _layoutTagTable.Keys)
                 {
                     if (line.Contains(tag))
                     {
-                        switch (_titleTagTable[tag])
+                        switch (_layoutTagTable[tag])
                         {
                             case ElementTags.Standalone:
                                 currentSectionIndex++;
-                                _imageSections.Add(new StandaloneImageSection());
+                                ImageSections.Add(new StandaloneImageSection());
                                 Logger.Log(LogLevel.Verbose, "Adding standalone image section to photo grid");
                                 break;
 
                             case ElementTags.Column:
                                 currentSectionIndex++;
-                                _imageSections.Add(new ColumnImageSection());
+                                ImageSections.Add(new ColumnImageSection());
                                 Logger.Log(LogLevel.Verbose, "Adding column section to photo grid");
                                 break;
 
                             case ElementTags.Title:
                                 currentSectionIndex++;
-                                _imageSections.Add(new TitleImageSection());
+                                ImageSections.Add(new TitleImageSection());
                                 Logger.Log(LogLevel.Verbose, "Adding title section to photo grid");
                                 break;
 
@@ -367,19 +369,19 @@ namespace Carpenter
                         // TODO: Don't assume this will be ordered image_url then detailed_image_url
                         if (imageTitle != string.Empty || imageUrl != string.Empty && detailedImageUrl != string.Empty)
                         {
-                            if (_imageSections[currentSectionIndex].GetType().Equals(typeof(StandaloneImageSection)))
+                            if (ImageSections[currentSectionIndex].GetType().Equals(typeof(StandaloneImageSection)))
                             {
                                 // If we are dealing with a standalone section
-                                var standaloneSection = _imageSections[currentSectionIndex] as StandaloneImageSection;
+                                var standaloneSection = ImageSections[currentSectionIndex] as StandaloneImageSection;
                                 standaloneSection.PreviewImage = imageUrl;
                                 standaloneSection.DetailedImage = detailedImageUrl;
 
                                 Logger.Log(LogLevel.Verbose, $"Added single image section to photo grid (image_url={imageUrl} detailed_image_url={imageUrl})");
                             }
-                            else if (_imageSections[currentSectionIndex].GetType().Equals(typeof(ColumnImageSection)))
+                            else if (ImageSections[currentSectionIndex].GetType().Equals(typeof(ColumnImageSection)))
                             {
                                 // If we are dealing with a column section
-                                var columnSection = _imageSections[currentSectionIndex] as ColumnImageSection;
+                                var columnSection = ImageSections[currentSectionIndex] as ColumnImageSection;
                                 columnSection.Sections.Add(new StandaloneImageSection
                                 {
                                     PreviewImage = imageUrl,
@@ -388,9 +390,9 @@ namespace Carpenter
 
                                 Logger.Log(LogLevel.Verbose, $"Added image to column section (image_url={imageUrl} detailed_image_url={imageUrl})");
                             }
-                            else if (_imageSections[currentSectionIndex].GetType().Equals(typeof(TitleImageSection)))
+                            else if (ImageSections[currentSectionIndex].GetType().Equals(typeof(TitleImageSection)))
                             {
-                                var titleSection = _imageSections[currentSectionIndex] as TitleImageSection;
+                                var titleSection = ImageSections[currentSectionIndex] as TitleImageSection;
                                 titleSection.TitleText = imageTitle;
 
                                 Logger.Log(LogLevel.Verbose, $"Added image title section to photo grid (titile={imageTitle})");
@@ -407,6 +409,7 @@ namespace Carpenter
 
             // TODO: Check that all tokens are present
             Logger.Log(LogLevel.Verbose, $"Schema parsed (\"{path}\")");
+            _loaded = true;
             return true;
         }
 
@@ -424,19 +427,13 @@ namespace Carpenter
             List<string> schemaFileContents = new List<string>();
 
             // First add the version
-            schemaFileContents.Add(CreateSchemaPair(kVersionToken, kSchemaVersion.ToString("0.0")));
+            schemaFileContents.Add(CreateNameValuePair(Config.kVersionOption, Config.kVersion.ToString("0.0")));
             schemaFileContents.Add(Environment.NewLine);
 
             // Next add the tokens (Except the class ids)
             schemaFileContents.Add(kTokensTag);
-            foreach (KeyValuePair<Tokens, string> tokenPair in _tokenValues)
+            foreach (KeyValuePair<Tokens, string> tokenPair in TokenValues)
             {
-                if (tokenPair.Key.ToString().Contains("ClassId"))
-                {
-                    // Don't both printing the class ids yet, we will do that after in a different section
-                    continue;
-                }
-
                 // Ok we need to find what the string for the given token type is
                 // use the original TokenTable for that
                 string tokenName = TokenTable.GetKeyOfValue(tokenPair.Key);
@@ -446,34 +443,13 @@ namespace Carpenter
                     Logger.Log(LogLevel.Error, $"Couldn't find token name for {tokenPair.Key.ToString()}. This isn't great...");
                     continue;
                 }
-                schemaFileContents.Add(CreateSchemaPair(tokenName, tokenPair.Value));
-            }
-            schemaFileContents.Add(Environment.NewLine);
-
-            // Class identifiers next!
-            schemaFileContents.Add(kClassIdentifierTag);
-            foreach (KeyValuePair<Tokens, string> tokenPair in _tokenValues)
-            {
-                // We only care about class ids this time
-                if (tokenPair.Key.ToString().Contains("ClassId") == false)
-                {
-                    continue;
-                }
-
-                // Same thing again, look up the token name in the TokenTable
-                string tokenName = TokenTable.GetKeyOfValue(tokenPair.Key);
-                if (string.IsNullOrEmpty(tokenName))
-                {
-                    Logger.Log(LogLevel.Error, $"Couldn't find token name for {tokenPair.Key.ToString()}. This isn't great...");
-                    continue;
-                }
-                schemaFileContents.Add(CreateSchemaPair(tokenName, tokenPair.Value));
+                schemaFileContents.Add(CreateNameValuePair(tokenName, tokenPair.Value));
             }
             schemaFileContents.Add(Environment.NewLine);
 
             // Then the options section
             schemaFileContents.Add(kOptionsTag);
-            foreach (KeyValuePair<Options, string> optionPair in _optionValues)
+            foreach (KeyValuePair<Options, string> optionPair in OptionValues)
             {
                 string optionName = OptionsTable.GetKeyOfValue(optionPair.Key);
                 if (string.IsNullOrEmpty(optionName))
@@ -481,23 +457,23 @@ namespace Carpenter
                     Logger.Log(LogLevel.Error, $"Couldn't find option name for {optionPair.Key.ToString()}. This isn't great...");
                     continue;
                 }
-                schemaFileContents.Add(CreateSchemaPair(optionName, optionPair.Value));
+                schemaFileContents.Add(CreateNameValuePair(optionName, optionPair.Value));
             }
             schemaFileContents.Add(Environment.NewLine);
 
             // Finally we print out the photogrid
-            schemaFileContents.Add(_titleTagTable.GetKeyOfValue(ElementTags.Grid));
+            schemaFileContents.Add(_layoutTagTable.GetKeyOfValue(ElementTags.Grid));
             schemaFileContents.Add(Environment.NewLine);
 
             // Just to save some lookups
             string imageUrlTokenName = ImageTokenTable.GetKeyOfValue(Tokens.Image);
             string detailedImageUrlTokenName = ImageTokenTable.GetKeyOfValue(Tokens.DetailedImage);
             string titleTokenName = ImageTokenTable.GetKeyOfValue(Tokens.Title);
-            string standaloneTag = _titleTagTable.GetKeyOfValue(ElementTags.Standalone);
-            string columnTag = _titleTagTable.GetKeyOfValue(ElementTags.Column);
-            string titleTag = _titleTagTable.GetKeyOfValue(ElementTags.Title);
+            string standaloneTag = _layoutTagTable.GetKeyOfValue(ElementTags.Standalone);
+            string columnTag = _layoutTagTable.GetKeyOfValue(ElementTags.Column);
+            string titleTag = _layoutTagTable.GetKeyOfValue(ElementTags.Title);
 
-            foreach (ImageSection section in _imageSections)
+            foreach (ImageSection section in ImageSections)
             {
                 if (section == null)
                 {
@@ -509,8 +485,8 @@ namespace Carpenter
                     StandaloneImageSection standaloneImageSection = (StandaloneImageSection)section;
 
                     schemaFileContents.Add(standaloneTag);
-                    schemaFileContents.Add(CreateSchemaPair(imageUrlTokenName, standaloneImageSection.PreviewImage));
-                    schemaFileContents.Add(CreateSchemaPair(detailedImageUrlTokenName, standaloneImageSection.DetailedImage));
+                    schemaFileContents.Add(CreateNameValuePair(imageUrlTokenName, standaloneImageSection.PreviewImage));
+                    schemaFileContents.Add(CreateNameValuePair(detailedImageUrlTokenName, standaloneImageSection.DetailedImage));
                 }
                 else if (section.GetType() == typeof(ColumnImageSection))
                 {
@@ -519,8 +495,8 @@ namespace Carpenter
                     schemaFileContents.Add(columnTag);
                     foreach (StandaloneImageSection columnItem in columnImageSection.Sections)
                     {
-                        schemaFileContents.Add(CreateSchemaPair(imageUrlTokenName, columnItem.PreviewImage));
-                        schemaFileContents.Add(CreateSchemaPair(detailedImageUrlTokenName, columnItem.DetailedImage));
+                        schemaFileContents.Add(CreateNameValuePair(imageUrlTokenName, columnItem.PreviewImage));
+                        schemaFileContents.Add(CreateNameValuePair(detailedImageUrlTokenName, columnItem.DetailedImage));
                     }
                 }
                 else if (section.GetType() == typeof(TitleImageSection))
@@ -528,13 +504,13 @@ namespace Carpenter
                     TitleImageSection titleImageSection = (TitleImageSection)section;
 
                     schemaFileContents.Add(titleTag);
-                    schemaFileContents.Add(CreateSchemaPair(titleTokenName, titleImageSection.TitleText));
+                    schemaFileContents.Add(CreateNameValuePair(titleTokenName, titleImageSection.TitleText));
                 }
                 schemaFileContents.Add(Environment.NewLine);
             }
 
             // Now we try and write it all to a file
-            string schemaPath = Path.Combine(path, "SCHEMA");
+            string schemaPath = Path.Combine(path, Config.kSchemaFileName);
             File.WriteAllLines(schemaPath, schemaFileContents);
             Logger.Log(LogLevel.Info, $"Schema generated: {schemaPath}");
             return true;
@@ -548,9 +524,9 @@ namespace Carpenter
         }
 
         // Shorthand to create a schema parameter and it's value. Just means that if we need to modify the format of the schema we can do it in one place.
-        private string CreateSchemaPair(string tokenName, string tokenValue)
+        private string CreateNameValuePair(string name, string value)
         {
-            return string.Format("{0}={1}", tokenName, tokenValue);
+            return string.Format("{0}={1}", name, value);
         }
 
         public bool Equals(Schema? other)
@@ -561,9 +537,9 @@ namespace Carpenter
             }
 
             bool equal = false;
-            equal &= _tokenValues == other._tokenValues;
-            equal &= _optionValues == other._optionValues;
-            equal &= _imageSections == other._imageSections;
+            equal &= TokenValues == other.TokenValues;
+            equal &= OptionValues == other.OptionValues;
+            equal &= ImageSections == other.ImageSections;
             return equal;
         }
 
@@ -572,9 +548,9 @@ namespace Carpenter
         {
             if (!_disposed)
             {
-                _tokenValues.Clear();
-                _optionValues.Clear();
-                _imageSections.Clear();
+                TokenValues.Clear();
+                OptionValues.Clear();
+                ImageSections.Clear();
 
                 _disposed = true;
             }

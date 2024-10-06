@@ -176,7 +176,7 @@ namespace Carpenter
         // TODO: Just garbage, produces terrible aspect ratio's rework to use floats maybe?
         public static AspectRatio CalculateAspectRatio(Image image)
         {
-            int lowestCommonDemoninator = MathUtils.LowestCommonMultiple(image.Width, image.Height);
+            int lowestCommonDemoninator = LowestCommonMultiple(image.Width, image.Height);
             return new AspectRatio(lowestCommonDemoninator / image.Width, lowestCommonDemoninator / image.Height);
         }
 
