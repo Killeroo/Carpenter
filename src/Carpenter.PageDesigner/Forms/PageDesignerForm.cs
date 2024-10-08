@@ -394,11 +394,12 @@ namespace PageDesigner.Forms
             _workingSchema.Year = YearTextBox.Text;
             _workingSchema.Author = AuthorTextBox.Text;
             _workingSchema.Camera = CameraTextBox.Text;
+            _workingSchema.Thumbnail = ThumbnailTextBox.Text;
 
             if (_savedSchema.OptionValues != _workingSchema.OptionValues)
             {
                 // TODO: Have these set via a form on the main form or have them stored somewhere else
-                _workingSchema.OptionValues = _savedSchema.OptionValues;
+                _workingSchema.GeneratedFilename = _savedSchema.GeneratedFilename;
             }
             else
             {
@@ -544,6 +545,7 @@ namespace PageDesigner.Forms
             YearTextBox.Text = GetTokenFromSchema(Schema.Tokens.Year, Settings.Default.YearLastUsedValue);
             AuthorTextBox.Text = GetTokenFromSchema(Schema.Tokens.Author, Settings.Default.AuthorLastUsedValue);
             CameraTextBox.Text = GetTokenFromSchema(Schema.Tokens.Camera, Settings.Default.CameraLastUsedValue);
+            ThumbnailTextBox.Text = GetTokenFromSchema(Schema.Tokens.Thumbnail, Settings.Default.ThumbnailLastUsedValue);
 
             AddTextboxCallbacks();
         }

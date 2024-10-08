@@ -161,14 +161,14 @@ namespace SiteViewer.Forms
             string[] localDirectories = Directory.GetDirectories(_rootPath);
             for (int i = 0; i < localDirectories.Length; i++)
             {
-                string localSchemaPath = Path.Combine(_rootPath, Path.GetFileName(localDirectories[i]), "SCHEMA");
+                string localSchemaPath = Path.Combine(_rootPath, Path.GetFileName(localDirectories[i]), Config.kSchemaFileName);
                 if (File.Exists(localSchemaPath))
                 {
                     GenerateSiteBackgroundWorker.ReportProgress((100 * i) / localDirectories.Length, $"Generating '{Path.GetFileName(localDirectories[i])}'...");
 
                     string currentDirectoryPath = Path.GetDirectoryName(localSchemaPath);
                     using Schema localSchema = new(localSchemaPath);
-                    if (_template.Generate(localSchema, currentDirectoryPath))
+                    if (_template.GenerateHtmlForSchema(localSchema, _site, currentDirectoryPath))
                     {
                         state.SuccessfulPaths.Add(currentDirectoryPath);
                     }
@@ -196,7 +196,7 @@ namespace SiteViewer.Forms
             for (int i = 0; i < localDirectories.Length; i++)
             {
                 string localPath = Path.Combine(_rootPath, Path.GetFileName(localDirectories[i]));
-                string localSchemaPath = Path.Combine(localPath, "SCHEMA");
+                string localSchemaPath = Path.Combine(localPath, Config.kSchemaFileName);
                 if (File.Exists(localSchemaPath))
                 {
                     // try and load the schema in the directory
@@ -257,8 +257,8 @@ namespace SiteViewer.Forms
             // TODO: Should probably put this somewhere else
             const string kHtmlTemplate = @"
 <div class=""container"">
-    <a href=""%BASE_URL/%PAGE_URL/"">
-        <img class=""preview_image"" src=""%BASE_URL/%PAGE_URL/%THUMBNAIL"" width=""%T_WIDTH"" height=""%T_HEIGHT"" style=""width:100%"">
+    <a href=""%PAGE_URL/"">
+        <img class=""preview_image"" src=""%PAGE_URL/%THUMBNAIL"" width=""%WIDTH"" height=""%HEIGHT"" style=""width:100%"">
 
         <div style=""margin-left: 1em;"">
             <h3 style=""margin-top: 0; margin-bottom: 0;"">%TITLE</h3>
@@ -288,7 +288,7 @@ namespace SiteViewer.Forms
             foreach (string directory in Directory.EnumerateDirectories(PathTextBox.Text))
             {
                 Schema schema = new();
-                if (schema.TryLoad(Path.Combine(directory, "SCHEMA")))
+                if (schema.TryLoad(Path.Combine(directory, Config.kSchemaFileName)))
                 {
                     DateTime date = new(
                         Convert.ToInt32(schema.TokenValues[Schema.Tokens.Year]),
@@ -309,38 +309,46 @@ namespace SiteViewer.Forms
             {
                 Schema schema = entry.Value;
 
-                string thumbnailName = string.Empty;
                 int thumbnailWidth = 0;
                 int thumbnailHeight = 0;
-                if (schema.OptionValues.TryGetValue(Schema.Options.PageImage, out string pageImage))
+                if (schema.Thumbnail != string.Empty)
                 {
-                    thumbnailName = pageImage;
-                    foreach (string file in Directory.EnumerateFiles(PathTextBox.Text, "*.jpg", SearchOption.AllDirectories))
+                    string thumbnailFilename = schema.Thumbnail;
+                    foreach (string imageFile in Directory.EnumerateFiles(PathTextBox.Text, string.Format("*.{0}", Path.GetExtension(thumbnailFilename)), SearchOption.AllDirectories))
                     {
-                        if (Path.GetFileName(file) == pageImage)
+                        if (Path.GetFileName(imageFile) == thumbnailFilename)
                         {
-                            var imageMetadata = JpegParser.GetMetadata(file);
+                            var imageMetadata = JpegParser.GetMetadata(imageFile);
                             thumbnailWidth = imageMetadata.Width;
                             thumbnailHeight = imageMetadata.Height;
                             break;
                         }
                     }
                 }
+                else
+                {
+                    // No thumbnail, skip generating this page
+                    continue;
+                }
+
+                // We have to modify the PAGE_URL to have the site URL included (as we do when generating HTML in template code
+                Dictionary<Schema.Tokens, string> modifiedSchemaTokens = new(schema.TokenValues);
+                modifiedSchemaTokens[Schema.Tokens.PageUrl] = string.Format("{0}/{1}/", _site.Url, modifiedSchemaTokens[Schema.Tokens.PageUrl]);
 
                 string generatedHtmlSnippet = string.Empty;
                 foreach (string line in kHtmlTemplate.Split(Environment.NewLine))
                 {
                     string processedLine = line;
 
-                    // HACK: Remove once we change thumbnail to be a token
-                    if (string.IsNullOrEmpty(thumbnailName) == false)
+                    // We still need to manually find and replace the image and width height tags
+                    if (line.Contains(Config.kTemplateImageWidthToken) || line.Contains(Config.kTemplateImageHeightToken))
                     {
-                        processedLine = processedLine.Replace(@"%THUMBNAIL", thumbnailName);
-                        processedLine = processedLine.Replace(@"%T_WIDTH", thumbnailWidth.ToString());
-                        processedLine = processedLine.Replace(@"%T_HEIGHT", thumbnailHeight.ToString());
+                        processedLine = processedLine.Replace(Config.kTemplateImageWidthToken, thumbnailWidth.ToString());
+                        processedLine = processedLine.Replace(Config.kTemplateImageHeightToken, thumbnailHeight.ToString());
                     }
 
-                    foreach (KeyValuePair<string, Schema.Tokens> tokenEntry in schema.TokenTable)
+                    // Process each line and replace them with values from the schema
+                    foreach (KeyValuePair<string, Schema.Tokens> tokenEntry in Schema.TokenTable)
                     {
                         processedLine = processedLine.Replace(tokenEntry.Key, schema.TokenValues[tokenEntry.Value]);
                     }
@@ -444,7 +452,7 @@ namespace SiteViewer.Forms
             foreach (string directory in Directory.GetDirectories(_rootPath))
             {
                 bool schemaPresent = File.Exists(Path.Combine(_rootPath, directory, "SCHEMA"));
-                pageEntries.Add(new PageEntryControl(directory, !schemaPresent, _template));
+                pageEntries.Add(new PageEntryControl(directory, schemaPresent ? PageEntryControl.ButtonTypes.Edit : PageEntryControl.ButtonTypes.Create, _template, _site));
             }
             pageEntries.Sort((x, y) => x.GetDirectoryName().CompareTo(y.GetDirectoryName()));
 

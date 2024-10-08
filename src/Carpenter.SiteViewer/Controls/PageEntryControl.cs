@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Accessibility;
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -9,11 +11,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using PageDesigner.Forms;
-
 using Carpenter;
 using SiteViewer.Forms;
-using Accessibility;
+
+using PageDesigner.Forms;
 
 namespace SiteViewer.Controls
 {
@@ -26,6 +27,7 @@ namespace SiteViewer.Controls
 
         public enum BuildState
         {
+            None,
             Success,
             Failure,
             Pending
@@ -57,26 +59,26 @@ namespace SiteViewer.Controls
         /// </summary>
         private BuildState _buildState;
 
-        /// <summary>
-        /// A reference to the SiteViwerForm that owns this control
-        /// </summary>
-        private SiteViewerForm _owner;
-
-        public PageEntryControl(string directoryPath, bool showCreateButton, Template template, Site site)
+        public PageEntryControl(string directoryPath, ButtonTypes buttonType, Template template, Site site)
         {
             InitializeComponent();
 
             Debug.Assert(template != null);
             Debug.Assert(site != null);
             Debug.Assert(Directory.Exists(directoryPath));
-            Debug.Assert(ParentForm is SiteViewerForm);
 
             _directoryPath = directoryPath;
             _template = template;
-            _owner = ParentForm as SiteViewerForm;
+            _site = site;
             DirectoryLabel.Text = Path.GetFileName(directoryPath);
 
-            SetControlButtonType(ButtonTypes.Create);
+            SetControlButtonType(buttonType);
+
+            if (buttonType == ButtonTypes.Create)
+            {
+                // If we are showing the create button then we don't have a PAGE file, so no point in showing a build status
+                SetBuildStatus(BuildState.None);
+            }
         }
 
         /// <summary>
@@ -100,6 +102,7 @@ namespace SiteViewer.Controls
 
             switch (newState)
             {
+                case BuildState.None:    StatusButton.BackColor = Color.LightGray; break;
                 case BuildState.Success: StatusButton.BackColor = Color.LightGreen; break;
                 case BuildState.Failure: StatusButton.BackColor = Color.Red; break;
                 case BuildState.Pending: StatusButton.BackColor = Color.Yellow; break;

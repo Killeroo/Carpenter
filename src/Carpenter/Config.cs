@@ -18,5 +18,7 @@ namespace Carpenter
         public const string kTemplateFilename = "template.html";
         public const string kGeneratedPreviewPostfix = "_preview";
         public const string kDefaultGeneratedFilename = "index.html";
+        public const string kTemplateImageWidthToken = "%WIDTH";
+        public const string kTemplateImageHeightToken = "%HEIGHT";
     }
 }

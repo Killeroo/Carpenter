@@ -159,7 +159,7 @@ namespace Carpenter
         }
 
         // TODO: Throw some exceptions
-        Dictionary<string, (int height, int width)> _schemaImages = new Dictionary<string, (int height, int width)>();
+        Dictionary<string, (int height, int width)> _schemaImages = new();
         private bool GenerateHtml(Schema schema, Site site, string outputPath, string outputFilename, bool isPreview)
         {
             if (!_loaded)
@@ -334,7 +334,7 @@ namespace Carpenter
                 string line = imageTemplate[i];
 
                 // Replace all image tokens with the values in the StandaloneImageSection
-                foreach (var imageTokenEntry in Schema.ImageTokenTable)
+                foreach (var imageTokenEntry in Schema.LayoutTokenTable)
                 {
                     switch (imageTokenEntry.Value)
                     {
@@ -354,11 +354,10 @@ namespace Carpenter
                     line = line.Replace("loading=\"lazy\"", "");
                 }
 
-
                 if (_schemaImages.ContainsKey(section.PreviewImage))
                 {
-                    line = line.Replace("%HEIGHT", _schemaImages[section.PreviewImage].height.ToString());
-                    line = line.Replace("%WIDTH", _schemaImages[section.PreviewImage].width.ToString());
+                    line = line.Replace(Config.kTemplateImageHeightToken, _schemaImages[section.PreviewImage].height.ToString());
+                    line = line.Replace(Config.kTemplateImageWidthToken, _schemaImages[section.PreviewImage].width.ToString());
                 }
                 else
                 {
@@ -381,9 +380,9 @@ namespace Carpenter
                 string line = titleTemplate[i];
 
                 // Replace all image tokens with the values in the StandaloneImageSection
-                foreach (var imageTokenEntry in Schema.ImageTokenTable)
+                foreach (var imageTokenEntry in Schema.LayoutTokenTable)
                 {
-                    if (imageTokenEntry.Value == Schema.Tokens.ImageTitle)
+                    if (imageTokenEntry.Value == Schema.Tokens.GridTitle)
                     {
                         line = line.Replace(imageTokenEntry.Key, section.TitleText);
                     }

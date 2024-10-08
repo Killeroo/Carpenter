@@ -122,6 +122,8 @@ namespace Carpenter.CommandLine
                 Console.WriteLine(schemaPreviewGenerationTimer);
             }
 
+            // TODO: Next try saving!
+
             //// Load the template we will use for all pages, it should be in our root directory
             //string pathToTemplateFile = Path.Combine(rootDirectory, "template.html");
             //Template template;

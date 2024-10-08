@@ -31,10 +31,10 @@ namespace Carpenter
             Camera,
             Thumbnail,
 
-            // Image specific tokens
+            // Layout specific tokens
             Image,
             DetailedImage,
-            ImageTitle
+            GridTitle
         };
 
         private enum ElementTags
@@ -62,16 +62,16 @@ namespace Carpenter
             { "output_file", Options.OutputFilename }
         };
 
-        public static readonly Dictionary<string, Tokens> ImageTokenTable = new()
+        public static readonly Dictionary<string, Tokens> LayoutTokenTable = new()
         {
-            { "%IMAGE_URL", Tokens.Image }, // TODO: Rename
-            { "%DETAILED_IMAGE_URL", Tokens.DetailedImage },
-            { "%IMAGE_TITLE", Tokens.ImageTitle },
+            { "%IMAGE", Tokens.Image }, // TODO: Can handle just 
+            { "%DETAILED_IMAGE", Tokens.DetailedImage },
+            { "%GRID_TITLE", Tokens.GridTitle },
         };
 
         private static readonly Dictionary<string, ElementTags> _layoutTagTable = new()
         {
-            { "[LAYOUT]", ElementTags.Grid }, // Remove IMAGE part of these sectons
+            { "[LAYOUT]", ElementTags.Grid },
             { "[IMAGE]", ElementTags.Standalone },
             { "[IMAGE_COLUMN]", ElementTags.Column },
             { "[TITLE]", ElementTags.Title },
@@ -339,13 +339,13 @@ namespace Carpenter
                 }
 
                 // If the line contains an image token
-                foreach (string token in ImageTokenTable.Keys)
+                foreach (string token in LayoutTokenTable.Keys)
                 {
                     if (line.Contains(token))
                     {
                         string tokenValue = line.Split('=').Last();
 
-                        switch (ImageTokenTable[token])
+                        switch (LayoutTokenTable[token])
                         {
                             case Tokens.Image:
                                 imageUrl = tokenValue;
@@ -355,7 +355,7 @@ namespace Carpenter
                                 detailedImageUrl = tokenValue;
                                 break;
 
-                            case Tokens.ImageTitle:
+                            case Tokens.GridTitle:
                                 imageTitle = tokenValue;
                                 break;
 
@@ -466,9 +466,9 @@ namespace Carpenter
             schemaFileContents.Add(Environment.NewLine);
 
             // Just to save some lookups
-            string imageUrlTokenName = ImageTokenTable.GetKeyOfValue(Tokens.Image);
-            string detailedImageUrlTokenName = ImageTokenTable.GetKeyOfValue(Tokens.DetailedImage);
-            string titleTokenName = ImageTokenTable.GetKeyOfValue(Tokens.Title);
+            string imageUrlTokenName = LayoutTokenTable.GetKeyOfValue(Tokens.Image);
+            string detailedImageUrlTokenName = LayoutTokenTable.GetKeyOfValue(Tokens.DetailedImage);
+            string titleTokenName = LayoutTokenTable.GetKeyOfValue(Tokens.Title);
             string standaloneTag = _layoutTagTable.GetKeyOfValue(ElementTags.Standalone);
             string columnTag = _layoutTagTable.GetKeyOfValue(ElementTags.Column);
             string titleTag = _layoutTagTable.GetKeyOfValue(ElementTags.Title);

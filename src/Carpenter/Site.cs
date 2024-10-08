@@ -49,14 +49,14 @@ namespace Carpenter
         /// </summary>
         public string Url 
         { 
-            get { return _optionValues.TryGetValue(Options.Url, out string value) ? value : string.Empty; } 
-            set { _optionValues.AddOrUpdate(Options.Url, value); }
+            get { return OptionValues.TryGetValue(Options.Url, out string value) ? value : string.Empty; } 
+            set { OptionValues.AddOrUpdate(Options.Url, value); }
         }
         public string TemplatePath 
         {
             get 
             {
-                if (_optionValues.TryGetValue(Options.TemplatePath, out string value))
+                if (OptionValues.TryGetValue(Options.TemplatePath, out string value))
                 {
                     string templatePath = Path.GetDirectoryName(value);
                     if (templatePath == string.Empty)
@@ -72,33 +72,33 @@ namespace Carpenter
                     return string.Empty;
                 }
             }
-            set { _optionValues.AddOrUpdate(Options.TemplatePath, value); }
+            set { OptionValues.AddOrUpdate(Options.TemplatePath, value); }
         }
         public string GridClass 
         {
-            get { return _optionValues.TryGetValue(Options.GridClass, out string value) ? value : string.Empty; }
-            set { _optionValues.AddOrUpdate(Options.GridClass, value); }
+            get { return OptionValues.TryGetValue(Options.GridClass, out string value) ? value : string.Empty; }
+            set { OptionValues.AddOrUpdate(Options.GridClass, value); }
         }
         public string ColumnClass 
         {
-            get { return _optionValues.TryGetValue(Options.ColumnClass, out string value) ? value : string.Empty; }
-            set { _optionValues.AddOrUpdate(Options.ColumnClass, value); }
+            get { return OptionValues.TryGetValue(Options.ColumnClass, out string value) ? value : string.Empty; }
+            set { OptionValues.AddOrUpdate(Options.ColumnClass, value); }
         }
         public string ImageClass 
         {
-            get { return _optionValues.TryGetValue(Options.ImageClass, out string value) ? value : string.Empty; }
-            set { _optionValues.AddOrUpdate(Options.ImageClass, value); }
+            get { return OptionValues.TryGetValue(Options.ImageClass, out string value) ? value : string.Empty; }
+            set { OptionValues.AddOrUpdate(Options.ImageClass, value); }
         }
         public string TitleClass 
         {
-            get { return _optionValues.TryGetValue(Options.TitleClass, out string value) ? value : string.Empty; }
-            set { _optionValues.AddOrUpdate(Options.TitleClass, value); }
+            get { return OptionValues.TryGetValue(Options.TitleClass, out string value) ? value : string.Empty; }
+            set { OptionValues.AddOrUpdate(Options.TitleClass, value); }
         }
 
         /// <summary>
         /// Contains all the current site option values
         /// </summary>
-        private Dictionary<Options, string> _optionValues = new();
+        public Dictionary<Options, string> OptionValues = new();
 
         /// <summary>
         /// The path to the site file 
@@ -159,15 +159,15 @@ namespace Carpenter
                 {
                     if (line.Contains(optionTag))
                     {
-                        _optionValues[OptionsTable[optionTag]] = line.GetTokenOrOptionValue();
-                        Logger.Log(LogLevel.Verbose, $"Site option {OptionsTable[optionTag]}={_optionValues[OptionsTable[optionTag]]}");
+                        OptionValues[OptionsTable[optionTag]] = line.GetTokenOrOptionValue();
+                        Logger.Log(LogLevel.Verbose, $"Site option {OptionsTable[optionTag]}={OptionValues[OptionsTable[optionTag]]}");
                         break;
                     }
                 }
             }
 
             // We have to strip forward slashes from any urls so we can process them consistently 
-            _optionValues[Options.Url] = _optionValues[Options.Url].StripForwardSlashes();
+            OptionValues[Options.Url] = OptionValues[Options.Url].StripForwardSlashes();
 
             _loaded = true;
             return true;
