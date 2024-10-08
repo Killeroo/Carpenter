@@ -206,20 +206,20 @@ namespace SiteViewer.Forms
                     // Construct a list of all referenced images in the schema so we can
                     // work out what files aren't referenced
                     List<string> referencedImages = new List<string>();
-                    foreach (ImageSection section in localSchema.ImageSections)
+                    foreach (Section section in localSchema.LayoutSections)
                     {
-                        if (section is ColumnImageSection)
+                        if (section is ImageColumnSection)
                         {
-                            ColumnImageSection columnSection = section as ColumnImageSection;
-                            foreach (StandaloneImageSection innerImage in columnSection.Sections)
+                            ImageColumnSection columnSection = section as ImageColumnSection;
+                            foreach (ImageSection innerImage in columnSection.Sections)
                             {
                                 referencedImages.Add(innerImage.PreviewImage);
                                 referencedImages.Add(innerImage.DetailedImage);
                             }
                         }
-                        else if (section is StandaloneImageSection)
+                        else if (section is ImageSection)
                         {
-                            StandaloneImageSection standaloneSection = section as StandaloneImageSection;
+                            ImageSection standaloneSection = section as ImageSection;
                             referencedImages.Add(standaloneSection.PreviewImage);
                             referencedImages.Add(standaloneSection.DetailedImage);
                         }

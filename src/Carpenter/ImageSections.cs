@@ -1,28 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Collections.Specialized.BitVector32;
 
 namespace Carpenter
 {
-    public abstract class ImageSection : IEquatable<ImageSection>
+    /// <summary>
+    /// Abstract representation of an section of content (can be image, text or title) that is used in a 
+    /// SCHEMA page layout.
+    /// </summary>
+    public abstract class Section : IEquatable<Section>
     {
-        public abstract bool Equals(ImageSection? other);
+        public abstract bool Equals(Section? other);
     }
 
-    public class StandaloneImageSection : ImageSection
+    /// <summary>
+    /// Image section that contains the definition of a single image
+    /// </summary>
+    public class ImageSection : Section
     {
         public string PreviewImage;
         public string DetailedImage;
 
-        public override bool Equals(ImageSection? other)
+        public override bool Equals(Section? other)
         {
             if (other == null)
                 return false;
 
-            if (other is StandaloneImageSection otherStandaloneImage)
+            if (other is ImageSection otherStandaloneImage)
             {
                 return PreviewImage == otherStandaloneImage.PreviewImage 
                     && DetailedImage == otherStandaloneImage.DetailedImage;
@@ -32,16 +35,20 @@ namespace Carpenter
         }
     }
 
-    public class ColumnImageSection : ImageSection
+    /// <summary>
+    /// A column of multiple images, normally used in conjunction with another ImageColumnSection to produce side by side
+    /// column of images on a webpage
+    /// </summary>
+    public class ImageColumnSection : Section
     {
-        public List<StandaloneImageSection> Sections = new();
+        public List<ImageSection> Sections = new();
 
-        public override bool Equals(ImageSection? other)
+        public override bool Equals(Section? other)
         {
             if (other == null)
                 return false;
 
-            if (other is ColumnImageSection otherColumnImages)
+            if (other is ImageColumnSection otherColumnImages)
             {
                 return Sections == otherColumnImages.Sections;
             }
@@ -50,16 +57,19 @@ namespace Carpenter
         }
     }
 
-    public class TitleImageSection : ImageSection
+    /// <summary>
+    /// A section that has a single piece of title text 
+    /// </summary>
+    public class TitleSection : Section
     {
         public string TitleText = "";
 
-        public override bool Equals(ImageSection? other)
+        public override bool Equals(Section? other)
         {
             if (other == null)
                 return false;
 
-            if (other is TitleImageSection otherTitleImageSection)
+            if (other is TitleSection otherTitleImageSection)
             {
                 return TitleText == otherTitleImageSection.TitleText;
             }

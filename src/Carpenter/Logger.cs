@@ -14,6 +14,9 @@ namespace Carpenter
         Error
     }
 
+    /// <summary>
+    /// A basic logging class used by Carpenter to log out different pieces of information to standard output
+    /// </summary>
     public static class Logger
     { 
         private static ConsoleColor[] LogColor =

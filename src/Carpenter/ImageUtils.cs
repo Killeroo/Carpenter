@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -13,6 +11,9 @@ using InterpolationMode = System.Drawing.Drawing2D.InterpolationMode;
 
 namespace Carpenter
 {
+    /// <summary>
+    /// Stores and calculates the aspect ratio of an image
+    /// </summary>
     public struct AspectRatio
     {
         public readonly int Width;
@@ -49,58 +50,9 @@ namespace Carpenter
         }
     }
 
-    //public struct PureAspectRatio
-    //{
-    //    public readonly int WidthRatio;
-    //    public readonly int HeightRatio;
-
-    //    public PureAspectRatio(int width, int height)
-    //    {
-    //        WidthRatio = width;
-    //        HeightRatio = height;
-    //    }
-
-    //    public int CalculateHeight(int inputHeight)
-    //    {
-    //        Debug.Assert(WidthRatio != 0);
-    //        Debug.Assert(WidthRatio != 0);
-
-    //        int factor = width / WidthRatio;
-    //        return Height * factor;
-    //    }
-
-    //    public int CalculateWidth(int height)
-    //    {
-    //        Debug.Assert(Width != 0);
-    //        Debug.Assert(Height != 0);
-
-    //        int factor = height / HeightRatio;
-    //        return Width * factor;
-    //    }
-
-    //    public Tuple<(int width, int height)> Calculate(int inputWidth, int inputHeight)
-    //    {
-    //        Debug.Assert(inputWidth != 0);
-    //        Debug.Assert(inputHeight != 0);
-
-    //        int widthFactor = inputWidth / WidthRatio;
-    //        int heightFactor = inputHeight / HeightRatio;
-
-
-
-    //        (int width, int height) newDimensions = (;
-    //        newDimensions.
-
-    //        return ;
-    //    }
-
-    //    public override string ToString()
-    //    {
-    //        return string.Format("{0}:{1}", WidthRatio, HeightRatio);
-    //    }
-
-    //}
-
+    /// <summary>
+    /// Series of image functionality used to re-size and modify images
+    /// </summary>
     public static class ImageUtils
     {
         /// <summary>
@@ -109,8 +61,9 @@ namespace Carpenter
         /// <param name="filename">The path to the image that will be compressed</param>
         /// <param name="quality">The quality of the new image, between 0 - 100% of the original image</param>
         /// <param name="scalePercent">The percentage to scale down the image size</param>
-        /// <returns></returns>
+        /// <remarks>
         /// Based off: https://stackoverflow.com/a/24651073
+        /// </remarks>
         public static Image CompressImage(string filename, int quality, float scalePercent = 1.0f)
         {
             Logger.Log(LogLevel.Verbose, $"Compressing image {Path.GetFileName(filename)} with {quality}% quality and scaled by {scalePercent * 100}%");
@@ -121,6 +74,16 @@ namespace Carpenter
 
                 using (Image originalImageData = new Bitmap(image, (int)newWidth, (int)newHeight))
                 {
+                    ImageCodecInfo? GetEncoderInfo(string mimeType)
+                    {
+                        ImageCodecInfo[] encoders;
+                        encoders = ImageCodecInfo.GetImageEncoders();
+                        foreach (ImageCodecInfo ici in encoders)
+                            if (ici.MimeType == mimeType) return ici;
+
+                        return null;
+                    }
+
                     // Setup the new image properties and set the quality encoder 
                     // (we could set other properties here)
                     ImageCodecInfo imageCodecInfo = GetEncoderInfo("image/jpeg");
@@ -163,28 +126,27 @@ namespace Carpenter
             }
         }
 
-        private static ImageCodecInfo? GetEncoderInfo(string mimeType)
-        {
-            ImageCodecInfo[] encoders;
-            encoders = ImageCodecInfo.GetImageEncoders();
-            foreach (ImageCodecInfo ici in encoders)
-                if (ici.MimeType == mimeType) return ici;
-
-            return null;
-        }
-
-        // TODO: Just garbage, produces terrible aspect ratio's rework to use floats maybe?
+        /// <summary>
+        /// Calculates the aspect ratio of an image
+        /// </summary>
+        /// <remarks>
+        /// Just garbage, produces terrible aspect ratio
+        /// </remarks>
         public static AspectRatio CalculateAspectRatio(Image image)
         {
             int lowestCommonDemoninator = LowestCommonMultiple(image.Width, image.Height);
             return new AspectRatio(lowestCommonDemoninator / image.Width, lowestCommonDemoninator / image.Height);
         }
 
+        /// <summary>
+        /// Resizes and image to a the supplied width and height
+        /// </summary>
+        /// <remarks>
+        /// https://stackoverflow.com/a/24199315
+        /// </remarks>
         private const int MaxResizeImageCacheSize = 30;
         private static Queue<int> _resizeHashes = new();
         private static Dictionary<int, Bitmap> _resizeImageCache = new();
-
-        //https://stackoverflow.com/a/24199315
         public static Bitmap ResizeImage(string path, Image sourceImage, int width, int height)
         {
             // TODO: How unique really is this
@@ -225,7 +187,12 @@ namespace Carpenter
             return destImage;
         }
 
-        //https://stackoverflow.com/a/20824923
+        /// <summary>
+        /// Returns the greatest common factor of 2 numbers, used when caculating the aspect ratio of an image
+        /// </summary>
+        /// <remarks>
+        /// https://stackoverflow.com/a/20824923
+        /// </remarks>
         private static int GreatestCommonFactor(int a, int b)
         {
             while (b != 0)
@@ -237,6 +204,9 @@ namespace Carpenter
             return a;
         }
 
+        /// <summary>
+        /// Calculates the lowest common factor of 2 numbers
+        /// </summary>
         private static int LowestCommonMultiple(int a, int b)
         {
             return (a / GreatestCommonFactor(a, b)) * b;

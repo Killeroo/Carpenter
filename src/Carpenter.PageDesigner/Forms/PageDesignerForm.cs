@@ -407,18 +407,18 @@ namespace PageDesigner.Forms
             }
 
             // Parse grid layout
-            List<ImageSection> sections = new();
-            List<StandaloneImageSection>[] columnsBuffer = new List<StandaloneImageSection>[]
+            List<Section> sections = new();
+            List<ImageSection>[] columnsBuffer = new List<ImageSection>[]
             {
-                new List<StandaloneImageSection>(),
-                new List<StandaloneImageSection>()
+                new List<ImageSection>(),
+                new List<ImageSection>()
             };
             foreach (Control control in GridFlowLayoutPanel.Controls)
             {
                 if (control is GridPictureBox gridPictureBox)
                 {
                     // Create standalone image from GridPictureBox
-                    StandaloneImageSection currentImageSection = new()
+                    ImageSection currentImageSection = new()
                     {
                         DetailedImage = gridPictureBox.DetailedImageName,
                         PreviewImage = gridPictureBox.PreviewImageName
@@ -453,7 +453,7 @@ namespace PageDesigner.Forms
             }
             TryAddColumnsBuffer(ref columnsBuffer, ref sections);
 
-            _workingSchema.ImageSections = sections;
+            _workingSchema.LayoutSections = sections;
         }
 
         private void UpdateFormFromWorkingSchema()
@@ -465,12 +465,12 @@ namespace PageDesigner.Forms
         private void PopulateGridFromWorkingSchema()
         {
             GridFlowLayoutPanel.Controls.Clear();
-            foreach (ImageSection section in _workingSchema.ImageSections)
+            foreach (Section section in _workingSchema.LayoutSections)
             {
                 Type sectionType = section.GetType();
-                if (sectionType == typeof(StandaloneImageSection))
+                if (sectionType == typeof(ImageSection))
                 {
-                    StandaloneImageSection? standaloneSection = section as StandaloneImageSection;
+                    ImageSection? standaloneSection = section as ImageSection;
                     if (standaloneSection != null)
                     {
                         string fileName = standaloneSection.PreviewImage;
@@ -478,9 +478,9 @@ namespace PageDesigner.Forms
                         AddLocalImageToGridLayout(standaloneSection.PreviewImage, standaloneSection.DetailedImage, true);
                     }
                 }
-                else if (sectionType == typeof(ColumnImageSection))
+                else if (sectionType == typeof(ImageColumnSection))
                 {
-                    ColumnImageSection columnSection = (ColumnImageSection)section;
+                    ImageColumnSection columnSection = (ImageColumnSection)section;
                     if (columnSection == null)
                     {
                         continue;
@@ -488,7 +488,7 @@ namespace PageDesigner.Forms
 
                     if (_pictureBoxBuffer.Count > 0)
                     {
-                        foreach (StandaloneImageSection standaloneImage in columnSection.Sections)
+                        foreach (ImageSection standaloneImage in columnSection.Sections)
                         {
                             GridPictureBox pictureBox = null;
                             if (_pictureBoxBuffer.Count > 0)
@@ -504,7 +504,7 @@ namespace PageDesigner.Forms
                     }
                     else
                     {
-                        foreach (StandaloneImageSection standaloneImage in columnSection.Sections)
+                        foreach (ImageSection standaloneImage in columnSection.Sections)
                         {
                             if (standaloneImage != null)
                             {
@@ -621,7 +621,7 @@ namespace PageDesigner.Forms
             {
                 _workingSchema = schemaChange;
 
-                if (_workingSchema.ImageSections != schemaChange.ImageSections)
+                if (_workingSchema.LayoutSections != schemaChange.LayoutSections)
                 {
                     PopulateGridFromWorkingSchema();
                 }
@@ -952,7 +952,7 @@ namespace PageDesigner.Forms
             }
         }
 
-        private void TryAddColumnsBuffer(ref List<StandaloneImageSection>[] buffer, ref List<ImageSection> destination)
+        private void TryAddColumnsBuffer(ref List<ImageSection>[] buffer, ref List<Section> destination)
         {
             // First check that the buffer has anything in it
             if (buffer[0].Count == 0 && buffer[1].Count == 0)
@@ -970,8 +970,8 @@ namespace PageDesigner.Forms
                 }
 
                 // Add the column
-                ColumnImageSection columnSection = new();
-                columnSection.Sections = new List<StandaloneImageSection>(buffer[index].ToArray());
+                ImageColumnSection columnSection = new();
+                columnSection.Sections = new List<ImageSection>(buffer[index].ToArray());
                 destination.Add(columnSection);
 
                 // Clear buffer 
