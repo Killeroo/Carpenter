@@ -109,7 +109,7 @@
             // 
             pageImageToolStripMenuItem.Name = "pageImageToolStripMenuItem";
             pageImageToolStripMenuItem.Size = new Size(180, 22);
-            pageImageToolStripMenuItem.Text = "Page Image";
+            pageImageToolStripMenuItem.Text = "Page Thumbnail";
             pageImageToolStripMenuItem.Click += pageImageToolStripMenuItem_Click;
             // 
             // PreviewImageBox

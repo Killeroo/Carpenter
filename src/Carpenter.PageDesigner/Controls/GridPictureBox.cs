@@ -7,26 +7,49 @@ using System.Threading.Tasks;
 
 namespace PageDesigner.Controls
 {
-    // Simple wrapper around picture box, holding some extra info used to store data for
-    // images that Carpenter needs
+    /// <summary> 
+    /// Simple wrapper around picture box, used for displaying image and storing
+    /// info about image in a schema grid layout
+    /// </summary>
     internal class GridPictureBox : PictureBox
     {
+        /// <summary>
+        /// The different types of image that can be stored in the GridPictureBox
+        /// </summary>
+        public enum ImageType
+        {
+            Standalone,
+            Column
+        }
+
+        /// <summary>
+        /// Image toolstrip event callbacks
+        /// </summary>
         public event EventHandler<EventArgs> SwapMenuItemClicked;
         public event EventHandler<EventArgs> RemoveMenuItemClicked;
         public event EventHandler<EventArgs> StandaloneMenuItemClicked;
 
-        public bool IsStandaloneImage() => _isStandaloneImage;
+        /// <summary>
+        /// Each image has can have 2 file names, the image that is displayed
+        /// on the webpage and the detailed image that can be clicked through too
+        /// both can be edited and are associated with a single image in a grid
+        /// </summary>
+        public string ImageFilename = string.Empty;
+        public string DetailImageFilename = string.Empty;
 
-        // TODO: Make readonly
-        public string PreviewImageName = string.Empty;
-        public string DetailedImageName = string.Empty;
+        /// <summary>
+        /// Is the image a standalone image that doesn't get put into a column
+        /// </summary>
+        private ImageType _imageType = ImageType.Column;
 
-        private bool _isStandaloneImage = false;
-
-        // UI elements
+        /// <summary>
+        /// Contextual tool strip ui elements
+        /// </summary>
         private ToolStripItem RemoveToolStripItem;
         private ToolStripMenuItem StandaloneToolStripItem;
         private ToolStripItem SwapToolStripItem;
+
+        public ImageType GetImageType() => _imageType;
 
         public GridPictureBox() : base() 
         {
@@ -36,7 +59,7 @@ namespace PageDesigner.Controls
             RemoveToolStripItem = ContextMenuStrip.Items.Add("Remove");
 
             StandaloneToolStripItem = new ToolStripMenuItem("Standalone");
-            StandaloneToolStripItem.Checked = _isStandaloneImage;
+            StandaloneToolStripItem.Checked = _imageType == ImageType.Standalone;
             ContextMenuStrip.Items.Add(StandaloneToolStripItem);
 
             SwapToolStripItem.Click += SwapToolStripItem_Click;
@@ -45,19 +68,27 @@ namespace PageDesigner.Controls
         }
 
         // TODO: Rename
-        public void SetImage(Image image, string previewName, string detailedName,  bool isStandaloneImage)
+        public void SetImage(Image image, string previewName, string detailedName, ImageType type)
         {
             Image = image;
-            PreviewImageName = previewName;
-            DetailedImageName = detailedName;
-            SetStandaloneImage(isStandaloneImage);
+            ImageFilename = previewName;
+            DetailImageFilename = detailedName;
+            SetImageType(type);
         }
 
-        public void SetStandaloneImage(bool value)
+        /// <summary>
+        /// Sets if the image should be an image displayed on it's own
+        /// or an image that is displayed as a column
+        /// </summary>
+        public void SetImageType(ImageType type)
         {
-            _isStandaloneImage = value;
-            StandaloneToolStripItem.Checked = value;
+            _imageType = type;
+            StandaloneToolStripItem.Checked = type == ImageType.Standalone;
         }
+
+        /// <summary>
+        /// Internal tool strip callbacks
+        /// </summary>
 
         private void SwapToolStripItem_Click(object? sender, EventArgs e)
         {

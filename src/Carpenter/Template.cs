@@ -170,16 +170,9 @@ namespace Carpenter
         /// <returns>If the page was successfully generated or not</returns>
         public bool GeneratePreviewHtmlForSchema(Schema schema, Site site, string outputPath, out string previewFilename)
         {
-            previewFilename = string.Empty;
-
-            string generatedFilename = schema.GeneratedFilename;
-            if (generatedFilename != string.Empty) // TODO: Should probably use a fallback
-            {
-                previewFilename = string.Format("{0}{1}.html", Path.GetFileNameWithoutExtension(generatedFilename), Config.kGeneratedPreviewPostfix);
-                return GenerateHtml(schema, site, outputPath, previewFilename, true);
-            }
-
-            return false;
+            string generatedFilename = schema.GeneratedFilename == string.Empty ? Config.kDefaultGeneratedFilename : schema.GeneratedFilename;
+            previewFilename = string.Format("{0}{1}.html", Path.GetFileNameWithoutExtension(generatedFilename), Config.kGeneratedPreviewPostfix);
+            return GenerateHtml(schema, site, outputPath, previewFilename, true);
         }
 
         /// <summary>
@@ -188,13 +181,8 @@ namespace Carpenter
         /// <returns>If the webpage was successfully generated or not</returns>
         public bool GenerateHtmlForSchema(Schema schema, Site site, string outputPath)
         {
-            string generatedFilename = schema.GeneratedFilename;
-            if (generatedFilename != string.Empty)
-            {
-                return GenerateHtml(schema, site, outputPath, generatedFilename, false);
-            }
-
-            return false;
+            string generatedFilename = schema.GeneratedFilename == string.Empty ? Config.kDefaultGeneratedFilename : schema.GeneratedFilename;
+            return GenerateHtml(schema, site, outputPath, generatedFilename, false);
         }
 
         /// <summary>

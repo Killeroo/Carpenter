@@ -118,5 +118,17 @@ namespace Carpenter.PageDesigner {
                 this["CameraLastUsedValue"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ConvertImageNames {
+            get {
+                return ((bool)(this["ConvertImageNames"]));
+            }
+            set {
+                this["ConvertImageNames"] = value;
+            }
+        }
     }
 }

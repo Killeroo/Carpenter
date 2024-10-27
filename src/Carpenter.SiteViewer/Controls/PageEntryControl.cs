@@ -190,7 +190,7 @@ namespace SiteViewer.Controls
         // TODO: TODO: Move to main form
         private void CreateButton_Click(object sender, EventArgs e)
         {
-#if false
+#if true
             PageDesignerForm form = new(_directoryPath, _site.GetPath());
             form.Show();
 #else

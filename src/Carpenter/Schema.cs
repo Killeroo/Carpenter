@@ -107,7 +107,7 @@ namespace Carpenter
         public List<Section> LayoutSections { get; set; } = new();
 
         /// <summary>
-        /// Denotes if the Schema file was loaded correctly
+        /// Denotes if the Schema file was loaded from a file correctly
         /// </summary>
         private bool _loaded = false;
 
@@ -167,7 +167,7 @@ namespace Carpenter
         public bool IsLoaded() => _loaded;
 
 
-        public Schema() { }
+        public Schema() => _loaded = true;
         public Schema(string path) => TryLoad(path);
         public Schema(Schema otherSchema)
         {
@@ -175,6 +175,8 @@ namespace Carpenter
             {
                 return;
             }
+
+            _loaded = otherSchema._loaded;
 
             TokenValues = new Dictionary<Tokens, string>(otherSchema.TokenValues);
             OptionValues = new Dictionary<Options, string>(otherSchema.OptionValues);

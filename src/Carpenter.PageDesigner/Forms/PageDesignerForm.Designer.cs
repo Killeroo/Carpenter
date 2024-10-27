@@ -79,7 +79,7 @@
             toolsToolStripMenuItem = new ToolStripMenuItem();
             livePreviewToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator7 = new ToolStripSeparator();
-            adddetailedPrefixToolStripMenuItem = new ToolStripMenuItem();
+            addDetailedPrefixToolStripMenuItem = new ToolStripMenuItem();
             buildToolStripMenuItem = new ToolStripMenuItem();
             webpageToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator3 = new ToolStripSeparator();
@@ -102,20 +102,17 @@
             // ImagePreviewFlowLayoutPanel
             // 
             ImagePreviewFlowLayoutPanel.AutoScroll = true;
-            ImagePreviewFlowLayoutPanel.Location = new Point(7, 23);
-            ImagePreviewFlowLayoutPanel.Margin = new Padding(3, 4, 3, 4);
+            ImagePreviewFlowLayoutPanel.Location = new Point(6, 17);
             ImagePreviewFlowLayoutPanel.Name = "ImagePreviewFlowLayoutPanel";
-            ImagePreviewFlowLayoutPanel.Size = new Size(567, 349);
+            ImagePreviewFlowLayoutPanel.Size = new Size(496, 262);
             ImagePreviewFlowLayoutPanel.TabIndex = 0;
             // 
             // groupBox1
             // 
             groupBox1.Controls.Add(ImagePreviewFlowLayoutPanel);
-            groupBox1.Location = new Point(717, 355);
-            groupBox1.Margin = new Padding(3, 4, 3, 4);
+            groupBox1.Location = new Point(627, 266);
             groupBox1.Name = "groupBox1";
-            groupBox1.Padding = new Padding(3, 4, 3, 4);
-            groupBox1.Size = new Size(581, 380);
+            groupBox1.Size = new Size(508, 285);
             groupBox1.TabIndex = 5;
             groupBox1.TabStop = false;
             groupBox1.Text = "Available Images";
@@ -144,157 +141,146 @@
             groupBox2.Controls.Add(label4);
             groupBox2.Controls.Add(PageUrlTextBox);
             groupBox2.Controls.Add(label3);
-            groupBox2.Location = new Point(717, 36);
-            groupBox2.Margin = new Padding(3, 4, 3, 4);
+            groupBox2.Location = new Point(627, 27);
             groupBox2.Name = "groupBox2";
-            groupBox2.Padding = new Padding(3, 4, 3, 4);
-            groupBox2.Size = new Size(581, 187);
+            groupBox2.Size = new Size(508, 140);
             groupBox2.TabIndex = 7;
             groupBox2.TabStop = false;
             groupBox2.Text = "Page Details";
             // 
             // ThumbnailTextBox
             // 
-            ThumbnailTextBox.Location = new Point(88, 73);
-            ThumbnailTextBox.Margin = new Padding(3, 4, 3, 4);
+            ThumbnailTextBox.Location = new Point(77, 55);
             ThumbnailTextBox.Name = "ThumbnailTextBox";
-            ThumbnailTextBox.Size = new Size(211, 27);
+            ThumbnailTextBox.Size = new Size(185, 23);
             ThumbnailTextBox.TabIndex = 17;
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(9, 77);
+            label1.Location = new Point(8, 58);
             label1.Name = "label1";
-            label1.Size = new Size(79, 20);
+            label1.Size = new Size(64, 15);
             label1.TabIndex = 16;
             label1.Text = "Thumbnail";
             // 
             // CameraTextBox
             // 
-            CameraTextBox.Location = new Point(376, 149);
-            CameraTextBox.Margin = new Padding(3, 4, 3, 4);
+            CameraTextBox.Location = new Point(329, 112);
             CameraTextBox.Name = "CameraTextBox";
-            CameraTextBox.Size = new Size(199, 27);
+            CameraTextBox.Size = new Size(175, 23);
             CameraTextBox.TabIndex = 15;
             // 
             // label9
             // 
             label9.AutoSize = true;
-            label9.Location = new Point(313, 153);
+            label9.Location = new Point(274, 115);
             label9.Name = "label9";
-            label9.Size = new Size(60, 20);
+            label9.Size = new Size(48, 15);
             label9.TabIndex = 14;
             label9.Text = "Camera";
             // 
             // AuthorTextBox
             // 
-            AuthorTextBox.Location = new Point(376, 111);
-            AuthorTextBox.Margin = new Padding(3, 4, 3, 4);
+            AuthorTextBox.Location = new Point(329, 83);
             AuthorTextBox.Name = "AuthorTextBox";
-            AuthorTextBox.Size = new Size(199, 27);
+            AuthorTextBox.Size = new Size(175, 23);
             AuthorTextBox.TabIndex = 13;
             // 
             // label8
             // 
             label8.AutoSize = true;
-            label8.Location = new Point(313, 115);
+            label8.Location = new Point(274, 86);
             label8.Name = "label8";
-            label8.Size = new Size(54, 20);
+            label8.Size = new Size(44, 15);
             label8.TabIndex = 12;
             label8.Text = "Author";
             // 
             // YearTextBox
             // 
-            YearTextBox.Location = new Point(375, 73);
-            YearTextBox.Margin = new Padding(3, 4, 3, 4);
+            YearTextBox.Location = new Point(328, 55);
             YearTextBox.Name = "YearTextBox";
-            YearTextBox.Size = new Size(199, 27);
+            YearTextBox.Size = new Size(175, 23);
             YearTextBox.TabIndex = 11;
             // 
             // label7
             // 
             label7.AutoSize = true;
-            label7.Location = new Point(313, 76);
+            label7.Location = new Point(274, 57);
             label7.Name = "label7";
-            label7.Size = new Size(37, 20);
+            label7.Size = new Size(29, 15);
             label7.TabIndex = 10;
             label7.Text = "Year";
             // 
             // MonthTextBox
             // 
-            MonthTextBox.Location = new Point(375, 35);
-            MonthTextBox.Margin = new Padding(3, 4, 3, 4);
+            MonthTextBox.Location = new Point(328, 26);
             MonthTextBox.Name = "MonthTextBox";
-            MonthTextBox.Size = new Size(199, 27);
+            MonthTextBox.Size = new Size(175, 23);
             MonthTextBox.TabIndex = 9;
             // 
             // label6
             // 
             label6.AutoSize = true;
-            label6.Location = new Point(313, 37);
+            label6.Location = new Point(274, 28);
             label6.Name = "label6";
-            label6.Size = new Size(52, 20);
+            label6.Size = new Size(43, 15);
             label6.TabIndex = 8;
             label6.Text = "Month";
             // 
             // LocationTextBox
             // 
-            LocationTextBox.Location = new Point(88, 149);
-            LocationTextBox.Margin = new Padding(3, 4, 3, 4);
+            LocationTextBox.Location = new Point(77, 112);
             LocationTextBox.Name = "LocationTextBox";
-            LocationTextBox.Size = new Size(211, 27);
+            LocationTextBox.Size = new Size(185, 23);
             LocationTextBox.TabIndex = 7;
             // 
             // label5
             // 
             label5.AutoSize = true;
-            label5.Location = new Point(9, 153);
+            label5.Location = new Point(8, 115);
             label5.Name = "label5";
-            label5.Size = new Size(66, 20);
+            label5.Size = new Size(53, 15);
             label5.TabIndex = 6;
             label5.Text = "Location";
             // 
             // TitleTextBox
             // 
-            TitleTextBox.Location = new Point(88, 111);
-            TitleTextBox.Margin = new Padding(3, 4, 3, 4);
+            TitleTextBox.Location = new Point(77, 83);
             TitleTextBox.Name = "TitleTextBox";
-            TitleTextBox.Size = new Size(211, 27);
+            TitleTextBox.Size = new Size(185, 23);
             TitleTextBox.TabIndex = 5;
             // 
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(9, 115);
+            label4.Location = new Point(8, 86);
             label4.Name = "label4";
-            label4.Size = new Size(38, 20);
+            label4.Size = new Size(29, 15);
             label4.TabIndex = 4;
             label4.Text = "Title";
             // 
             // PageUrlTextBox
             // 
-            PageUrlTextBox.Location = new Point(88, 35);
-            PageUrlTextBox.Margin = new Padding(3, 4, 3, 4);
+            PageUrlTextBox.Location = new Point(77, 26);
             PageUrlTextBox.Name = "PageUrlTextBox";
-            PageUrlTextBox.Size = new Size(211, 27);
+            PageUrlTextBox.Size = new Size(185, 23);
             PageUrlTextBox.TabIndex = 3;
             // 
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(9, 39);
+            label3.Location = new Point(8, 29);
             label3.Name = "label3";
-            label3.Size = new Size(71, 20);
+            label3.Size = new Size(57, 15);
             label3.TabIndex = 1;
             label3.Text = "Page URL";
             // 
             // PreviewButton
             // 
-            PreviewButton.Location = new Point(1120, 755);
-            PreviewButton.Margin = new Padding(3, 4, 3, 4);
+            PreviewButton.Location = new Point(980, 566);
             PreviewButton.Name = "PreviewButton";
-            PreviewButton.Size = new Size(86, 31);
+            PreviewButton.Size = new Size(75, 23);
             PreviewButton.TabIndex = 10;
             PreviewButton.Text = "Preview";
             PreviewButton.UseVisualStyleBackColor = true;
@@ -302,10 +288,9 @@
             // 
             // GenerateButton
             // 
-            GenerateButton.Location = new Point(1211, 755);
-            GenerateButton.Margin = new Padding(3, 4, 3, 4);
+            GenerateButton.Location = new Point(1060, 566);
             GenerateButton.Name = "GenerateButton";
-            GenerateButton.Size = new Size(86, 31);
+            GenerateButton.Size = new Size(75, 23);
             GenerateButton.TabIndex = 11;
             GenerateButton.Text = "Generate";
             GenerateButton.UseVisualStyleBackColor = true;
@@ -317,55 +302,54 @@
             groupBox3.Controls.Add(PreviewImageTextBox);
             groupBox3.Controls.Add(label10);
             groupBox3.Controls.Add(label11);
-            groupBox3.Location = new Point(717, 231);
+            groupBox3.Location = new Point(627, 173);
+            groupBox3.Margin = new Padding(3, 2, 3, 2);
             groupBox3.Name = "groupBox3";
-            groupBox3.Size = new Size(581, 117);
+            groupBox3.Padding = new Padding(3, 2, 3, 2);
+            groupBox3.Size = new Size(508, 88);
             groupBox3.TabIndex = 12;
             groupBox3.TabStop = false;
             groupBox3.Text = "Image Details";
             // 
             // DetailedImageTextBox
             // 
-            DetailedImageTextBox.Location = new Point(79, 73);
-            DetailedImageTextBox.Margin = new Padding(3, 4, 3, 4);
+            DetailedImageTextBox.Location = new Point(69, 55);
             DetailedImageTextBox.Name = "DetailedImageTextBox";
-            DetailedImageTextBox.Size = new Size(211, 27);
+            DetailedImageTextBox.Size = new Size(185, 23);
             DetailedImageTextBox.TabIndex = 7;
             DetailedImageTextBox.TextChanged += DetailedImageTextBox_TextChanged;
             // 
             // PreviewImageTextBox
             // 
-            PreviewImageTextBox.Location = new Point(79, 33);
-            PreviewImageTextBox.Margin = new Padding(3, 4, 3, 4);
+            PreviewImageTextBox.Location = new Point(69, 25);
             PreviewImageTextBox.Name = "PreviewImageTextBox";
-            PreviewImageTextBox.Size = new Size(211, 27);
+            PreviewImageTextBox.Size = new Size(185, 23);
             PreviewImageTextBox.TabIndex = 6;
             PreviewImageTextBox.TextChanged += PreviewImageTextBox_TextChanged;
             // 
             // label10
             // 
             label10.AutoSize = true;
-            label10.Location = new Point(9, 76);
+            label10.Location = new Point(8, 57);
             label10.Name = "label10";
-            label10.Size = new Size(66, 20);
+            label10.Size = new Size(50, 15);
             label10.TabIndex = 5;
             label10.Text = "Detailed";
             // 
             // label11
             // 
             label11.AutoSize = true;
-            label11.Location = new Point(9, 37);
+            label11.Location = new Point(8, 28);
             label11.Name = "label11";
-            label11.Size = new Size(60, 20);
+            label11.Size = new Size(48, 15);
             label11.TabIndex = 4;
             label11.Text = "Preview";
             // 
             // SaveButton
             // 
-            SaveButton.Location = new Point(1027, 755);
-            SaveButton.Margin = new Padding(3, 4, 3, 4);
+            SaveButton.Location = new Point(899, 566);
             SaveButton.Name = "SaveButton";
-            SaveButton.Size = new Size(86, 31);
+            SaveButton.Size = new Size(75, 23);
             SaveButton.TabIndex = 13;
             SaveButton.Text = "Save";
             SaveButton.UseVisualStyleBackColor = true;
@@ -377,41 +361,40 @@
             menuStrip1.Items.AddRange(new ToolStripItem[] { toolStripMenuItem1, fileToolStripMenuItem, editToolStripMenuItem, toolsToolStripMenuItem, buildToolStripMenuItem, aboutToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
-            menuStrip1.Padding = new Padding(7, 3, 0, 3);
-            menuStrip1.Size = new Size(1307, 30);
+            menuStrip1.Size = new Size(1144, 24);
             menuStrip1.TabIndex = 14;
             menuStrip1.Text = "menuStrip";
             // 
             // toolStripMenuItem1
             // 
             toolStripMenuItem1.Name = "toolStripMenuItem1";
-            toolStripMenuItem1.Size = new Size(14, 24);
+            toolStripMenuItem1.Size = new Size(12, 20);
             // 
             // fileToolStripMenuItem
             // 
             fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { newToolStripMenuItem, toolStripSeparator2, saveToolStripMenuItem, openToolStripMenuItem, toolStripSeparator6, importToolStripMenuItem, toolStripSeparator1, exitToolStripMenuItem });
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            fileToolStripMenuItem.Size = new Size(46, 24);
+            fileToolStripMenuItem.Size = new Size(37, 20);
             fileToolStripMenuItem.Text = "File";
             // 
             // newToolStripMenuItem
             // 
             newToolStripMenuItem.Name = "newToolStripMenuItem";
             newToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.N;
-            newToolStripMenuItem.Size = new Size(198, 26);
+            newToolStripMenuItem.Size = new Size(160, 22);
             newToolStripMenuItem.Text = "New";
             newToolStripMenuItem.Click += newToolStripMenuItem_Click;
             // 
             // toolStripSeparator2
             // 
             toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(195, 6);
+            toolStripSeparator2.Size = new Size(157, 6);
             // 
             // saveToolStripMenuItem
             // 
             saveToolStripMenuItem.Name = "saveToolStripMenuItem";
             saveToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.S;
-            saveToolStripMenuItem.Size = new Size(198, 26);
+            saveToolStripMenuItem.Size = new Size(160, 22);
             saveToolStripMenuItem.Text = "Save";
             saveToolStripMenuItem.Click += saveToolStripMenuItem_Click;
             // 
@@ -419,31 +402,31 @@
             // 
             openToolStripMenuItem.Name = "openToolStripMenuItem";
             openToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.O;
-            openToolStripMenuItem.Size = new Size(198, 26);
+            openToolStripMenuItem.Size = new Size(160, 22);
             openToolStripMenuItem.Text = "Open";
             openToolStripMenuItem.Click += openToolStripMenuItem_Click;
             // 
             // toolStripSeparator6
             // 
             toolStripSeparator6.Name = "toolStripSeparator6";
-            toolStripSeparator6.Size = new Size(195, 6);
+            toolStripSeparator6.Size = new Size(157, 6);
             // 
             // importToolStripMenuItem
             // 
             importToolStripMenuItem.Name = "importToolStripMenuItem";
-            importToolStripMenuItem.Size = new Size(198, 26);
+            importToolStripMenuItem.Size = new Size(160, 22);
             importToolStripMenuItem.Text = "Import Images...";
             importToolStripMenuItem.Click += importToolStripMenuItem_Click;
             // 
             // toolStripSeparator1
             // 
             toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new Size(195, 6);
+            toolStripSeparator1.Size = new Size(157, 6);
             // 
             // exitToolStripMenuItem
             // 
             exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            exitToolStripMenuItem.Size = new Size(198, 26);
+            exitToolStripMenuItem.Size = new Size(160, 22);
             exitToolStripMenuItem.Text = "Exit";
             exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
@@ -451,14 +434,14 @@
             // 
             editToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { undoToolStripMenuItem, redoToolStripMenuItem, toolStripSeparator4, resetFieldsToolStripMenuItem, toolStripSeparator5, presetsToolStripMenuItem, preferencesToolStripMenuItem });
             editToolStripMenuItem.Name = "editToolStripMenuItem";
-            editToolStripMenuItem.Size = new Size(49, 24);
+            editToolStripMenuItem.Size = new Size(39, 20);
             editToolStripMenuItem.Text = "Edit";
             // 
             // undoToolStripMenuItem
             // 
             undoToolStripMenuItem.Name = "undoToolStripMenuItem";
             undoToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.Z;
-            undoToolStripMenuItem.Size = new Size(179, 26);
+            undoToolStripMenuItem.Size = new Size(144, 22);
             undoToolStripMenuItem.Text = "Undo";
             undoToolStripMenuItem.Click += undoToolStripMenuItem_Click;
             // 
@@ -466,106 +449,106 @@
             // 
             redoToolStripMenuItem.Name = "redoToolStripMenuItem";
             redoToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.Y;
-            redoToolStripMenuItem.Size = new Size(179, 26);
+            redoToolStripMenuItem.Size = new Size(144, 22);
             redoToolStripMenuItem.Text = "Redo";
             redoToolStripMenuItem.Click += redoToolStripMenuItem_Click;
             // 
             // toolStripSeparator4
             // 
             toolStripSeparator4.Name = "toolStripSeparator4";
-            toolStripSeparator4.Size = new Size(176, 6);
+            toolStripSeparator4.Size = new Size(141, 6);
             // 
             // resetFieldsToolStripMenuItem
             // 
             resetFieldsToolStripMenuItem.Name = "resetFieldsToolStripMenuItem";
-            resetFieldsToolStripMenuItem.Size = new Size(179, 26);
+            resetFieldsToolStripMenuItem.Size = new Size(144, 22);
             resetFieldsToolStripMenuItem.Text = "Reset Fields";
             // 
             // toolStripSeparator5
             // 
             toolStripSeparator5.Name = "toolStripSeparator5";
-            toolStripSeparator5.Size = new Size(176, 6);
+            toolStripSeparator5.Size = new Size(141, 6);
             // 
             // presetsToolStripMenuItem
             // 
             presetsToolStripMenuItem.Name = "presetsToolStripMenuItem";
-            presetsToolStripMenuItem.Size = new Size(179, 26);
+            presetsToolStripMenuItem.Size = new Size(144, 22);
             presetsToolStripMenuItem.Text = "Presets";
             // 
             // preferencesToolStripMenuItem
             // 
             preferencesToolStripMenuItem.Name = "preferencesToolStripMenuItem";
-            preferencesToolStripMenuItem.Size = new Size(179, 26);
+            preferencesToolStripMenuItem.Size = new Size(144, 22);
             preferencesToolStripMenuItem.Text = "Preferences";
             // 
             // toolsToolStripMenuItem
             // 
-            toolsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { livePreviewToolStripMenuItem, toolStripSeparator7, adddetailedPrefixToolStripMenuItem });
+            toolsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { livePreviewToolStripMenuItem, toolStripSeparator7, addDetailedPrefixToolStripMenuItem });
             toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            toolsToolStripMenuItem.Size = new Size(58, 24);
+            toolsToolStripMenuItem.Size = new Size(46, 20);
             toolsToolStripMenuItem.Text = "Tools";
             // 
             // livePreviewToolStripMenuItem
             // 
             livePreviewToolStripMenuItem.Name = "livePreviewToolStripMenuItem";
-            livePreviewToolStripMenuItem.Size = new Size(247, 26);
+            livePreviewToolStripMenuItem.Size = new Size(184, 22);
             livePreviewToolStripMenuItem.Text = "Live Preview";
             livePreviewToolStripMenuItem.Click += livePreviewToolStripMenuItem_Click;
             // 
             // toolStripSeparator7
             // 
             toolStripSeparator7.Name = "toolStripSeparator7";
-            toolStripSeparator7.Size = new Size(244, 6);
+            toolStripSeparator7.Size = new Size(181, 6);
             // 
-            // adddetailedPrefixToolStripMenuItem
+            // addDetailedPrefixToolStripMenuItem
             // 
-            adddetailedPrefixToolStripMenuItem.Name = "adddetailedPrefixToolStripMenuItem";
-            adddetailedPrefixToolStripMenuItem.Size = new Size(247, 26);
-            adddetailedPrefixToolStripMenuItem.Text = "Add 'detailed' prefixes..";
-            adddetailedPrefixToolStripMenuItem.Click += adddetailedPrefixToolStripMenuItem_Click;
+            addDetailedPrefixToolStripMenuItem.Checked = true;
+            addDetailedPrefixToolStripMenuItem.CheckState = CheckState.Checked;
+            addDetailedPrefixToolStripMenuItem.Name = "addDetailedPrefixToolStripMenuItem";
+            addDetailedPrefixToolStripMenuItem.Size = new Size(184, 22);
+            addDetailedPrefixToolStripMenuItem.Text = "Add prefix to images";
+            addDetailedPrefixToolStripMenuItem.Click += adddetailedPrefixToolStripMenuItem_Click;
             // 
             // buildToolStripMenuItem
             // 
             buildToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { webpageToolStripMenuItem, toolStripSeparator3, previewToolStripMenuItem });
             buildToolStripMenuItem.Name = "buildToolStripMenuItem";
-            buildToolStripMenuItem.Size = new Size(83, 24);
+            buildToolStripMenuItem.Size = new Size(66, 20);
             buildToolStripMenuItem.Text = "Generate";
             // 
             // webpageToolStripMenuItem
             // 
             webpageToolStripMenuItem.Name = "webpageToolStripMenuItem";
             webpageToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.G;
-            webpageToolStripMenuItem.Size = new Size(208, 26);
+            webpageToolStripMenuItem.Size = new Size(166, 22);
             webpageToolStripMenuItem.Text = "Webpage";
             webpageToolStripMenuItem.Click += webpageToolStripMenuItem_Click;
             // 
             // toolStripSeparator3
             // 
             toolStripSeparator3.Name = "toolStripSeparator3";
-            toolStripSeparator3.Size = new Size(205, 6);
+            toolStripSeparator3.Size = new Size(163, 6);
             // 
             // previewToolStripMenuItem
             // 
             previewToolStripMenuItem.Name = "previewToolStripMenuItem";
             previewToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.P;
-            previewToolStripMenuItem.Size = new Size(208, 26);
+            previewToolStripMenuItem.Size = new Size(166, 22);
             previewToolStripMenuItem.Text = "Preview";
             previewToolStripMenuItem.Click += previewToolStripMenuItem_Click;
             // 
             // aboutToolStripMenuItem
             // 
             aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            aboutToolStripMenuItem.Size = new Size(64, 24);
+            aboutToolStripMenuItem.Size = new Size(52, 20);
             aboutToolStripMenuItem.Text = "About";
             // 
             // groupBox4
             // 
             groupBox4.Controls.Add(GridFlowLayoutPanel);
-            groupBox4.Location = new Point(14, 36);
-            groupBox4.Margin = new Padding(3, 4, 3, 4);
+            groupBox4.Location = new Point(12, 27);
             groupBox4.Name = "groupBox4";
-            groupBox4.Padding = new Padding(3, 4, 3, 4);
-            groupBox4.Size = new Size(696, 699);
+            groupBox4.Size = new Size(609, 524);
             groupBox4.TabIndex = 15;
             groupBox4.TabStop = false;
             groupBox4.Text = "Photo Grid";
@@ -574,32 +557,32 @@
             // 
             GridFlowLayoutPanel.AutoScroll = true;
             GridFlowLayoutPanel.BorderStyle = BorderStyle.FixedSingle;
-            GridFlowLayoutPanel.Location = new Point(9, 21);
-            GridFlowLayoutPanel.Margin = new Padding(3, 4, 3, 4);
+            GridFlowLayoutPanel.Location = new Point(8, 16);
             GridFlowLayoutPanel.Name = "GridFlowLayoutPanel";
-            GridFlowLayoutPanel.Size = new Size(680, 669);
+            GridFlowLayoutPanel.Size = new Size(595, 502);
             GridFlowLayoutPanel.TabIndex = 6;
             // 
             // statusStrip1
             // 
             statusStrip1.ImageScalingSize = new Size(20, 20);
             statusStrip1.Items.AddRange(new ToolStripItem[] { statusToolStripStatusLabel, toolStripProgressBar1 });
-            statusStrip1.Location = new Point(0, 774);
+            statusStrip1.Location = new Point(0, 579);
             statusStrip1.Name = "statusStrip1";
-            statusStrip1.Size = new Size(1307, 27);
+            statusStrip1.Padding = new Padding(1, 0, 12, 0);
+            statusStrip1.Size = new Size(1144, 22);
             statusStrip1.TabIndex = 16;
             statusStrip1.Text = "statusStrip";
             // 
             // statusToolStripStatusLabel
             // 
             statusToolStripStatusLabel.Name = "statusToolStripStatusLabel";
-            statusToolStripStatusLabel.Size = new Size(50, 21);
+            statusToolStripStatusLabel.Size = new Size(39, 17);
             statusToolStripStatusLabel.Text = "Ready";
             // 
             // toolStripProgressBar1
             // 
             toolStripProgressBar1.Name = "toolStripProgressBar1";
-            toolStripProgressBar1.Size = new Size(101, 19);
+            toolStripProgressBar1.Size = new Size(88, 16);
             // 
             // LivePreviewGenerateTimer
             // 
@@ -608,9 +591,9 @@
             // 
             // PageDesignerForm
             // 
-            AutoScaleDimensions = new SizeF(8F, 20F);
+            AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1307, 801);
+            ClientSize = new Size(1144, 601);
             Controls.Add(statusStrip1);
             Controls.Add(groupBox4);
             Controls.Add(SaveButton);
@@ -621,7 +604,6 @@
             Controls.Add(groupBox1);
             Controls.Add(menuStrip1);
             MainMenuStrip = menuStrip1;
-            Margin = new Padding(3, 4, 3, 4);
             Name = "PageDesignerForm";
             Text = "Carpenter";
             Load += PageDesignerForm_Load;
@@ -694,7 +676,7 @@
         private ToolStripSeparator toolStripSeparator6;
         private ToolStripMenuItem importToolStripMenuItem;
         private ToolStripMenuItem toolsToolStripMenuItem;
-        private ToolStripMenuItem adddetailedPrefixToolStripMenuItem;
+        private ToolStripMenuItem addDetailedPrefixToolStripMenuItem;
         private StatusStrip statusStrip1;
         private ToolStripStatusLabel statusToolStripStatusLabel;
         private ToolStripProgressBar toolStripProgressBar1;

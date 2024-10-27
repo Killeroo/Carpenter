@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -266,14 +267,53 @@ namespace PageDesigner.Forms
             _workingSchema = new Schema();
             _schemaChanges.Reset();
 
-            ThumbnailTextBox.Text = Settings.Default.ThumbnailLastUsedValue;
-            PageUrlTextBox.Text = Settings.Default.PageUrlLastUsedValue;
-            TitleTextBox.Text = Settings.Default.TitleLastUsedValue;
+            // Do a bit of recon to try and populate some of these fields
+            string folderName = Path.GetFileName(_workingPath);
+            string title = string.Empty;
+            string[] titleWords = folderName.Split('-');
+            foreach (string word in titleWords)
+            {
+                if (int.TryParse(word, out int numeric))
+                    title += string.Format(" (Vol. {0})", numeric);
+                else
+                    title += string.Format("{2}{0}{1}", char.ToUpper(word[0]), word.Substring(1), word == titleWords.First() ? "" : " ");
+            }
+
+            string month = string.Empty;
+            string year = string.Empty;
+            string model = string.Empty;
+            foreach (string imagePath in Directory.GetFiles(_workingPath, "*.jpg"))
+            {
+                try
+                {
+                    ImageMetadata metadata = JpegParser.GetMetadata(imagePath);
+                    string exifDate = metadata.CreatedDate;
+                    model = metadata.CameraModel;
+                    if (exifDate != string.Empty)
+                    {
+                        DateTime dateCreated = DateTime.ParseExact(exifDate.Replace("\0", ""), "yyyy:MM:dd HH:mm:ss", CultureInfo.InvariantCulture);
+                        month = dateCreated.ToString("MMMM");
+                        year = dateCreated.ToString("yyyy");
+                    }
+                }
+                catch (Exception) { }
+
+                // Silently continue till we find a photo we can parse or we run out of photos
+                if (year != string.Empty && month != string.Empty && model != string.Empty)
+                {
+                    break;
+                }
+            }
+
+            PageUrlTextBox.Text = folderName == string.Empty ? Settings.Default.PageUrlLastUsedValue : folderName;
+            TitleTextBox.Text = title == string.Empty ? Settings.Default.TitleLastUsedValue : title;
+            MonthTextBox.Text = month == string.Empty ? Settings.Default.MonthLastUsedValue : month;
+            YearTextBox.Text = year == string.Empty ? Settings.Default.YearLastUsedValue : year;
+            CameraTextBox.Text = model == string.Empty ? Settings.Default.CameraLastUsedValue : model;
+
             LocationTextBox.Text = Settings.Default.LocationLastUsedValue;
-            MonthTextBox.Text = Settings.Default.MonthLastUsedValue;
-            YearTextBox.Text = Settings.Default.YearLastUsedValue;
             AuthorTextBox.Text = Settings.Default.AuthorLastUsedValue;
-            CameraTextBox.Text = Settings.Default.CameraLastUsedValue;
+            //ThumbnailTextBox.Text = Settings.Default.ThumbnailLastUsedValue;
 
             GridFlowLayoutPanel.Controls.Clear();
             ImagePreviewFlowLayoutPanel.Controls.Clear();
@@ -324,8 +364,6 @@ namespace PageDesigner.Forms
             _pageImageName = _workingSchema.Thumbnail;
 
             UpdateFormFromWorkingSchema();
-
-            // Load available images in the directory
             LoadAvailableImagePreviews();
 
             this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
@@ -340,14 +378,16 @@ namespace PageDesigner.Forms
                 return;
             }
 
-            // Temp: Add _detailed prefix to all images in the grid
-            //foreach (Control control in GridFlowLayoutPanel.Controls)
-            //{
-            //    if (control is GridPictureBox gridPictureBox)
-            //    {
-            //        gridPictureBox.DetailedImageName = gridPictureBox.PreviewImageName.Replace("_Preview", "_Detailed");
-            //    }
-            //}
+            if (addDetailedPrefixToolStripMenuItem.Checked)
+            {
+                foreach (Control control in GridFlowLayoutPanel.Controls)
+                {
+                    if (control is GridPictureBox gridPictureBox)
+                    {
+                        gridPictureBox.DetailImageFilename = gridPictureBox.ImageFilename.Replace("_Preview", "_Detailed");
+                    }
+                }
+            }
 
             UpdateWorkingSchemaFromForm();
             
@@ -396,15 +436,8 @@ namespace PageDesigner.Forms
             _workingSchema.Camera = CameraTextBox.Text;
             _workingSchema.Thumbnail = ThumbnailTextBox.Text;
 
-            if (_savedSchema.OptionValues != _workingSchema.OptionValues)
-            {
-                // TODO: Have these set via a form on the main form or have them stored somewhere else
-                _workingSchema.GeneratedFilename = _savedSchema.GeneratedFilename;
-            }
-            else
-            {
-                _workingSchema.GeneratedFilename = Config.kDefaultGeneratedFilename;
-            }
+            // TODO: Have these set via a form on the main form or have them stored somewhere else
+            _workingSchema.GeneratedFilename = Config.kDefaultGeneratedFilename;
 
             // Parse grid layout
             List<Section> sections = new();
@@ -420,11 +453,11 @@ namespace PageDesigner.Forms
                     // Create standalone image from GridPictureBox
                     ImageSection currentImageSection = new()
                     {
-                        DetailedImage = gridPictureBox.DetailedImageName,
-                        PreviewImage = gridPictureBox.PreviewImageName
+                        DetailedImage = gridPictureBox.DetailImageFilename,
+                        PreviewImage = gridPictureBox.ImageFilename
                     };
 
-                    if (gridPictureBox.IsStandaloneImage())
+                    if (gridPictureBox.GetImageType() == GridPictureBox.ImageType.Standalone)
                     {
                         // Attempt to add contents of previous column buffer if we encounter a standalone image
                         TryAddColumnsBuffer(ref columnsBuffer, ref sections);
@@ -719,7 +752,7 @@ namespace PageDesigner.Forms
             //        ImagePreviewFlowLayoutPanel.Controls.Add(previewImageBox);
             //    }
 
-
+            _previewImages.Clear();
             foreach (string imagePath in imageFilesAtPath)
             {
                 if (Path.GetFileName(imagePath).Contains("_Detailed"))
@@ -809,9 +842,9 @@ namespace PageDesigner.Forms
                 gridPictureBox.SizeMode = PictureBoxSizeMode.AutoSize;
 
                 // Save properties for later
-                gridPictureBox.DetailedImageName = detailedImageName;
-                gridPictureBox.PreviewImageName = previewImageName;
-                gridPictureBox.SetStandaloneImage(standaloneImage);
+                gridPictureBox.DetailImageFilename = detailedImageName;
+                gridPictureBox.ImageFilename = previewImageName;
+                gridPictureBox.SetImageType(standaloneImage ? GridPictureBox.ImageType.Standalone : GridPictureBox.ImageType.Column);
 
                 // Add callbacks
                 gridPictureBox.Click += GridPictureBox_Click;
@@ -862,9 +895,9 @@ namespace PageDesigner.Forms
                 pictureBox.SizeMode = PictureBoxSizeMode.AutoSize;
 
                 // Save properties for later
-                pictureBox.DetailedImageName = newDetailedImageName;
-                pictureBox.PreviewImageName = newPreviewImageName;
-                pictureBox.SetStandaloneImage(standalone);
+                pictureBox.DetailImageFilename = newDetailedImageName;
+                pictureBox.ImageFilename = newPreviewImageName;
+                pictureBox.SetImageType(standalone ? GridPictureBox.ImageType.Standalone : GridPictureBox.ImageType.Column);
 
                 //// Add callbacks
                 //pictureBox.Click += GridPictureBox_Click;
@@ -936,9 +969,9 @@ namespace PageDesigner.Forms
                 gridPictureBox.SizeMode = PictureBoxSizeMode.AutoSize;
 
                 // Save properties for later
-                gridPictureBox.DetailedImageName = TEMP_CreateDetailedImageName(detailedImageName);
-                gridPictureBox.PreviewImageName = TEMP_CreatePreviewImageName(previewImageName);
-                gridPictureBox.SetStandaloneImage(standaloneImage);
+                gridPictureBox.DetailImageFilename = TEMP_CreateDetailedImageName(detailedImageName);
+                gridPictureBox.ImageFilename = TEMP_CreatePreviewImageName(previewImageName);
+                gridPictureBox.SetImageType(standaloneImage ? GridPictureBox.ImageType.Standalone : GridPictureBox.ImageType.Column);
 
                 //// Add callbacks
                 ///// TODO: This really show be above not here
@@ -995,7 +1028,6 @@ namespace PageDesigner.Forms
 
             previewImageControl.SetSelected(true);
             previewImageControl.Invalidate();
-
 
             _selectedPreviewImageControl = previewImageControl;
         }
@@ -1124,7 +1156,7 @@ namespace PageDesigner.Forms
                     return;
                 }
 
-                Image image = LoadImage(previewImageControl.GetImageName(), _selectedGridImage.IsStandaloneImage());
+                Image image = LoadImage(previewImageControl.GetImageName(), _selectedGridImage.GetImageType() == GridPictureBox.ImageType.Standalone);
                 if (image == null)
                 {
                     // TODO: Show error
@@ -1135,7 +1167,7 @@ namespace PageDesigner.Forms
                     image,
                     TEMP_CreatePreviewImageName(previewImageControl.GetImageName()),
                     TEMP_CreateDetailedImageName(previewImageControl.GetImageName()),
-                    _selectedGridImage.IsStandaloneImage());
+                    _selectedGridImage.GetImageType());
 
                 SignalSchemaChange();
             }
@@ -1182,7 +1214,7 @@ namespace PageDesigner.Forms
             {
                 // Update grid image with new name
                 // (bit inefficient to do it each time the text is updated but oh well)
-                _selectedGridImage.PreviewImageName = PreviewImageTextBox.Text;
+                _selectedGridImage.ImageFilename = PreviewImageTextBox.Text;
             }
         }
 
@@ -1192,7 +1224,7 @@ namespace PageDesigner.Forms
             {
                 // Update grid image with new name
                 // (bit inefficient to do it each time the text is updated but oh well)
-                _selectedGridImage.DetailedImageName = DetailedImageTextBox.Text;
+                _selectedGridImage.DetailImageFilename = DetailedImageTextBox.Text;
             }
         }
 
@@ -1211,21 +1243,21 @@ namespace PageDesigner.Forms
                 }
 
                 Image image = _selectedGridImage.Image;
-                string previewImageName = _selectedGridImage.PreviewImageName;
-                string detailedImageName = _selectedGridImage.DetailedImageName;
-                bool standalone = _selectedGridImage.IsStandaloneImage();
+                string previewImageName = _selectedGridImage.ImageFilename;
+                string detailedImageName = _selectedGridImage.DetailImageFilename;
+                GridPictureBox.ImageType imageType = _selectedGridImage.GetImageType();
 
                 _selectedGridImage.SetImage(
                     currentGridPictureBox.Image,
-                    currentGridPictureBox.PreviewImageName,
-                    currentGridPictureBox.DetailedImageName,
-                    currentGridPictureBox.IsStandaloneImage());
+                    currentGridPictureBox.ImageFilename,
+                    currentGridPictureBox.DetailImageFilename,
+                    currentGridPictureBox.GetImageType());
 
                 currentGridPictureBox.SetImage(
                     image,
                     previewImageName,
                     detailedImageName,
-                    standalone);
+                    imageType);
 
                 SignalSchemaChange();
             }
@@ -1235,10 +1267,10 @@ namespace PageDesigner.Forms
         {
             if (sender is GridPictureBox gridPictureBox)
             {
-                bool newStandaloneValue = !gridPictureBox.IsStandaloneImage();
+                GridPictureBox.ImageType newImageType = gridPictureBox.GetImageType() == GridPictureBox.ImageType.Standalone ? GridPictureBox.ImageType.Column : GridPictureBox.ImageType.Standalone;
 
-                UpdateGridPictureBox(gridPictureBox, gridPictureBox.PreviewImageName, gridPictureBox.DetailedImageName, newStandaloneValue);
-                gridPictureBox.SetStandaloneImage(newStandaloneValue);
+                UpdateGridPictureBox(gridPictureBox, gridPictureBox.ImageFilename, gridPictureBox.DetailImageFilename, newImageType == GridPictureBox.ImageType.Standalone);
+                gridPictureBox.SetImageType(newImageType);
                 SignalSchemaChange();
             }
         }
@@ -1267,8 +1299,8 @@ namespace PageDesigner.Forms
                 _selectedGridImage = gridPictureBox;
 
                 // Retrieve details from selected image
-                PreviewImageTextBox.Text = gridPictureBox.PreviewImageName;
-                DetailedImageTextBox.Text = gridPictureBox.DetailedImageName;
+                PreviewImageTextBox.Text = gridPictureBox.ImageFilename;
+                DetailedImageTextBox.Text = gridPictureBox.DetailImageFilename;
 
                 // Highlight image
                 //gridPictureBox.BorderStyle = BorderStyle.FixedSingle;
@@ -1428,13 +1460,9 @@ namespace PageDesigner.Forms
 
         private void adddetailedPrefixToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            foreach (Control control in GridFlowLayoutPanel.Controls)
-            {
-                if (control is GridPictureBox gridPictureBox)
-                {
-                    gridPictureBox.DetailedImageName = gridPictureBox.PreviewImageName.Replace("_Preview", "_Detailed");
-                }
-            }
+            addDetailedPrefixToolStripMenuItem.Checked = !addDetailedPrefixToolStripMenuItem.Checked;
+            Settings.Default.ConvertImageNames = addDetailedPrefixToolStripMenuItem.Checked;
+            Settings.Default.Save();
         }
 
         private void livePreviewToolStripMenuItem_Click(object sender, EventArgs e)
