@@ -2,7 +2,7 @@
   "profiles": {
     "PageDesigner": {
       "commandName": "Project",
-      "commandLineArgs": "\"C:\\Users\\Kelpie\\My Drive\\Website\\photos\\central-london-4\" \"C:\\Users\\Kelpie\\My Drive\\Website\\photos\\template.html\""
+      "commandLineArgs": "\"G:\\My Drive\\Website\\matthewcarney.info\\photos\\donegal-4\" \"G:\\My Drive\\Website\\matthewcarney.info\\photos\""
     }
   }
 }

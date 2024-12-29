@@ -11,6 +11,7 @@ using Carpenter;
 using System.ComponentModel;
 
 using Carpenter;
+using System.Runtime.CompilerServices;
 
 namespace Carpenter.Tests
 {
@@ -29,6 +30,7 @@ namespace Carpenter.Tests
         private class TimerScope : IDisposable
         {
             public TimeSpan Elapsed => _stopwatch.Elapsed;
+            public string Name => _name;
 
             private Stopwatch _stopwatch = new();
             private string _name = string.Empty;
@@ -52,11 +54,20 @@ namespace Carpenter.Tests
 
         static void Main(string[] args)
         {
-            // TODO: Point at example project
-            string rootDirectory = @"C:\Users\Kelpie\Desktop\WebsiteConversion\photos";
-            string schemaDirectory = @"C:\Users\Kelpie\Desktop\WebsiteConversion\photos\central-london-1";
+            //// TODO: Point at example project
+            //string rootDirectory = @"C:\Users\Kelpie\Desktop\WebsiteConversion\photos";
+            //string schemaDirectory = @"C:\Users\Kelpie\Desktop\WebsiteConversion\photos\donegal-3";
+            string rootDirectory = @"G:\My Drive\Website\matthewcarney.info\photos";
+            string schemaDirectory = @"G:\My Drive\Website\matthewcarney.info\photos\donegal-4";
+            string tempPath = Path.Combine(Path.GetTempPath(), "Carpenter", "Benchmark");
+            if (Directory.Exists(tempPath) == false)
+            {
+                Directory.CreateDirectory(tempPath);
+            }
 
             Console.WriteLine($"Carpenter v{Config.kVersion} - Static photo webpage generator");
+
+            Logger.EnableLevel(LogLevel.Info, false);
 
             Site site = new();
             Template template = new();
@@ -69,7 +80,7 @@ namespace Carpenter.Tests
                     Console.WriteLine("Failed to read site");
                     return;
                 }
-                Console.WriteLine(siteLoadTimer);
+                WriteTimerScopeToConsole(siteLoadTimer);
             }
 
             using (TimerScope templateLoadTimer = new("Template.TryLoad"))
@@ -79,7 +90,7 @@ namespace Carpenter.Tests
                     Console.WriteLine("Failed to read Template");
                     return;
                 }
-                Console.WriteLine(templateLoadTimer);
+                WriteTimerScopeToConsole(templateLoadTimer);
             }
 
             using (TimerScope schemaLoadTimer = new("Schema.TryLoad"))
@@ -89,9 +100,8 @@ namespace Carpenter.Tests
                     Console.WriteLine("Failed to read schema");
                     return;
                 }
-                Console.WriteLine(schemaLoadTimer);
+                WriteTimerScopeToConsole(schemaLoadTimer);
             }
-            Console.WriteLine();
 
             using (TimerScope schemaPreviewGenerationTimer = new("Template.GeneratePreviewHtmlForSchema"))
             {
@@ -100,7 +110,7 @@ namespace Carpenter.Tests
                     Console.WriteLine("Failed to generate preview");
                     return;
                 }
-                Console.WriteLine(schemaPreviewGenerationTimer);
+                WriteTimerScopeToConsole(schemaPreviewGenerationTimer);
             }
             using (TimerScope schemaPreviewGenerationTimer = new("Template.GenerateHtmlForSchema"))
             {
@@ -109,12 +119,56 @@ namespace Carpenter.Tests
                     Console.WriteLine("Failed to generate webpage");
                     return;
                 }
-                Console.WriteLine(schemaPreviewGenerationTimer);
+                WriteTimerScopeToConsole(schemaPreviewGenerationTimer);
+            }
+            using (TimerScope schemaPreviewGenerationTimer = new("Schema.TrySave"))
+            {
+                if (schema.TrySave(tempPath) == false)
+                {
+                    Console.WriteLine("Failed to save schema");
+                    return;
+                }
+                WriteTimerScopeToConsole(schemaPreviewGenerationTimer);
             }
 
-            // TODO: Next try saving!
-
         }
+
+        static List<Tuple<int, ConsoleColor>> TimeRanges = new()
+            {
+                new (10, ConsoleColor.Green),
+                new (50, ConsoleColor.Yellow),
+                new (100, ConsoleColor.Red),
+            };
+
+        static void WriteTimerScopeToConsole(TimerScope scopeToWrite)
+        {
+            ConsoleColor Color = ConsoleColor.Magenta;
+            foreach (var Range in TimeRanges)
+            {
+                if (scopeToWrite.Elapsed.Milliseconds < Range.Item1)
+                {
+                    Color = Range.Item2;
+                    break;
+                }
+            }
+
+            ConsoleWrite(Color, $"[{scopeToWrite.Elapsed.Milliseconds}ms] ");
+            ConsoleWriteLine(ConsoleColor.DarkGray, scopeToWrite.Name);
+        }
+
+        static void ConsoleWrite(ConsoleColor color, string text)
+        {
+            ConsoleColor previousColor = Console.ForegroundColor;
+            Console.ForegroundColor = color;
+            Console.Write(text);
+            Console.ForegroundColor = previousColor;
+        }
+
+        static void ConsoleWriteLine(ConsoleColor color, string text)
+        {
+            ConsoleWrite(color, text + Environment.NewLine);
+        }
+
     }
 }
 

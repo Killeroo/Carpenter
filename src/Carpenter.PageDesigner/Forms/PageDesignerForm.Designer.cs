@@ -64,7 +64,7 @@
             toolStripSeparator2 = new ToolStripSeparator();
             saveToolStripMenuItem = new ToolStripMenuItem();
             openToolStripMenuItem = new ToolStripMenuItem();
-            toolStripSeparator6 = new ToolStripSeparator();
+            toolStripSeparator8 = new ToolStripSeparator();
             importToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator1 = new ToolStripSeparator();
             exitToolStripMenuItem = new ToolStripMenuItem();
@@ -72,6 +72,9 @@
             undoToolStripMenuItem = new ToolStripMenuItem();
             redoToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator4 = new ToolStripSeparator();
+            openInExplorerToolStripMenuItem = new ToolStripMenuItem();
+            openInNotepadToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator9 = new ToolStripSeparator();
             resetFieldsToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator5 = new ToolStripSeparator();
             presetsToolStripMenuItem = new ToolStripMenuItem();
@@ -372,7 +375,7 @@
             // 
             // fileToolStripMenuItem
             // 
-            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { newToolStripMenuItem, toolStripSeparator2, saveToolStripMenuItem, openToolStripMenuItem, toolStripSeparator6, importToolStripMenuItem, toolStripSeparator1, exitToolStripMenuItem });
+            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { newToolStripMenuItem, toolStripSeparator2, saveToolStripMenuItem, openToolStripMenuItem, toolStripSeparator8, importToolStripMenuItem, toolStripSeparator1, exitToolStripMenuItem });
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             fileToolStripMenuItem.Size = new Size(37, 20);
             fileToolStripMenuItem.Text = "File";
@@ -406,10 +409,10 @@
             openToolStripMenuItem.Text = "Open";
             openToolStripMenuItem.Click += openToolStripMenuItem_Click;
             // 
-            // toolStripSeparator6
+            // toolStripSeparator8
             // 
-            toolStripSeparator6.Name = "toolStripSeparator6";
-            toolStripSeparator6.Size = new Size(157, 6);
+            toolStripSeparator8.Name = "toolStripSeparator8";
+            toolStripSeparator8.Size = new Size(157, 6);
             // 
             // importToolStripMenuItem
             // 
@@ -432,7 +435,7 @@
             // 
             // editToolStripMenuItem
             // 
-            editToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { undoToolStripMenuItem, redoToolStripMenuItem, toolStripSeparator4, resetFieldsToolStripMenuItem, toolStripSeparator5, presetsToolStripMenuItem, preferencesToolStripMenuItem });
+            editToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { undoToolStripMenuItem, redoToolStripMenuItem, toolStripSeparator4, openInExplorerToolStripMenuItem, openInNotepadToolStripMenuItem, toolStripSeparator9, resetFieldsToolStripMenuItem, toolStripSeparator5, presetsToolStripMenuItem, preferencesToolStripMenuItem });
             editToolStripMenuItem.Name = "editToolStripMenuItem";
             editToolStripMenuItem.Size = new Size(39, 20);
             editToolStripMenuItem.Text = "Edit";
@@ -441,7 +444,7 @@
             // 
             undoToolStripMenuItem.Name = "undoToolStripMenuItem";
             undoToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.Z;
-            undoToolStripMenuItem.Size = new Size(144, 22);
+            undoToolStripMenuItem.Size = new Size(180, 22);
             undoToolStripMenuItem.Text = "Undo";
             undoToolStripMenuItem.Click += undoToolStripMenuItem_Click;
             // 
@@ -449,36 +452,55 @@
             // 
             redoToolStripMenuItem.Name = "redoToolStripMenuItem";
             redoToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.Y;
-            redoToolStripMenuItem.Size = new Size(144, 22);
+            redoToolStripMenuItem.Size = new Size(180, 22);
             redoToolStripMenuItem.Text = "Redo";
             redoToolStripMenuItem.Click += redoToolStripMenuItem_Click;
             // 
             // toolStripSeparator4
             // 
             toolStripSeparator4.Name = "toolStripSeparator4";
-            toolStripSeparator4.Size = new Size(141, 6);
+            toolStripSeparator4.Size = new Size(177, 6);
+            // 
+            // openInExplorerToolStripMenuItem
+            // 
+            openInExplorerToolStripMenuItem.Name = "openInExplorerToolStripMenuItem";
+            openInExplorerToolStripMenuItem.Size = new Size(180, 22);
+            openInExplorerToolStripMenuItem.Text = "Open in Explorer...";
+            openInExplorerToolStripMenuItem.Click += openInExplorerToolStripMenuItem_Click;
+            // 
+            // openInNotepadToolStripMenuItem
+            // 
+            openInNotepadToolStripMenuItem.Name = "openInNotepadToolStripMenuItem";
+            openInNotepadToolStripMenuItem.Size = new Size(180, 22);
+            openInNotepadToolStripMenuItem.Text = "Open in Notepad...";
+            openInNotepadToolStripMenuItem.Click += openInNotepadToolStripMenuItem_Click;
+            // 
+            // toolStripSeparator9
+            // 
+            toolStripSeparator9.Name = "toolStripSeparator9";
+            toolStripSeparator9.Size = new Size(177, 6);
             // 
             // resetFieldsToolStripMenuItem
             // 
             resetFieldsToolStripMenuItem.Name = "resetFieldsToolStripMenuItem";
-            resetFieldsToolStripMenuItem.Size = new Size(144, 22);
+            resetFieldsToolStripMenuItem.Size = new Size(180, 22);
             resetFieldsToolStripMenuItem.Text = "Reset Fields";
             // 
             // toolStripSeparator5
             // 
             toolStripSeparator5.Name = "toolStripSeparator5";
-            toolStripSeparator5.Size = new Size(141, 6);
+            toolStripSeparator5.Size = new Size(177, 6);
             // 
             // presetsToolStripMenuItem
             // 
             presetsToolStripMenuItem.Name = "presetsToolStripMenuItem";
-            presetsToolStripMenuItem.Size = new Size(144, 22);
+            presetsToolStripMenuItem.Size = new Size(180, 22);
             presetsToolStripMenuItem.Text = "Presets";
             // 
             // preferencesToolStripMenuItem
             // 
             preferencesToolStripMenuItem.Name = "preferencesToolStripMenuItem";
-            preferencesToolStripMenuItem.Size = new Size(144, 22);
+            preferencesToolStripMenuItem.Size = new Size(180, 22);
             preferencesToolStripMenuItem.Text = "Preferences";
             // 
             // toolsToolStripMenuItem
@@ -685,5 +707,10 @@
         private ToolStripSeparator toolStripSeparator7;
         private TextBox ThumbnailTextBox;
         private Label label1;
+        private ToolStripMenuItem openInExplorerToolStripMenuItem;
+        private ToolStripSeparator toolStripSeparator8;
+        private ToolStripMenuItem editSourceToolStripMenuItem;
+        private ToolStripSeparator toolStripSeparator9;
+        private ToolStripMenuItem openInNotepadToolStripMenuItem;
     }
 }

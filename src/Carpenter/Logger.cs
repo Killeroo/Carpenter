@@ -60,5 +60,17 @@ namespace Carpenter
             Console.WriteLine(message);
             Console.ResetColor();
         }
+
+        public static void EnableLevel(LogLevel level, bool bEnable)
+        {
+            if (bEnable == false)
+            {
+                _enabledLogLevels.Remove(level);
+            }
+            else if (!_enabledLogLevels.Contains(level))
+            {
+                _enabledLogLevels.Add(level);
+            }
+        }
     }
 }

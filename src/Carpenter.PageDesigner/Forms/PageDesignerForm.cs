@@ -390,7 +390,7 @@ namespace PageDesigner.Forms
             }
 
             UpdateWorkingSchemaFromForm();
-            
+
             //if (File.Exists(_schemaPath))
             //{
             //    if (ShowConfirmSaveDialog() == false)
@@ -402,7 +402,12 @@ namespace PageDesigner.Forms
             // TODO: Show an error when schema save fails
             if (_workingSchema.TrySave(Path.GetDirectoryName(_schemaPath)))
             {
-                MessageBox.Show("Schema successfully saved.", "File saved");
+                statusToolStripStatusLabel.Text = "Schema successfully saved.";
+            }
+            else
+            {
+
+                MessageBox.Show("Could not save schema.", "Error saving schema", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
             this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
@@ -713,45 +718,6 @@ namespace PageDesigner.Forms
                 return;
             }
 
-            // Failed attempt to get thumbnails from the JpegParser
-            // This works when you save the thumbnail to a file first... but as a MemoryStream it doesn't work
-
-            //foreach (string imagePath in imageFilesAtPath)
-            //{
-            //    data.Add(JpegParser.GetRawMetadata(imagePath));
-
-            //    using (Image previewImage = Image.FromStream(new MemoryStream(data[data.Count - 1].ThumbnailData)))
-            //    {
-            //        // TODO: Wish we didn't have to force aspectratio but CalculateAspectRatio is broken
-            //        //AspectRatio ar = new AspectRatio(3, 4);//ImageUtils.CalculateAspectRatio(originalImage);
-
-            //        //int desiredWidth = 120;
-            //        //int desiredHeight = ar.CalculateHeight(desiredWidth);
-
-            //        //// TODO: Use DrawImage to properly resize
-            //        //Image previewImage2 = previewImage.GetThumbnailImage(desiredWidth, desiredHeight, () => false, IntPtr.Zero);
-
-            //        var width = previewImage.Width;
-            //        _previewImages.Add(Path.GetFileName(imagePath), previewImage);
-
-            //        //_previewImages.Add(Path.GetFileName(imagePath), previewImage2);
-
-            //        // Cache in temp directory
-            //        // TODO: Fix with aspect ratio
-            //        PreviewImageBox previewImageBox = new PreviewImageBox(
-            //            Path.GetFileName(imagePath), previewImage);
-            //        //FetchOrCatchPreviewImage(Path.GetFileName(filename), inputtedPath));  //
-
-            //        //previewImageBox.MouseClick += ImagePreviewFlowLayoutPanel_MouseClick;
-            //        previewImageBox.ControlClicked += ImagePreviewFlowLayoutPanel_Control_Clicked;
-            //        previewImageBox.ControlDoubleClicked += ImagePreviewFlowLayoutPanel_Control_DoubleClicked;
-            //        previewImageBox.AddContextItemClicked += ImagePreviewFlowLayoutPanel_Control_DoubleClicked;
-            //        previewImageBox.InsertContextItemClicked += ImagePreviewFlowPanel_InsertContextItem_Clicked;
-            //        previewImageBox.ReplaceContextItemClicked += ImagePreviewFlowPanel_ReplaceContextItem_Clicked;
-
-            //        ImagePreviewFlowLayoutPanel.Controls.Add(previewImageBox);
-            //    }
-
             _previewImages.Clear();
             foreach (string imagePath in imageFilesAtPath)
             {
@@ -761,7 +727,14 @@ namespace PageDesigner.Forms
                     continue;
                 }
 
-                using (Image originalImage = Image.FromFile(imagePath))
+                // TODO: Have a fallback
+                //byte[] thumbnailData = JpegParser.GetThumbnailData(imagePath);
+                //using (MemoryStream stream = new MemoryStream(thumbnailData))
+                ////using (Image originalImage = Image.FromFile(imagePath))
+                //using (Image originalImage = Image.FromStream(stream))
+
+
+                using (Image originalImage = ExtractThumbnail(imagePath))
                 {
                     // TODO: Wish we didn't have to force aspectratio but CalculateAspectRatio is broken
                     AspectRatio ar = new AspectRatio(1, 1);//ImageUtils.CalculateAspectRatio(originalImage);
@@ -799,65 +772,6 @@ namespace PageDesigner.Forms
         }
 
         // TODO: DRY
-        private GridPictureBox CreateGridPictureBox(string previewImageName, string detailedImageName, bool standaloneImage)
-        {
-            // Find the image locally and save a resized copy
-            string localImagePath = Path.Combine(_workingPath, previewImageName);
-            if (File.Exists(localImagePath) == false)
-            {
-                return null;
-            }
-
-            // Load original image, resize it to fit into grid
-            // TODO: Work out size without loading the whole image into memory
-            using (Image sourceImage = Image.FromFile(localImagePath)) // TODO: Cache this
-            {
-                // TODO: This is just awful, so we hardcode the aspect ratio
-                AspectRatio ar = new AspectRatio(3, 4);//ImageUtils.CalculateAspectRatio(sourceImage);
-
-                // Find the width that we need to fit into
-                int targetWidth = GridFlowLayoutPanel.Width - 10;
-                if (standaloneImage == false)
-                {
-                    targetWidth /= 2;
-                }
-
-                // There is a bug where, when we add an image to a picturebox from the buffer there is some deadspace
-                // causing an overflow, meaning we have to reduce this width for now
-                targetWidth -= 20;// 10; 
-                int targetHeight = ar.CalculateHeight(targetWidth);
-
-                //ImageMetadata metadata = JpegParser.GetMetadata(localImagePath);
-                if (sourceImage.Height > sourceImage.Width)// || metadata.Orientation != OrientationType.Horizontal)
-                {
-                    targetHeight *= 2;
-                }
-
-                Image resizedImage = ImageUtils.ResizeImage(localImagePath, sourceImage, targetWidth, targetHeight);
-
-                GridPictureBox gridPictureBox = new();
-
-                // Setup image
-                gridPictureBox.Image = resizedImage;
-                gridPictureBox.SizeMode = PictureBoxSizeMode.AutoSize;
-
-                // Save properties for later
-                gridPictureBox.DetailImageFilename = detailedImageName;
-                gridPictureBox.ImageFilename = previewImageName;
-                gridPictureBox.SetImageType(standaloneImage ? GridPictureBox.ImageType.Standalone : GridPictureBox.ImageType.Column);
-
-                // Add callbacks
-                gridPictureBox.Click += GridPictureBox_Click;
-                gridPictureBox.Paint += GridPictureBox_Paint;
-                gridPictureBox.SwapMenuItemClicked += GridPictureBox_SwapMenuItemClicked;
-                gridPictureBox.RemoveMenuItemClicked += GridPictureBox_RemoveMenuItemClicked;
-                gridPictureBox.StandaloneMenuItemClicked += GridPictureBox_StandaloneMenuItemClicked;
-
-                return gridPictureBox;
-            }
-        }
-
-        // TODO: DRY
         private void UpdateGridPictureBox(GridPictureBox pictureBox, string newPreviewImageName, string newDetailedImageName, bool standalone)
         {
 
@@ -870,7 +784,16 @@ namespace PageDesigner.Forms
 
             // Load original image, resize it to fit into grid
             // TODO: Work out size without loading the whole image into memory
-            using (Image sourceImage = Image.FromFile(localImagePath))
+            // TODO: Have a fallback
+            //byte[] thumbnailData = JpegParser.GetThumbnailData(localImagePath);
+            //using (MemoryStream stream = new MemoryStream(thumbnailData))
+            ////using (Image originalImage = Image.FromFile(imagePath))
+            //using (Image sourceImage = Image.FromStream(stream))
+
+            //using (Image sourceImage = Image.FromFile(localImagePath))
+
+
+            using (Image sourceImage = ExtractThumbnail(localImagePath))
             {
                 // TODO: This is just awful, so we hardcode the aspect ratio
                 AspectRatio ar = new AspectRatio(3, 4);//ImageUtils.CalculateAspectRatio(sourceImage);
@@ -917,7 +840,13 @@ namespace PageDesigner.Forms
 
             // Load original image, resize it to fit into grid
             // TODO: Work out size without loading the whole image into memory
-            using (Image sourceImage = Image.FromFile(localImagePath))
+            //byte[] thumbnailData = JpegParser.GetThumbnailData(localImagePath);
+            //using (MemoryStream stream = new MemoryStream(thumbnailData))
+            ////using (Image originalImage = Image.FromFile(imagePath))
+            //using (Image sourceImage = Image.FromStream(stream))
+            ////using (Image sourceImage = Image.FromFile(localImagePath))
+
+            using (Image sourceImage = ExtractThumbnail(localImagePath))
             {
                 // TODO: This is just awful, so we hardcode the aspect ratio
                 AspectRatio ar = new AspectRatio(3, 4);//ImageUtils.CalculateAspectRatio(sourceImage);
@@ -985,6 +914,20 @@ namespace PageDesigner.Forms
             }
         }
 
+        private Image ExtractThumbnail(string imagePath)
+        {
+            byte[] thumbnailData = JpegParser.GetThumbnailData(imagePath);
+            if (thumbnailData.Length == 0)
+            {
+                return Image.FromFile(imagePath);
+            }
+
+            using (MemoryStream stream = new MemoryStream(thumbnailData))
+            {
+                return Image.FromStream(stream);
+            }
+        }
+
         private void TryAddColumnsBuffer(ref List<ImageSection>[] buffer, ref List<Section> destination)
         {
             // First check that the buffer has anything in it
@@ -1030,16 +973,6 @@ namespace PageDesigner.Forms
             previewImageControl.Invalidate();
 
             _selectedPreviewImageControl = previewImageControl;
-        }
-
-        private bool ShowConfirmSaveDialog()
-        {
-            DialogResult result = MessageBox.Show(
-                "Schema file already exists.\nDo you want to replace it?",
-                "File exists",
-                MessageBoxButtons.YesNo);
-
-            return result == DialogResult.Yes;
         }
 
         // TODO: No, remove this, handle preview and detailed images better than hack hardcoding them
@@ -1199,7 +1132,7 @@ namespace PageDesigner.Forms
         }
 
         private void PreviewButton_Click(object sender, EventArgs e)
-        { 
+        {
             DisplayPreviewInNewProcess();
         }
 
@@ -1472,7 +1405,7 @@ namespace PageDesigner.Forms
                 return;
             }
 
-            if (_livePreviewForm == null)
+            if (_livePreviewForm == null || _livePreviewForm.IsDisposed)
             {
                 _livePreviewForm = new();
                 _livePreviewForm.ShowInTaskbar = true;
@@ -1497,6 +1430,20 @@ namespace PageDesigner.Forms
             _isLivePreviewFormActive = false;
         }
 
+        private void openInExplorerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (Directory.Exists(_workingPath))
+            {
+                Process.Start(_workingPath);
+            }
+        }
 
+        private void openInNotepadToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (File.Exists(_schemaPath))
+            {
+                Process.Start("notepad", _schemaPath);
+            }
+        }
     }
 }
