@@ -73,64 +73,63 @@ namespace Carpenter.Tests
             Template template = new();
             Schema schema = new();
 
-            using (TimerScope siteLoadTimer = new("Site.TryLoad"))
+            Stopwatch stopwatch = Stopwatch.StartNew();
             {
                 if (site.TryLoad(rootDirectory) == false)
                 {
                     Console.WriteLine("Failed to read site");
                     return;
                 }
-                WriteTimerScopeToConsole(siteLoadTimer);
             }
+            WriteTimerToConsole(stopwatch, "Site.TryLoad");
 
-            using (TimerScope templateLoadTimer = new("Template.TryLoad"))
+            stopwatch = Stopwatch.StartNew();
             {
                 if (template.TryLoad(site.TemplatePath) == false)
                 {
                     Console.WriteLine("Failed to read Template");
                     return;
                 }
-                WriteTimerScopeToConsole(templateLoadTimer);
             }
+            WriteTimerToConsole(stopwatch, "Template.TryLoad");
 
-            using (TimerScope schemaLoadTimer = new("Schema.TryLoad"))
+            stopwatch = Stopwatch.StartNew();
             {
                 if (schema.TryLoad(Path.Combine(schemaDirectory, Config.kSchemaFileName)) == false)
                 {
                     Console.WriteLine("Failed to read schema");
                     return;
                 }
-                WriteTimerScopeToConsole(schemaLoadTimer);
             }
+            WriteTimerToConsole(stopwatch, "Schema.TryLoad");
 
-            using (TimerScope schemaPreviewGenerationTimer = new("Template.GeneratePreviewHtmlForSchema"))
+            stopwatch = Stopwatch.StartNew();
+            if (template.GeneratePreviewHtmlForSchema(schema, site, schemaDirectory, out string previewFilename) == false)
             {
-                if (template.GeneratePreviewHtmlForSchema(schema, site, schemaDirectory, out string previewFilename) == false)
-                {
-                    Console.WriteLine("Failed to generate preview");
-                    return;
-                }
-                WriteTimerScopeToConsole(schemaPreviewGenerationTimer);
+                Console.WriteLine("Failed to generate preview");
+                return;
             }
-            using (TimerScope schemaPreviewGenerationTimer = new("Template.GenerateHtmlForSchema"))
+            WriteTimerToConsole(stopwatch, "Template.GeneratePreviewHtmlForSchema");
+
+            stopwatch = Stopwatch.StartNew();
             {
                 if (template.GenerateHtmlForSchema(schema, site, schemaDirectory) == false)
                 {
                     Console.WriteLine("Failed to generate webpage");
                     return;
                 }
-                WriteTimerScopeToConsole(schemaPreviewGenerationTimer);
             }
-            using (TimerScope schemaPreviewGenerationTimer = new("Schema.TrySave"))
+            WriteTimerToConsole(stopwatch, "Template.GenerateHtmlForSchema");
+
+            stopwatch = Stopwatch.StartNew();
             {
                 if (schema.TrySave(tempPath) == false)
                 {
                     Console.WriteLine("Failed to save schema");
                     return;
                 }
-                WriteTimerScopeToConsole(schemaPreviewGenerationTimer);
             }
-
+            WriteTimerToConsole(stopwatch, "Schema.TrySave");
         }
 
         static List<Tuple<int, ConsoleColor>> TimeRanges = new()
@@ -140,21 +139,22 @@ namespace Carpenter.Tests
                 new (100, ConsoleColor.Red),
             };
 
-        static void WriteTimerScopeToConsole(TimerScope scopeToWrite)
+        static void WriteTimerToConsole(Stopwatch stopwatch, string name)
         {
             ConsoleColor Color = ConsoleColor.Magenta;
             foreach (var Range in TimeRanges)
             {
-                if (scopeToWrite.Elapsed.Milliseconds < Range.Item1)
+                if (stopwatch.ElapsedMilliseconds < Range.Item1)
                 {
                     Color = Range.Item2;
                     break;
                 }
             }
 
-            ConsoleWrite(Color, $"[{scopeToWrite.Elapsed.Milliseconds}ms] ");
-            ConsoleWriteLine(ConsoleColor.DarkGray, scopeToWrite.Name);
+            ConsoleWrite(Color, $"[{stopwatch.ElapsedMilliseconds}ms] ");
+            ConsoleWriteLine(ConsoleColor.DarkGray, name);
         }
+
 
         static void ConsoleWrite(ConsoleColor color, string text)
         {
