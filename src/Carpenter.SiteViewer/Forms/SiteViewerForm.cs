@@ -48,6 +48,7 @@ namespace SiteViewer.Forms
         private Site _site = new Site();
         private string _rootPath = string.Empty;
         private string _lastCreatedPageName = string.Empty;
+        private string _templatePath = string.Empty;
 
         public SiteViewerForm()
         {
@@ -78,6 +79,7 @@ namespace SiteViewer.Forms
 
             // The site file contains the template file location
             _template = new Template();
+            _templatePath = _site.TemplatePath;
             if (_template.TryLoad(_site.TemplatePath) == false)
             {
                 return;
@@ -156,8 +158,13 @@ namespace SiteViewer.Forms
             }
 
             SiteGenerationState state = new();
-
             Stopwatch progressStopwatch = Stopwatch.StartNew();
+            
+            JpegParser.UseInternalCache = false;
+
+            const int kMaxThreadCount = 10;
+            object lockObject = new object();
+            Thread[] threads = new Thread[kMaxThreadCount];
             string[] localDirectories = Directory.GetDirectories(_rootPath);
             for (int i = 0; i < localDirectories.Length; i++)
             {
@@ -166,23 +173,82 @@ namespace SiteViewer.Forms
                 {
                     GenerateSiteBackgroundWorker.ReportProgress((100 * i) / localDirectories.Length, $"Generating '{Path.GetFileName(localDirectories[i])}'...");
 
-                    string currentDirectoryPath = Path.GetDirectoryName(localSchemaPath);
-                    using Schema localSchema = new(localSchemaPath);
-                    if (_template.GenerateHtmlForSchema(localSchema, _site, currentDirectoryPath))
+                    bool processed = false;
+                    while (!processed)
                     {
-                        state.SuccessfulPaths.Add(currentDirectoryPath);
-                    }
-                    else
-                    {
-                        state.FailedPaths.Add(currentDirectoryPath);
-                    }
-                    state.ProcessedPaths.Add(currentDirectoryPath);
+                        for (int index = 0; index < kMaxThreadCount; index++)
+                        {
+                            if (threads[index] == null || !threads[index].IsAlive)
+                            {
+                                threads[index] = new Thread(() =>
+                                {
+                                    Debug.Print("Thread {0}: {1}", index, localSchemaPath);
+                                    string currentDirectoryPath = Path.GetDirectoryName(localSchemaPath);
+                                    using Schema localSchema = new(localSchemaPath);
+                                    Template template = new Template(_templatePath);
+                                    bool wasGeneratedSuccessfully = template.GenerateHtmlForSchema(localSchema, _site, currentDirectoryPath);
 
-                    GenerateSiteBackgroundWorker.ReportProgress((100 * i) / localDirectories.Length, state);
+                                    lock (lockObject)
+                                    {
+                                        if (wasGeneratedSuccessfully)
+                                        {
+                                            state.SuccessfulPaths.Add(currentDirectoryPath);
+                                        }
+                                        else
+                                        {
+                                            state.FailedPaths.Add(currentDirectoryPath);
+                                        }
+                                        state.ProcessedPaths.Add(currentDirectoryPath);
+
+                                        try
+                                        {
+                                            GenerateSiteBackgroundWorker.ReportProgress((100 * i) / localDirectories.Length, state);
+                                        }
+                                        catch (InvalidOperationException) { /** Ey don't worry about it */ }
+                                    }
+                                });
+                                threads[index].IsBackground = true;
+                                threads[index].Start();
+                                processed = true;
+                                break;
+                            }
+                        }
+
+                        if (!processed)
+                        {
+                            Thread.Sleep(1000);
+                        }
+                    }
+
+                    //string currentDirectoryPath = Path.GetDirectoryName(localSchemaPath);
+                    //using Schema localSchema = new(localSchemaPath);
+                    //if (_template.GenerateHtmlForSchema(localSchema, _site, currentDirectoryPath))
+                    //{
+                    //    state.SuccessfulPaths.Add(currentDirectoryPath);
+                    //}
+                    //else
+                    //{
+                    //    state.FailedPaths.Add(currentDirectoryPath);
+                    //}
+                    //state.ProcessedPaths.Add(currentDirectoryPath);
+
+                    //GenerateSiteBackgroundWorker.ReportProgress((100 * i) / localDirectories.Length, state);
                 }
             }
-            progressStopwatch.Stop();
 
+            // Wait for threads to finish
+            bool threadStillRunning = true;
+            while (threadStillRunning)
+            {
+                threadStillRunning = false;
+                foreach (Thread thread in threads)
+                {
+                    threadStillRunning |= thread != null && thread.IsAlive;
+                }
+                Thread.Sleep(200);
+            }
+
+            progressStopwatch.Stop();
             GenerateSiteBackgroundWorker.ReportProgress(100, $"Site generated in {progressStopwatch.ElapsedMilliseconds}ms");
         }
 
@@ -350,7 +416,10 @@ namespace SiteViewer.Forms
                     // Process each line and replace them with values from the schema
                     foreach (KeyValuePair<string, Schema.Tokens> tokenEntry in Schema.TokenTable)
                     {
-                        processedLine = processedLine.Replace(tokenEntry.Key, schema.TokenValues[tokenEntry.Value]);
+                        if (schema.TokenValues.ContainsKey(tokenEntry.Value) && !Schema.OptionalTokens.Contains(tokenEntry.Value))
+                        {
+                            processedLine = processedLine.Replace(tokenEntry.Key, schema.TokenValues[tokenEntry.Value]);
+                        }
                     }
                     generatedHtmlSnippet += processedLine + Environment.NewLine;
                 }

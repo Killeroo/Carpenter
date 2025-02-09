@@ -57,8 +57,8 @@ namespace Carpenter.Tests
             //// TODO: Point at example project
             //string rootDirectory = @"C:\Users\Kelpie\Desktop\WebsiteConversion\photos";
             //string schemaDirectory = @"C:\Users\Kelpie\Desktop\WebsiteConversion\photos\donegal-3";
-            string rootDirectory = @"G:\My Drive\Website\matthewcarney.info\photos";
-            string schemaDirectory = @"G:\My Drive\Website\matthewcarney.info\photos\donegal-4";
+            string rootDirectory = @"G:\My Drive\Website\photos.matthewcarney.net\digital";
+            string schemaDirectory = @"G:\My Drive\Website\photos.matthewcarney.net\digital\donegal-4";
             string tempPath = Path.Combine(Path.GetTempPath(), "Carpenter", "Benchmark");
             if (Directory.Exists(tempPath) == false)
             {
@@ -130,6 +130,19 @@ namespace Carpenter.Tests
                 }
             }
             WriteTimerToConsole(stopwatch, "Schema.TrySave");
+
+            stopwatch = Stopwatch.StartNew();
+            {
+                if (SchemaValidator.Run(schema, out SchemaValidator.ValidationResults results) == false)
+                {
+                    Console.WriteLine("Validation failed!");
+                }
+                //if (results.FailedTests.Count > 0)
+                //{
+                //    Console.WriteLine(results);
+                //}
+            }
+            WriteTimerToConsole(stopwatch, "SchemaValidator.Run");
         }
 
         static List<Tuple<int, ConsoleColor>> TimeRanges = new()

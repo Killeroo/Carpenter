@@ -205,6 +205,7 @@ namespace PageDesigner.Forms
             YearTextBox.TextChanged += FormTextBox_TextChanged;
             AuthorTextBox.TextChanged += FormTextBox_TextChanged;
             CameraTextBox.TextChanged += FormTextBox_TextChanged;
+            DescriptionTextBox.TextChanged += FormTextBox_TextChanged;
         }
 
         private void RemoveTextboxCallbacks()
@@ -217,8 +218,9 @@ namespace PageDesigner.Forms
             YearTextBox.TextChanged -= FormTextBox_TextChanged;
             AuthorTextBox.TextChanged -= FormTextBox_TextChanged;
             CameraTextBox.TextChanged -= FormTextBox_TextChanged;
+            DescriptionTextBox.TextChanged -= FormTextBox_TextChanged;
         }
-
+        
         // TODO: Move to utils 
         private string GeneratePreviewWebpage()
         {
@@ -440,6 +442,7 @@ namespace PageDesigner.Forms
             _workingSchema.Author = AuthorTextBox.Text;
             _workingSchema.Camera = CameraTextBox.Text;
             _workingSchema.Thumbnail = ThumbnailTextBox.Text;
+            _workingSchema.Description = DescriptionTextBox.Text;
 
             // TODO: Have these set via a form on the main form or have them stored somewhere else
             _workingSchema.GeneratedFilename = Config.kDefaultGeneratedFilename;

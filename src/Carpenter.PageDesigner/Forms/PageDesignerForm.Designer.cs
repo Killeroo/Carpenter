@@ -33,6 +33,8 @@
             groupBox1 = new GroupBox();
             imageList1 = new ImageList(components);
             groupBox2 = new GroupBox();
+            DescriptionTextBox = new TextBox();
+            label2 = new Label();
             ThumbnailTextBox = new TextBox();
             label1 = new Label();
             CameraTextBox = new TextBox();
@@ -107,15 +109,15 @@
             ImagePreviewFlowLayoutPanel.AutoScroll = true;
             ImagePreviewFlowLayoutPanel.Location = new Point(6, 17);
             ImagePreviewFlowLayoutPanel.Name = "ImagePreviewFlowLayoutPanel";
-            ImagePreviewFlowLayoutPanel.Size = new Size(496, 262);
+            ImagePreviewFlowLayoutPanel.Size = new Size(496, 233);
             ImagePreviewFlowLayoutPanel.TabIndex = 0;
             // 
             // groupBox1
             // 
             groupBox1.Controls.Add(ImagePreviewFlowLayoutPanel);
-            groupBox1.Location = new Point(627, 266);
+            groupBox1.Location = new Point(627, 321);
             groupBox1.Name = "groupBox1";
-            groupBox1.Size = new Size(508, 285);
+            groupBox1.Size = new Size(508, 256);
             groupBox1.TabIndex = 5;
             groupBox1.TabStop = false;
             groupBox1.Text = "Available Images";
@@ -128,6 +130,8 @@
             // 
             // groupBox2
             // 
+            groupBox2.Controls.Add(DescriptionTextBox);
+            groupBox2.Controls.Add(label2);
             groupBox2.Controls.Add(ThumbnailTextBox);
             groupBox2.Controls.Add(label1);
             groupBox2.Controls.Add(CameraTextBox);
@@ -146,16 +150,34 @@
             groupBox2.Controls.Add(label3);
             groupBox2.Location = new Point(627, 27);
             groupBox2.Name = "groupBox2";
-            groupBox2.Size = new Size(508, 140);
+            groupBox2.Size = new Size(508, 230);
             groupBox2.TabIndex = 7;
             groupBox2.TabStop = false;
             groupBox2.Text = "Page Details";
             // 
+            // DescriptionTextBox
+            // 
+            DescriptionTextBox.Location = new Point(8, 160);
+            DescriptionTextBox.Multiline = true;
+            DescriptionTextBox.Name = "DescriptionTextBox";
+            DescriptionTextBox.ScrollBars = ScrollBars.Vertical;
+            DescriptionTextBox.Size = new Size(495, 65);
+            DescriptionTextBox.TabIndex = 19;
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Location = new Point(8, 142);
+            label2.Name = "label2";
+            label2.Size = new Size(67, 15);
+            label2.TabIndex = 18;
+            label2.Text = "Description";
+            // 
             // ThumbnailTextBox
             // 
-            ThumbnailTextBox.Location = new Point(77, 55);
+            ThumbnailTextBox.Location = new Point(88, 55);
             ThumbnailTextBox.Name = "ThumbnailTextBox";
-            ThumbnailTextBox.Size = new Size(185, 23);
+            ThumbnailTextBox.Size = new Size(175, 23);
             ThumbnailTextBox.TabIndex = 17;
             // 
             // label1
@@ -169,9 +191,9 @@
             // 
             // CameraTextBox
             // 
-            CameraTextBox.Location = new Point(329, 112);
+            CameraTextBox.Location = new Point(342, 112);
             CameraTextBox.Name = "CameraTextBox";
-            CameraTextBox.Size = new Size(175, 23);
+            CameraTextBox.Size = new Size(162, 23);
             CameraTextBox.TabIndex = 15;
             // 
             // label9
@@ -185,9 +207,9 @@
             // 
             // AuthorTextBox
             // 
-            AuthorTextBox.Location = new Point(329, 83);
+            AuthorTextBox.Location = new Point(342, 83);
             AuthorTextBox.Name = "AuthorTextBox";
-            AuthorTextBox.Size = new Size(175, 23);
+            AuthorTextBox.Size = new Size(162, 23);
             AuthorTextBox.TabIndex = 13;
             // 
             // label8
@@ -201,9 +223,9 @@
             // 
             // YearTextBox
             // 
-            YearTextBox.Location = new Point(328, 55);
+            YearTextBox.Location = new Point(342, 55);
             YearTextBox.Name = "YearTextBox";
-            YearTextBox.Size = new Size(175, 23);
+            YearTextBox.Size = new Size(161, 23);
             YearTextBox.TabIndex = 11;
             // 
             // label7
@@ -217,9 +239,9 @@
             // 
             // MonthTextBox
             // 
-            MonthTextBox.Location = new Point(328, 26);
+            MonthTextBox.Location = new Point(342, 26);
             MonthTextBox.Name = "MonthTextBox";
-            MonthTextBox.Size = new Size(175, 23);
+            MonthTextBox.Size = new Size(161, 23);
             MonthTextBox.TabIndex = 9;
             // 
             // label6
@@ -233,9 +255,9 @@
             // 
             // LocationTextBox
             // 
-            LocationTextBox.Location = new Point(77, 112);
+            LocationTextBox.Location = new Point(88, 112);
             LocationTextBox.Name = "LocationTextBox";
-            LocationTextBox.Size = new Size(185, 23);
+            LocationTextBox.Size = new Size(175, 23);
             LocationTextBox.TabIndex = 7;
             // 
             // label5
@@ -249,9 +271,9 @@
             // 
             // TitleTextBox
             // 
-            TitleTextBox.Location = new Point(77, 83);
+            TitleTextBox.Location = new Point(88, 83);
             TitleTextBox.Name = "TitleTextBox";
-            TitleTextBox.Size = new Size(185, 23);
+            TitleTextBox.Size = new Size(175, 23);
             TitleTextBox.TabIndex = 5;
             // 
             // label4
@@ -265,9 +287,9 @@
             // 
             // PageUrlTextBox
             // 
-            PageUrlTextBox.Location = new Point(77, 26);
+            PageUrlTextBox.Location = new Point(88, 26);
             PageUrlTextBox.Name = "PageUrlTextBox";
-            PageUrlTextBox.Size = new Size(185, 23);
+            PageUrlTextBox.Size = new Size(175, 23);
             PageUrlTextBox.TabIndex = 3;
             // 
             // label3
@@ -281,7 +303,7 @@
             // 
             // PreviewButton
             // 
-            PreviewButton.Location = new Point(980, 566);
+            PreviewButton.Location = new Point(976, 584);
             PreviewButton.Name = "PreviewButton";
             PreviewButton.Size = new Size(75, 23);
             PreviewButton.TabIndex = 10;
@@ -291,7 +313,7 @@
             // 
             // GenerateButton
             // 
-            GenerateButton.Location = new Point(1060, 566);
+            GenerateButton.Location = new Point(1055, 584);
             GenerateButton.Name = "GenerateButton";
             GenerateButton.Size = new Size(75, 23);
             GenerateButton.TabIndex = 11;
@@ -305,20 +327,20 @@
             groupBox3.Controls.Add(PreviewImageTextBox);
             groupBox3.Controls.Add(label10);
             groupBox3.Controls.Add(label11);
-            groupBox3.Location = new Point(627, 173);
+            groupBox3.Location = new Point(627, 262);
             groupBox3.Margin = new Padding(3, 2, 3, 2);
             groupBox3.Name = "groupBox3";
             groupBox3.Padding = new Padding(3, 2, 3, 2);
-            groupBox3.Size = new Size(508, 88);
+            groupBox3.Size = new Size(508, 54);
             groupBox3.TabIndex = 12;
             groupBox3.TabStop = false;
             groupBox3.Text = "Image Details";
             // 
             // DetailedImageTextBox
             // 
-            DetailedImageTextBox.Location = new Point(69, 55);
+            DetailedImageTextBox.Location = new Point(342, 26);
             DetailedImageTextBox.Name = "DetailedImageTextBox";
-            DetailedImageTextBox.Size = new Size(185, 23);
+            DetailedImageTextBox.Size = new Size(161, 23);
             DetailedImageTextBox.TabIndex = 7;
             DetailedImageTextBox.TextChanged += DetailedImageTextBox_TextChanged;
             // 
@@ -333,7 +355,7 @@
             // label10
             // 
             label10.AutoSize = true;
-            label10.Location = new Point(8, 57);
+            label10.Location = new Point(274, 28);
             label10.Name = "label10";
             label10.Size = new Size(50, 15);
             label10.TabIndex = 5;
@@ -350,7 +372,7 @@
             // 
             // SaveButton
             // 
-            SaveButton.Location = new Point(899, 566);
+            SaveButton.Location = new Point(894, 584);
             SaveButton.Name = "SaveButton";
             SaveButton.Size = new Size(75, 23);
             SaveButton.TabIndex = 13;
@@ -444,7 +466,7 @@
             // 
             undoToolStripMenuItem.Name = "undoToolStripMenuItem";
             undoToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.Z;
-            undoToolStripMenuItem.Size = new Size(180, 22);
+            undoToolStripMenuItem.Size = new Size(174, 22);
             undoToolStripMenuItem.Text = "Undo";
             undoToolStripMenuItem.Click += undoToolStripMenuItem_Click;
             // 
@@ -452,55 +474,55 @@
             // 
             redoToolStripMenuItem.Name = "redoToolStripMenuItem";
             redoToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.Y;
-            redoToolStripMenuItem.Size = new Size(180, 22);
+            redoToolStripMenuItem.Size = new Size(174, 22);
             redoToolStripMenuItem.Text = "Redo";
             redoToolStripMenuItem.Click += redoToolStripMenuItem_Click;
             // 
             // toolStripSeparator4
             // 
             toolStripSeparator4.Name = "toolStripSeparator4";
-            toolStripSeparator4.Size = new Size(177, 6);
+            toolStripSeparator4.Size = new Size(171, 6);
             // 
             // openInExplorerToolStripMenuItem
             // 
             openInExplorerToolStripMenuItem.Name = "openInExplorerToolStripMenuItem";
-            openInExplorerToolStripMenuItem.Size = new Size(180, 22);
+            openInExplorerToolStripMenuItem.Size = new Size(174, 22);
             openInExplorerToolStripMenuItem.Text = "Open in Explorer...";
             openInExplorerToolStripMenuItem.Click += openInExplorerToolStripMenuItem_Click;
             // 
             // openInNotepadToolStripMenuItem
             // 
             openInNotepadToolStripMenuItem.Name = "openInNotepadToolStripMenuItem";
-            openInNotepadToolStripMenuItem.Size = new Size(180, 22);
+            openInNotepadToolStripMenuItem.Size = new Size(174, 22);
             openInNotepadToolStripMenuItem.Text = "Open in Notepad...";
             openInNotepadToolStripMenuItem.Click += openInNotepadToolStripMenuItem_Click;
             // 
             // toolStripSeparator9
             // 
             toolStripSeparator9.Name = "toolStripSeparator9";
-            toolStripSeparator9.Size = new Size(177, 6);
+            toolStripSeparator9.Size = new Size(171, 6);
             // 
             // resetFieldsToolStripMenuItem
             // 
             resetFieldsToolStripMenuItem.Name = "resetFieldsToolStripMenuItem";
-            resetFieldsToolStripMenuItem.Size = new Size(180, 22);
+            resetFieldsToolStripMenuItem.Size = new Size(174, 22);
             resetFieldsToolStripMenuItem.Text = "Reset Fields";
             // 
             // toolStripSeparator5
             // 
             toolStripSeparator5.Name = "toolStripSeparator5";
-            toolStripSeparator5.Size = new Size(177, 6);
+            toolStripSeparator5.Size = new Size(171, 6);
             // 
             // presetsToolStripMenuItem
             // 
             presetsToolStripMenuItem.Name = "presetsToolStripMenuItem";
-            presetsToolStripMenuItem.Size = new Size(180, 22);
+            presetsToolStripMenuItem.Size = new Size(174, 22);
             presetsToolStripMenuItem.Text = "Presets";
             // 
             // preferencesToolStripMenuItem
             // 
             preferencesToolStripMenuItem.Name = "preferencesToolStripMenuItem";
-            preferencesToolStripMenuItem.Size = new Size(180, 22);
+            preferencesToolStripMenuItem.Size = new Size(174, 22);
             preferencesToolStripMenuItem.Text = "Preferences";
             // 
             // toolsToolStripMenuItem
@@ -570,7 +592,7 @@
             groupBox4.Controls.Add(GridFlowLayoutPanel);
             groupBox4.Location = new Point(12, 27);
             groupBox4.Name = "groupBox4";
-            groupBox4.Size = new Size(609, 524);
+            groupBox4.Size = new Size(609, 550);
             groupBox4.TabIndex = 15;
             groupBox4.TabStop = false;
             groupBox4.Text = "Photo Grid";
@@ -581,14 +603,14 @@
             GridFlowLayoutPanel.BorderStyle = BorderStyle.FixedSingle;
             GridFlowLayoutPanel.Location = new Point(8, 16);
             GridFlowLayoutPanel.Name = "GridFlowLayoutPanel";
-            GridFlowLayoutPanel.Size = new Size(595, 502);
+            GridFlowLayoutPanel.Size = new Size(595, 529);
             GridFlowLayoutPanel.TabIndex = 6;
             // 
             // statusStrip1
             // 
             statusStrip1.ImageScalingSize = new Size(20, 20);
             statusStrip1.Items.AddRange(new ToolStripItem[] { statusToolStripStatusLabel, toolStripProgressBar1 });
-            statusStrip1.Location = new Point(0, 579);
+            statusStrip1.Location = new Point(0, 610);
             statusStrip1.Name = "statusStrip1";
             statusStrip1.Padding = new Padding(1, 0, 12, 0);
             statusStrip1.Size = new Size(1144, 22);
@@ -615,7 +637,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1144, 601);
+            ClientSize = new Size(1144, 632);
             Controls.Add(statusStrip1);
             Controls.Add(groupBox4);
             Controls.Add(SaveButton);
@@ -712,5 +734,7 @@
         private ToolStripMenuItem editSourceToolStripMenuItem;
         private ToolStripSeparator toolStripSeparator9;
         private ToolStripMenuItem openInNotepadToolStripMenuItem;
+        private TextBox DescriptionTextBox;
+        private Label label2;
     }
 }

@@ -5,6 +5,7 @@ using System.IO;
 using System.Diagnostics;
 
 using JpegMetadataExtractor;
+using static Carpenter.Schema;
 
 namespace Carpenter
 {
@@ -138,8 +139,8 @@ namespace Carpenter
         public Template() 
         {
             // Setup Jpeg parser library 
-            JpegParser.UseInternalCache = true;
-            JpegParser.CacheSize = 1;
+            //JpegParser.UseInternalCache = true;
+            //JpegParser.CacheSize = 1;
         }
         public Template(string path) : this() => TryLoad(path);
 
@@ -189,6 +190,7 @@ namespace Carpenter
         /// Internal method for creating a webpage from a schema, site and template contents
         /// </summary>
         /// <returns>If the webpage was successfully generated or not</returns>
+        /// // TODO: Throw exception
         Dictionary<string, (int height, int width)> _schemaImages = new();
         private bool GenerateHtml(Schema schema, Site site, string outputPath, string outputFilename, bool isPreview)
         {
@@ -270,7 +272,16 @@ namespace Carpenter
 
                 foreach (var token in Schema.TokenTable)
                 {
-                    line = line.Replace(token.Key, modifiedTokenValues[token.Value]);
+                    if (modifiedTokenValues.Keys.Contains(token.Value))
+                    {
+                        line = line.Replace(token.Key, modifiedTokenValues[token.Value]);
+                    }
+                }
+
+                // Remove any token placeholders 
+                foreach (var token in Schema.TokenTable)
+                {
+                    line = line.Replace(token.Key, string.Empty);
                 }
 
                 templateCopy[i] = line;
@@ -437,6 +448,7 @@ namespace Carpenter
         /// We need to parse the template using the site data to understand some basics about how things
         /// will be laid out and what elements in the template are what
         /// </summary>
+        /// TODO: Throw exceptions
         private void Parse(Site site)
         {
             // Reset everything so we don't end up having data from another schema
@@ -451,24 +463,24 @@ namespace Carpenter
             {
                 string line = _fileContents[i];
 
-                if (line.Contains($"class=") && line.Contains(site.GridClass))
+                if ((line.Contains($"class=") || line.Contains($"id=")) && line.Contains(site.GridClass))
                 {
                     // First we need to find of the template that corresponds to our photo grid
                     _gridSection = new HtmlSnippet(this, i);
                     Logger.Log(LogLevel.Verbose, $"Found ImageGrid element (id={site.GridClass})");
                 }
-                else if (line.Contains($"class=") && line.Contains(site.ImageClass))
+                else if ((line.Contains($"class=") || line.Contains($"id=")) && line.Contains(site.ImageClass))
                 {
                     // Next we need to find the second of the template that makes up the element for our image
                     _imageSection = new HtmlSnippet(this, i);
                     Logger.Log(LogLevel.Verbose, $"Found ImageSection element (id={site.ImageClass})");
                 }
-                else if (line.Contains($"class=") && line.Contains(site.ColumnClass))
+                else if ((line.Contains($"class=") || line.Contains($"id=")) && line.Contains(site.ColumnClass))
                 {
                     _imageColumnSection = new HtmlSnippet(this, i);
                     Logger.Log(LogLevel.Verbose, $"Found ImageColumn element (id={site.ColumnClass})");
                 }
-                else if (line.Contains($"class=") && line.Contains(site.TitleClass))
+                else if ((line.Contains($"class=") || line.Contains($"id=")) && line.Contains(site.TitleClass))
                 {
                     _titleSection = new HtmlSnippet(this, i);
                     Logger.Log(LogLevel.Verbose, $"Found ImageTitle element (id={site.TitleClass})");

@@ -69,9 +69,9 @@ namespace Carpenter
                     {
                         // Template is in root directory, append site root so it makes sense to anything
                         // that tries to fetch the template location
-                        templatePath = Path.Combine(GetPath(), value);
+                        return Path.Combine(GetPath(), value);
                     }
-                    return templatePath;
+                    return value;
                 }
                 else
                 {

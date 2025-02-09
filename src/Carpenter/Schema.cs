@@ -32,11 +32,12 @@ namespace Carpenter
             Author,
             Camera,
             Thumbnail,
+            Description,
+            GridTitle,
 
             // Layout specific tokens
             Image,
             DetailedImage,
-            GridTitle
         };
 
         private enum ElementTags
@@ -60,7 +61,8 @@ namespace Carpenter
             { "%YEAR", Tokens.Year },
             { "%CAMERA", Tokens.Camera },
             { "%AUTHOR", Tokens.Author },
-            { "%THUMBNAIL", Tokens.Thumbnail }
+            { "%THUMBNAIL", Tokens.Thumbnail },
+            { "%DESCRIPTION", Tokens.Description }
         };
 
         /// <summary>
@@ -80,6 +82,15 @@ namespace Carpenter
             { "%IMAGE", Tokens.Image }, // TODO: Can handle just 
             { "%DETAILED_IMAGE", Tokens.DetailedImage },
             { "%GRID_TITLE", Tokens.GridTitle },
+        };
+
+        /// <summary>
+        /// List of tags that are optional and don't have to be explictly specified in the schema 
+        /// </summary>
+        public static readonly HashSet<Tokens> OptionalTokens = new()
+        {
+            Tokens.Description,
+            Tokens.GridTitle
         };
 
         /// <summary>
@@ -110,6 +121,11 @@ namespace Carpenter
         /// Denotes if the Schema file was loaded from a file correctly
         /// </summary>
         private bool _loaded = false;
+
+        /// <summary>
+        /// The directory containing the schema file
+        /// </summary>
+        public string _workingDirectory = string.Empty;
 
         /// <summary>
         /// Accessors for Token values
@@ -154,6 +170,11 @@ namespace Carpenter
             get { return TokenValues.TryGetValue(Tokens.Thumbnail, out string value) ? value : string.Empty; }
             set { TokenValues.AddOrUpdate(Tokens.Thumbnail, value); }
         }
+        public string Description 
+        {
+            get { return TokenValues.TryGetValue(Tokens.Description, out string value) ? value : string.Empty; }
+            set { TokenValues.AddOrUpdate(Tokens.Description, value); }
+        }
 
         /// <summary>
         /// Accessors for Option values
@@ -165,6 +186,7 @@ namespace Carpenter
         }
 
         public bool IsLoaded() => _loaded;
+        public string WorkingDirectory() => _workingDirectory;
 
 
         public Schema() => _loaded = true;
@@ -239,6 +261,8 @@ namespace Carpenter
                 return false;
             }
 
+            _workingDirectory = Path.GetDirectoryName(path);
+
             // Sanity check size
             if (schemaFileContents.Length == 0)
             {
@@ -260,7 +284,7 @@ namespace Carpenter
             }
             catch (Exception e) 
             {
-                Logger.Log(LogLevel.Error, $"[] Could not parse schema version string (\'{versionValue}\') ({e.GetType()} exception occured)");
+                Logger.Log(LogLevel.Error, $"Could not parse schema version string (\'{versionValue}\') ({e.GetType()} exception occured)");
                 return false;
             }
             if (version != Config.kVersion)
@@ -589,28 +613,18 @@ namespace Carpenter
         /// <returns>If the schema is valid or not</returns>
         private bool IsValid()
         {
-            foreach (Tokens token in Enum.GetValues(typeof(Tokens)))
+            if (!SchemaValidator.Run(this, out SchemaValidator.ValidationResults results))
             {
-                if ((token < Tokens.Image) && // We shouldn't expect to find grid specific tokens defines in the Token value tables (they are stored in the layout instead)
-                    TokenValues.ContainsKey(token) == false)
-                {
-                    Logger.Log(LogLevel.Error, $"Sanity check failure! Token {token.ToString()} was not found in schema's token values.");
-                    return false;
-                }
-            }
-            foreach (Options option in Enum.GetValues(typeof(Options)))
-            {
-                if (OptionValues.ContainsKey(option) == false)
-                {
-                    Logger.Log(LogLevel.Error, $"Sanity check failure! Option {option.ToString()} was not found in schema's option values.");
-                    return false;
-                }
-            }
-            if (LayoutSections.Count == 0)
-            {
-                Logger.Log(LogLevel.Error, $"Sanity check failure! Empty layout found in schema.");
+                Logger.Log(LogLevel.Error, $"Schema validator failed! Some required tests did not pass.");
+                Logger.Log(LogLevel.Error, results.ToString());
                 return false;
             }
+            else
+            {
+                Logger.Log(LogLevel.Warning, $"Schema is valid but some optional tests did not pass.");
+                Logger.Log(LogLevel.Warning, results.ToString());
+            }
+
             return true;
         }
         
@@ -623,6 +637,7 @@ namespace Carpenter
             OptionValues.Clear();
             LayoutSections.Clear();
             _loaded = false;
+            _workingDirectory = string.Empty;
         }
 
         public bool Equals(Schema? other)
