@@ -20,6 +20,8 @@ using SiteViewer;
 using SiteViewer.Controls;
 
 using PageDesigner.Forms;
+using static System.Windows.Forms.AxHost;
+using Carpenter.SiteViewer.Forms;
 
 
 namespace SiteViewer.Forms
@@ -34,11 +36,10 @@ namespace SiteViewer.Forms
         /// </summary>
         private class SiteGenerationState
         {
-            public List<string> ProcessedPaths = new();
             public List<string> FailedPaths = new();
             public List<string> SuccessfulPaths = new();
 
-            public string ProgressMessage = string.Empty;
+            public string Message = string.Empty;
         }
 
         private const string kPageDesignerAppName = "PageDesigner.exe";
@@ -130,126 +131,8 @@ namespace SiteViewer.Forms
         /// </summary>
         private void GenerateAllPagesInBackgroundWorker()
         {
-            foreach (Control control in TableLayoutPanel.Controls)
-            {
-                if (control is PageEntryControl entry)
-                {
-                    entry.SetBuildStatus(PageEntryControl.BuildState.Pending);
-                }
-            }
-
-            EnablePageEntryButtons(false);
+            ResetUIForGenerateOrPublish();
             GenerateSiteBackgroundWorker.RunWorkerAsync();
-        }
-
-        /// <summary>
-        /// Generate webpages for each schema in root path, progress is reported via a BackgroundWorker
-        /// </summary>
-        private void GenerateAllPages()
-        {
-            if (_template == null)
-            {
-                return;
-            }
-
-            if (Directory.Exists(_rootPath) == false)
-            {
-                return;
-            }
-
-            SiteGenerationState state = new();
-            Stopwatch progressStopwatch = Stopwatch.StartNew();
-            
-            JpegParser.UseInternalCache = false;
-
-            const int kMaxThreadCount = 10;
-            object lockObject = new object();
-            Thread[] threads = new Thread[kMaxThreadCount];
-            string[] localDirectories = Directory.GetDirectories(_rootPath);
-            for (int i = 0; i < localDirectories.Length; i++)
-            {
-                string localSchemaPath = Path.Combine(_rootPath, Path.GetFileName(localDirectories[i]), Config.kSchemaFileName);
-                if (File.Exists(localSchemaPath))
-                {
-                    GenerateSiteBackgroundWorker.ReportProgress((100 * i) / localDirectories.Length, $"Generating '{Path.GetFileName(localDirectories[i])}'...");
-
-                    bool processed = false;
-                    while (!processed)
-                    {
-                        for (int index = 0; index < kMaxThreadCount; index++)
-                        {
-                            if (threads[index] == null || !threads[index].IsAlive)
-                            {
-                                threads[index] = new Thread(() =>
-                                {
-                                    Debug.Print("Thread {0}: {1}", index, localSchemaPath);
-                                    string currentDirectoryPath = Path.GetDirectoryName(localSchemaPath);
-                                    using Schema localSchema = new(localSchemaPath);
-                                    Template template = new Template(_templatePath);
-                                    bool wasGeneratedSuccessfully = template.GenerateHtmlForSchema(localSchema, _site, currentDirectoryPath);
-
-                                    lock (lockObject)
-                                    {
-                                        if (wasGeneratedSuccessfully)
-                                        {
-                                            state.SuccessfulPaths.Add(currentDirectoryPath);
-                                        }
-                                        else
-                                        {
-                                            state.FailedPaths.Add(currentDirectoryPath);
-                                        }
-                                        state.ProcessedPaths.Add(currentDirectoryPath);
-
-                                        try
-                                        {
-                                            GenerateSiteBackgroundWorker.ReportProgress((100 * i) / localDirectories.Length, state);
-                                        }
-                                        catch (InvalidOperationException) { /** Ey don't worry about it */ }
-                                    }
-                                });
-                                threads[index].IsBackground = true;
-                                threads[index].Start();
-                                processed = true;
-                                break;
-                            }
-                        }
-
-                        if (!processed)
-                        {
-                            Thread.Sleep(1000);
-                        }
-                    }
-
-                    //string currentDirectoryPath = Path.GetDirectoryName(localSchemaPath);
-                    //using Schema localSchema = new(localSchemaPath);
-                    //if (_template.GenerateHtmlForSchema(localSchema, _site, currentDirectoryPath))
-                    //{
-                    //    state.SuccessfulPaths.Add(currentDirectoryPath);
-                    //}
-                    //else
-                    //{
-                    //    state.FailedPaths.Add(currentDirectoryPath);
-                    //}
-                    //state.ProcessedPaths.Add(currentDirectoryPath);
-
-                    //GenerateSiteBackgroundWorker.ReportProgress((100 * i) / localDirectories.Length, state);
-                }
-            }
-
-            // Wait for threads to finish
-            bool threadStillRunning = true;
-            while (threadStillRunning)
-            {
-                threadStillRunning = false;
-                foreach (Thread thread in threads)
-                {
-                    threadStillRunning |= thread != null && thread.IsAlive;
-                }
-                Thread.Sleep(200);
-            }
-
-            progressStopwatch.Stop();
-            GenerateSiteBackgroundWorker.ReportProgress(100, $"Site generated in {progressStopwatch.ElapsedMilliseconds}ms");
         }
 
         /// <summary>
@@ -257,54 +140,8 @@ namespace SiteViewer.Forms
         /// </summary>
         private void RemoveUnusedImages()
         {
-            string[] localDirectories = Directory.GetDirectories(_rootPath);
-            int count = 0;
-            for (int i = 0; i < localDirectories.Length; i++)
-            {
-                string localPath = Path.Combine(_rootPath, Path.GetFileName(localDirectories[i]));
-                string localSchemaPath = Path.Combine(localPath, Config.kSchemaFileName);
-                if (File.Exists(localSchemaPath))
-                {
-                    // try and load the schema in the directory
-                    string currentDirectoryPath = Path.GetDirectoryName(localSchemaPath);
-                    using Schema localSchema = new(localSchemaPath);
-
-                    // Construct a list of all referenced images in the schema so we can
-                    // work out what files aren't referenced
-                    List<string> referencedImages = new List<string>();
-                    foreach (Section section in localSchema.LayoutSections)
-                    {
-                        if (section is ImageColumnSection)
-                        {
-                            ImageColumnSection columnSection = section as ImageColumnSection;
-                            foreach (ImageSection innerImage in columnSection.Sections)
-                            {
-                                referencedImages.Add(innerImage.PreviewImage);
-                                referencedImages.Add(innerImage.DetailedImage);
-                            }
-                        }
-                        else if (section is ImageSection)
-                        {
-                            ImageSection standaloneSection = section as ImageSection;
-                            referencedImages.Add(standaloneSection.PreviewImage);
-                            referencedImages.Add(standaloneSection.DetailedImage);
-                        }
-                    }
-
-                    // Loop through and remove any files that aren't referenced in the schema 
-                    foreach (string imagePath in Directory.GetFiles(localPath, "*.jpg"))
-                    {
-                        string imageName = Path.GetFileName(imagePath);
-                        if (referencedImages.Contains(imageName) == false)
-                        {
-                            File.Delete(imagePath);
-                            count++;
-                        }
-                    }
-                }
-            }
-
-            StateToolStripStatusLabel.Text = count + " files removed";
+            int removedFiles = SiteUtils.RemoveAllUnusedImages(_rootPath);
+            StateToolStripStatusLabel.Text = $"{removedFiles} files removed";
         }
 
         /// <summary>
@@ -571,10 +408,34 @@ namespace SiteViewer.Forms
 
         private void GenerateSiteBackgroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            GenerateAllPages();
+            Stopwatch progressStopwatch = Stopwatch.StartNew();
+            GenerateSiteBackgroundWorker.ReportProgress(0, "Generating pages...");
+
+            SiteGenerationState state = new();
+            SiteUtils.GenerateAllPagesInSite(_rootPath, (bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
+            {
+                if (success)
+                {
+                    state.SuccessfulPaths.Add(directoryPath);
+                }
+                else
+                {
+                    state.FailedPaths.Add(directoryPath);
+                }
+                state.Message = $"Generated {directoriesProcessed}/{directoryCount}";
+
+                try
+                {
+                    GenerateSiteBackgroundWorker.ReportProgress((100 * directoriesProcessed) / directoryCount, state);
+                }
+                catch (InvalidOperationException) { /** Ey don't worry about it */ }
+            });
+
+            progressStopwatch.Stop();
+            GenerateSiteBackgroundWorker.ReportProgress(100, $"Site generated in {progressStopwatch.ElapsedMilliseconds}ms");
         }
 
-        private void GenerateSiteBackgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        private void BackgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             ToolStripProgressBar.Value = e.ProgressPercentage;
             if (e.UserState is string message)
@@ -604,11 +465,15 @@ namespace SiteViewer.Forms
                         }
                     }
                 }
-            }
 
+                if (!string.IsNullOrEmpty(progressState.Message))
+                {
+                    StateToolStripStatusLabel.Text = progressState.Message;
+                }
+            }
         }
 
-        private void GenerateSiteBackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void BackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             ToolStripProgressBar.Value = 100;
             EnablePageEntryButtons(true);
@@ -663,5 +528,126 @@ namespace SiteViewer.Forms
         }
 
         #endregion
+
+        private void ResetUIForGenerateOrPublish()
+        {
+            foreach (Control control in TableLayoutPanel.Controls)
+            {
+                if (control is PageEntryControl entry)
+                {
+                    entry.SetBuildStatus(PageEntryControl.BuildState.Pending);
+                }
+            }
+
+            PublishButton.Enabled = false;
+            GenerateAllButton.Enabled = false;
+            EnablePageEntryButtons(false);
+        }
+
+        private void PublishButton_Click(object sender, EventArgs e)
+        {
+            ResetUIForGenerateOrPublish();
+            PublishSiteBackgroundWorker.RunWorkerAsync();
+        }
+
+        private void PublishSiteBackgroundWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            // Validate
+            {
+                PublishSiteBackgroundWorker.ReportProgress(0, "Validating Schemas...");
+                SiteUtils.ValidateAllSchemas(_rootPath, out List<(string path, SchemaValidator.ValidationResults results)> siteResults,
+                    (bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
+                    {
+                        PublishSiteBackgroundWorker.ReportProgress((100 * directoriesProcessed) / directoryCount, $"Validated {directoriesProcessed}/{directoryCount}");
+                    });
+                string errorMessage = string.Empty;
+                foreach ((string path, SchemaValidator.ValidationResults results) schemaResult in siteResults)
+                {
+                    if (schemaResult.results.FailedTests.Count > 0)
+                    {
+                        errorMessage += $"{Environment.NewLine}- {Path.GetFileName(schemaResult.path)}";
+                        schemaResult.results.FailedTests.ForEach(test => errorMessage += $"{Environment.NewLine} -> ({test.Importance}) {test.Name}");
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    using (ValidationFailedForm form = new(errorMessage))
+                    {
+                        form.StartPosition = FormStartPosition.CenterParent;
+                        if (form.ShowDialog() == DialogResult.No)
+                        {
+                            PublishSiteBackgroundWorker.ReportProgress(0, $"Cancelled");
+                            return;
+                        }
+                    }
+                }
+            }
+
+            // Generate
+            {
+                PublishSiteBackgroundWorker.ReportProgress(0, "Generating pages...");
+                SiteGenerationState state = new();
+                SiteUtils.GenerateAllPagesInSite(_rootPath, (bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
+                {
+                    if (success)
+                    {
+                        state.SuccessfulPaths.Add(directoryPath);
+                    }
+                    else
+                    {
+                        state.FailedPaths.Add(directoryPath);
+                    }
+                    state.Message = $"Generated {directoriesProcessed}/{directoryCount}";
+
+                    try
+                    {
+                        PublishSiteBackgroundWorker.ReportProgress((100 * directoriesProcessed) / directoryCount, state);
+                    }
+                    catch (InvalidOperationException) { /** Ey don't worry about it */ }
+                });
+            }
+
+            // Cleanup
+            {
+                int unusedImageCount = SiteUtils.GetAllUnusedImages(_rootPath).Count;
+                if (unusedImageCount > 0)
+                {
+                    if (MessageBox.Show($"{unusedImageCount} unused images found, would you like to remove them?", "Cleanup", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        SiteUtils.RemoveAllUnusedImages(_rootPath);
+                    }
+                }
+            }
+        }
+
+        private void ValidateButton_Click(object sender, EventArgs e)
+        {
+            SiteUtils.ValidateAllSchemas(_rootPath, out List<(string path, SchemaValidator.ValidationResults results)> siteResults,
+                (bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
+                {
+                    ToolStripProgressBar.Value = (100 * directoriesProcessed) / directoryCount;
+                });
+            string errorMessage = string.Empty;
+            foreach ((string path, SchemaValidator.ValidationResults results) schemaResult in siteResults)
+            {
+                if (schemaResult.results.FailedTests.Count > 0)
+                {
+                    errorMessage += $"{Environment.NewLine}- {Path.GetFileName(schemaResult.path)}";
+                    schemaResult.results.FailedTests.ForEach(test => errorMessage += $"{Environment.NewLine} -> ({test.Importance}) {test.Name}");
+                }
+            }
+
+            if (!string.IsNullOrEmpty(errorMessage))
+            {
+                using (ValidationFailedForm form = new(errorMessage))
+                {
+                    if (form.ShowDialog() == DialogResult.No)
+                    {
+                        return;
+                    }
+                }
+            }
+        }
     }
 }

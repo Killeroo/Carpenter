@@ -76,13 +76,13 @@ namespace Carpenter
                 Func<ImageSection, bool> DoImageSectionPathsExist = (ImageSection section) =>
                 {
                     bool bExists = true;
-                    if (section.PreviewImage != string.Empty)
+                    if (!string.IsNullOrEmpty(section.ImageUrl))
                     {
-                        bExists &= File.Exists(Path.Combine(schema._workingDirectory, section.PreviewImage));
+                        bExists &= File.Exists(Path.Combine(schema._workingDirectory, section.ImageUrl));
                     }
-                    if (section.DetailedImage != string.Empty)
+                    if (!string.IsNullOrEmpty(section.AltImageUrl))
                     {
-                        bExists &= File.Exists(Path.Combine(schema._workingDirectory, section.DetailedImage));
+                        bExists &= File.Exists(Path.Combine(schema._workingDirectory, section.AltImageUrl));
                     }
                     return bExists;
                 };
@@ -131,7 +131,7 @@ namespace Carpenter
                         ImageColumnSection columnSection = section as ImageColumnSection;
                         foreach (ImageSection image in columnSection.Sections)
                         {
-                            if (string.IsNullOrWhiteSpace(image.PreviewImage) && string.IsNullOrWhiteSpace(image.DetailedImage))
+                            if (string.IsNullOrWhiteSpace(image.ImageUrl) && string.IsNullOrWhiteSpace(image.AltImageUrl))
                             {
                                 return false;
                             }

@@ -17,8 +17,8 @@ namespace Carpenter
     /// </summary>
     public class ImageSection : Section
     {
-        public string PreviewImage;
-        public string DetailedImage;
+        public string ImageUrl = string.Empty;
+        public string AltImageUrl = string.Empty;
 
         public override bool Equals(Section? other)
         {
@@ -27,8 +27,8 @@ namespace Carpenter
 
             if (other is ImageSection otherStandaloneImage)
             {
-                return PreviewImage == otherStandaloneImage.PreviewImage 
-                    && DetailedImage == otherStandaloneImage.DetailedImage;
+                return ImageUrl == otherStandaloneImage.ImageUrl 
+                    && AltImageUrl == otherStandaloneImage.AltImageUrl;
             }
 
             return false;
@@ -62,7 +62,7 @@ namespace Carpenter
     /// </summary>
     public class TitleSection : Section
     {
-        public string TitleText = "";
+        public string TitleText = string.Empty;
 
         public override bool Equals(Section? other)
         {

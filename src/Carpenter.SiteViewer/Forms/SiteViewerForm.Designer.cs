@@ -54,16 +54,19 @@
             toolStripSeparator1 = new ToolStripSeparator();
             generateHeaders1ColumnToolStripMenuItem = new ToolStripMenuItem();
             aboutToolStripMenuItem = new ToolStripMenuItem();
+            PublishButton = new Button();
+            backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            PublishSiteBackgroundWorker = new System.ComponentModel.BackgroundWorker();
+            ValidateButton = new Button();
             StatusStrip.SuspendLayout();
             menuStrip.SuspendLayout();
             SuspendLayout();
             // 
             // OpenFolderButton
             // 
-            OpenFolderButton.Location = new Point(731, 45);
-            OpenFolderButton.Margin = new Padding(4, 5, 4, 5);
+            OpenFolderButton.Location = new Point(512, 27);
             OpenFolderButton.Name = "OpenFolderButton";
-            OpenFolderButton.Size = new Size(40, 38);
+            OpenFolderButton.Size = new Size(28, 22);
             OpenFolderButton.TabIndex = 0;
             OpenFolderButton.Text = "...";
             OpenFolderButton.UseVisualStyleBackColor = true;
@@ -76,20 +79,18 @@
             TableLayoutPanel.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
             TableLayoutPanel.ColumnCount = 1;
             TableLayoutPanel.ColumnStyles.Add(new ColumnStyle());
-            TableLayoutPanel.Location = new Point(17, 93);
-            TableLayoutPanel.Margin = new Padding(4, 5, 4, 5);
+            TableLayoutPanel.Location = new Point(12, 56);
             TableLayoutPanel.Name = "TableLayoutPanel";
             TableLayoutPanel.RowCount = 1;
             TableLayoutPanel.RowStyles.Add(new RowStyle());
-            TableLayoutPanel.Size = new Size(756, 587);
+            TableLayoutPanel.Size = new Size(529, 352);
             TableLayoutPanel.TabIndex = 1;
             // 
             // PathTextBox
             // 
-            PathTextBox.Location = new Point(17, 45);
-            PathTextBox.Margin = new Padding(4, 5, 4, 5);
+            PathTextBox.Location = new Point(12, 27);
             PathTextBox.Name = "PathTextBox";
-            PathTextBox.Size = new Size(704, 31);
+            PathTextBox.Size = new Size(494, 23);
             PathTextBox.TabIndex = 2;
             PathTextBox.Text = "C:\\Users\\Shadowfax\\My Drive\\Website\\photos";
             PathTextBox.TextChanged += PathTextBox_TextChanged;
@@ -98,31 +99,29 @@
             // 
             StatusStrip.ImageScalingSize = new Size(20, 20);
             StatusStrip.Items.AddRange(new ToolStripItem[] { ToolStripProgressBar, StateToolStripStatusLabel });
-            StatusStrip.Location = new Point(0, 738);
+            StatusStrip.Location = new Point(0, 440);
             StatusStrip.Name = "StatusStrip";
-            StatusStrip.Padding = new Padding(1, 0, 20, 0);
-            StatusStrip.Size = new Size(790, 32);
+            StatusStrip.Size = new Size(553, 22);
             StatusStrip.TabIndex = 3;
             StatusStrip.Text = "statusStrip1";
             // 
             // ToolStripProgressBar
             // 
             ToolStripProgressBar.Name = "ToolStripProgressBar";
-            ToolStripProgressBar.Size = new Size(143, 24);
+            ToolStripProgressBar.Size = new Size(100, 16);
             // 
             // StateToolStripStatusLabel
             // 
             StateToolStripStatusLabel.Name = "StateToolStripStatusLabel";
-            StateToolStripStatusLabel.Size = new Size(60, 25);
+            StateToolStripStatusLabel.Size = new Size(39, 17);
             StateToolStripStatusLabel.Text = "Ready";
             // 
             // GenerateAllButton
             // 
             GenerateAllButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            GenerateAllButton.Location = new Point(659, 690);
-            GenerateAllButton.Margin = new Padding(4, 5, 4, 5);
+            GenerateAllButton.Location = new Point(461, 414);
             GenerateAllButton.Name = "GenerateAllButton";
-            GenerateAllButton.Size = new Size(114, 38);
+            GenerateAllButton.Size = new Size(80, 22);
             GenerateAllButton.TabIndex = 4;
             GenerateAllButton.Text = "Generate all";
             GenerateAllButton.UseVisualStyleBackColor = true;
@@ -131,10 +130,9 @@
             // NewFolderButton
             // 
             NewFolderButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            NewFolderButton.Location = new Point(543, 690);
-            NewFolderButton.Margin = new Padding(4, 5, 4, 5);
+            NewFolderButton.Location = new Point(282, 415);
             NewFolderButton.Name = "NewFolderButton";
-            NewFolderButton.Size = new Size(107, 38);
+            NewFolderButton.Size = new Size(75, 22);
             NewFolderButton.TabIndex = 5;
             NewFolderButton.Text = "New Folder";
             NewFolderButton.UseVisualStyleBackColor = true;
@@ -144,8 +142,8 @@
             // 
             GenerateSiteBackgroundWorker.WorkerReportsProgress = true;
             GenerateSiteBackgroundWorker.DoWork += GenerateSiteBackgroundWorker_DoWork;
-            GenerateSiteBackgroundWorker.ProgressChanged += GenerateSiteBackgroundWorker_ProgressChanged;
-            GenerateSiteBackgroundWorker.RunWorkerCompleted += GenerateSiteBackgroundWorker_RunWorkerCompleted;
+            GenerateSiteBackgroundWorker.ProgressChanged += BackgroundWorker_ProgressChanged;
+            GenerateSiteBackgroundWorker.RunWorkerCompleted += BackgroundWorker_RunWorkerCompleted;
             // 
             // menuStrip
             // 
@@ -153,8 +151,7 @@
             menuStrip.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, generateToolStripMenuItem, toolsToolStripMenuItem, aboutToolStripMenuItem });
             menuStrip.Location = new Point(0, 0);
             menuStrip.Name = "menuStrip";
-            menuStrip.Padding = new Padding(9, 3, 0, 3);
-            menuStrip.Size = new Size(790, 35);
+            menuStrip.Size = new Size(553, 24);
             menuStrip.TabIndex = 7;
             menuStrip.Text = "menuStrip1";
             // 
@@ -162,37 +159,37 @@
             // 
             fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { newFPageToolStripMenuItem, toolStripSeparator2, openInExplorerToolStripMenuItem, toolStripSeparator3, exitToolStripMenuItem });
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            fileToolStripMenuItem.Size = new Size(54, 29);
+            fileToolStripMenuItem.Size = new Size(37, 20);
             fileToolStripMenuItem.Text = "File";
             // 
             // newFPageToolStripMenuItem
             // 
             newFPageToolStripMenuItem.Name = "newFPageToolStripMenuItem";
-            newFPageToolStripMenuItem.Size = new Size(270, 34);
+            newFPageToolStripMenuItem.Size = new Size(162, 22);
             newFPageToolStripMenuItem.Text = "New Page...";
             newFPageToolStripMenuItem.Click += newPageToolStripMenuItem_Click;
             // 
             // toolStripSeparator2
             // 
             toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(267, 6);
+            toolStripSeparator2.Size = new Size(159, 6);
             // 
             // openInExplorerToolStripMenuItem
             // 
             openInExplorerToolStripMenuItem.Name = "openInExplorerToolStripMenuItem";
-            openInExplorerToolStripMenuItem.Size = new Size(270, 34);
+            openInExplorerToolStripMenuItem.Size = new Size(162, 22);
             openInExplorerToolStripMenuItem.Text = "Open in Explorer";
             openInExplorerToolStripMenuItem.Click += openInExplorerToolStripMenuItem_Click;
             // 
             // toolStripSeparator3
             // 
             toolStripSeparator3.Name = "toolStripSeparator3";
-            toolStripSeparator3.Size = new Size(267, 6);
+            toolStripSeparator3.Size = new Size(159, 6);
             // 
             // exitToolStripMenuItem
             // 
             exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            exitToolStripMenuItem.Size = new Size(270, 34);
+            exitToolStripMenuItem.Size = new Size(162, 22);
             exitToolStripMenuItem.Text = "Exit";
             exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
@@ -200,25 +197,25 @@
             // 
             generateToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { siteToolStripMenuItem, toolStripSeparator4, GenerateHeadersToolStripMenuItem });
             generateToolStripMenuItem.Name = "generateToolStripMenuItem";
-            generateToolStripMenuItem.Size = new Size(98, 29);
+            generateToolStripMenuItem.Size = new Size(66, 20);
             generateToolStripMenuItem.Text = "Generate";
             // 
             // siteToolStripMenuItem
             // 
             siteToolStripMenuItem.Name = "siteToolStripMenuItem";
-            siteToolStripMenuItem.Size = new Size(270, 34);
+            siteToolStripMenuItem.Size = new Size(117, 22);
             siteToolStripMenuItem.Text = "Site";
             siteToolStripMenuItem.Click += siteToolStripMenuItem_Click;
             // 
             // toolStripSeparator4
             // 
             toolStripSeparator4.Name = "toolStripSeparator4";
-            toolStripSeparator4.Size = new Size(267, 6);
+            toolStripSeparator4.Size = new Size(114, 6);
             // 
             // GenerateHeadersToolStripMenuItem
             // 
             GenerateHeadersToolStripMenuItem.Name = "GenerateHeadersToolStripMenuItem";
-            GenerateHeadersToolStripMenuItem.Size = new Size(270, 34);
+            GenerateHeadersToolStripMenuItem.Size = new Size(117, 22);
             GenerateHeadersToolStripMenuItem.Text = "Headers";
             GenerateHeadersToolStripMenuItem.Click += GenerateHeadersToolStripMenuItem_Click;
             // 
@@ -226,39 +223,74 @@
             // 
             toolsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { removeUnusedImagesToolStripMenuItem, toolStripSeparator1, generateHeaders1ColumnToolStripMenuItem });
             toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            toolsToolStripMenuItem.Size = new Size(69, 29);
+            toolsToolStripMenuItem.Size = new Size(46, 20);
             toolsToolStripMenuItem.Text = "Tools";
             // 
             // removeUnusedImagesToolStripMenuItem
             // 
             removeUnusedImagesToolStripMenuItem.Name = "removeUnusedImagesToolStripMenuItem";
-            removeUnusedImagesToolStripMenuItem.Size = new Size(306, 34);
+            removeUnusedImagesToolStripMenuItem.Size = new Size(201, 22);
             removeUnusedImagesToolStripMenuItem.Text = "Remove Unused Images";
             removeUnusedImagesToolStripMenuItem.Click += removeUnusedImagesToolStripMenuItem_Click;
             // 
             // toolStripSeparator1
             // 
             toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new Size(303, 6);
+            toolStripSeparator1.Size = new Size(198, 6);
             // 
             // generateHeaders1ColumnToolStripMenuItem
             // 
             generateHeaders1ColumnToolStripMenuItem.Name = "generateHeaders1ColumnToolStripMenuItem";
-            generateHeaders1ColumnToolStripMenuItem.Size = new Size(306, 34);
+            generateHeaders1ColumnToolStripMenuItem.Size = new Size(201, 22);
             generateHeaders1ColumnToolStripMenuItem.Text = "Generate Page Headers";
             generateHeaders1ColumnToolStripMenuItem.Click += generateHeadersToolStripMenuItem_Click;
             // 
             // aboutToolStripMenuItem
             // 
             aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            aboutToolStripMenuItem.Size = new Size(78, 29);
+            aboutToolStripMenuItem.Size = new Size(52, 20);
             aboutToolStripMenuItem.Text = "About";
             // 
-            // MainForm
+            // PublishButton
             // 
-            AutoScaleDimensions = new SizeF(10F, 25F);
+            PublishButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            PublishButton.Location = new Point(12, 414);
+            PublishButton.Name = "PublishButton";
+            PublishButton.Size = new Size(80, 22);
+            PublishButton.TabIndex = 8;
+            PublishButton.Text = "Publish";
+            PublishButton.UseVisualStyleBackColor = true;
+            PublishButton.Click += PublishButton_Click;
+            // 
+            // backgroundWorker1
+            // 
+            backgroundWorker1.WorkerReportsProgress = true;
+            // 
+            // PublishSiteBackgroundWorker
+            // 
+            PublishSiteBackgroundWorker.WorkerReportsProgress = true;
+            PublishSiteBackgroundWorker.DoWork += PublishSiteBackgroundWorker_DoWork;
+            PublishSiteBackgroundWorker.ProgressChanged += BackgroundWorker_ProgressChanged;
+            PublishSiteBackgroundWorker.RunWorkerCompleted += BackgroundWorker_RunWorkerCompleted;
+            // 
+            // ValidateButton
+            // 
+            ValidateButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            ValidateButton.Location = new Point(375, 414);
+            ValidateButton.Name = "ValidateButton";
+            ValidateButton.Size = new Size(80, 22);
+            ValidateButton.TabIndex = 9;
+            ValidateButton.Text = "Validate";
+            ValidateButton.UseVisualStyleBackColor = true;
+            ValidateButton.Click += ValidateButton_Click;
+            // 
+            // SiteViewerForm
+            // 
+            AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(790, 770);
+            ClientSize = new Size(553, 462);
+            Controls.Add(ValidateButton);
+            Controls.Add(PublishButton);
             Controls.Add(NewFolderButton);
             Controls.Add(GenerateAllButton);
             Controls.Add(StatusStrip);
@@ -267,8 +299,7 @@
             Controls.Add(TableLayoutPanel);
             Controls.Add(OpenFolderButton);
             MainMenuStrip = menuStrip;
-            Margin = new Padding(4, 5, 4, 5);
-            Name = "MainForm";
+            Name = "SiteViewerForm";
             Text = "Carpenter";
             Load += MainForm_Load;
             StatusStrip.ResumeLayout(false);
@@ -307,5 +338,9 @@
         private ToolStripSeparator toolStripSeparator4;
         private ToolStripMenuItem GenerateHeadersToolStripMenuItem;
         private ToolStripMenuItem aboutToolStripMenuItem;
+        private Button PublishButton;
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.ComponentModel.BackgroundWorker PublishSiteBackgroundWorker;
+        private Button ValidateButton;
     }
 }

@@ -406,20 +406,20 @@
             // 
             newToolStripMenuItem.Name = "newToolStripMenuItem";
             newToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.N;
-            newToolStripMenuItem.Size = new Size(160, 22);
+            newToolStripMenuItem.Size = new Size(180, 22);
             newToolStripMenuItem.Text = "New";
             newToolStripMenuItem.Click += newToolStripMenuItem_Click;
             // 
             // toolStripSeparator2
             // 
             toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(157, 6);
+            toolStripSeparator2.Size = new Size(177, 6);
             // 
             // saveToolStripMenuItem
             // 
             saveToolStripMenuItem.Name = "saveToolStripMenuItem";
             saveToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.S;
-            saveToolStripMenuItem.Size = new Size(160, 22);
+            saveToolStripMenuItem.Size = new Size(180, 22);
             saveToolStripMenuItem.Text = "Save";
             saveToolStripMenuItem.Click += saveToolStripMenuItem_Click;
             // 
@@ -427,31 +427,31 @@
             // 
             openToolStripMenuItem.Name = "openToolStripMenuItem";
             openToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.O;
-            openToolStripMenuItem.Size = new Size(160, 22);
+            openToolStripMenuItem.Size = new Size(180, 22);
             openToolStripMenuItem.Text = "Open";
             openToolStripMenuItem.Click += openToolStripMenuItem_Click;
             // 
             // toolStripSeparator8
             // 
             toolStripSeparator8.Name = "toolStripSeparator8";
-            toolStripSeparator8.Size = new Size(157, 6);
+            toolStripSeparator8.Size = new Size(177, 6);
             // 
             // importToolStripMenuItem
             // 
             importToolStripMenuItem.Name = "importToolStripMenuItem";
-            importToolStripMenuItem.Size = new Size(160, 22);
+            importToolStripMenuItem.Size = new Size(180, 22);
             importToolStripMenuItem.Text = "Import Images...";
             importToolStripMenuItem.Click += importToolStripMenuItem_Click;
             // 
             // toolStripSeparator1
             // 
             toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new Size(157, 6);
+            toolStripSeparator1.Size = new Size(177, 6);
             // 
             // exitToolStripMenuItem
             // 
             exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            exitToolStripMenuItem.Size = new Size(160, 22);
+            exitToolStripMenuItem.Size = new Size(180, 22);
             exitToolStripMenuItem.Text = "Exit";
             exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
@@ -466,7 +466,7 @@
             // 
             undoToolStripMenuItem.Name = "undoToolStripMenuItem";
             undoToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.Z;
-            undoToolStripMenuItem.Size = new Size(174, 22);
+            undoToolStripMenuItem.Size = new Size(180, 22);
             undoToolStripMenuItem.Text = "Undo";
             undoToolStripMenuItem.Click += undoToolStripMenuItem_Click;
             // 
@@ -474,55 +474,55 @@
             // 
             redoToolStripMenuItem.Name = "redoToolStripMenuItem";
             redoToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.Y;
-            redoToolStripMenuItem.Size = new Size(174, 22);
+            redoToolStripMenuItem.Size = new Size(180, 22);
             redoToolStripMenuItem.Text = "Redo";
             redoToolStripMenuItem.Click += redoToolStripMenuItem_Click;
             // 
             // toolStripSeparator4
             // 
             toolStripSeparator4.Name = "toolStripSeparator4";
-            toolStripSeparator4.Size = new Size(171, 6);
+            toolStripSeparator4.Size = new Size(177, 6);
             // 
             // openInExplorerToolStripMenuItem
             // 
             openInExplorerToolStripMenuItem.Name = "openInExplorerToolStripMenuItem";
-            openInExplorerToolStripMenuItem.Size = new Size(174, 22);
+            openInExplorerToolStripMenuItem.Size = new Size(180, 22);
             openInExplorerToolStripMenuItem.Text = "Open in Explorer...";
             openInExplorerToolStripMenuItem.Click += openInExplorerToolStripMenuItem_Click;
             // 
             // openInNotepadToolStripMenuItem
             // 
             openInNotepadToolStripMenuItem.Name = "openInNotepadToolStripMenuItem";
-            openInNotepadToolStripMenuItem.Size = new Size(174, 22);
+            openInNotepadToolStripMenuItem.Size = new Size(180, 22);
             openInNotepadToolStripMenuItem.Text = "Open in Notepad...";
             openInNotepadToolStripMenuItem.Click += openInNotepadToolStripMenuItem_Click;
             // 
             // toolStripSeparator9
             // 
             toolStripSeparator9.Name = "toolStripSeparator9";
-            toolStripSeparator9.Size = new Size(171, 6);
+            toolStripSeparator9.Size = new Size(177, 6);
             // 
             // resetFieldsToolStripMenuItem
             // 
             resetFieldsToolStripMenuItem.Name = "resetFieldsToolStripMenuItem";
-            resetFieldsToolStripMenuItem.Size = new Size(174, 22);
+            resetFieldsToolStripMenuItem.Size = new Size(180, 22);
             resetFieldsToolStripMenuItem.Text = "Reset Fields";
             // 
             // toolStripSeparator5
             // 
             toolStripSeparator5.Name = "toolStripSeparator5";
-            toolStripSeparator5.Size = new Size(171, 6);
+            toolStripSeparator5.Size = new Size(177, 6);
             // 
             // presetsToolStripMenuItem
             // 
             presetsToolStripMenuItem.Name = "presetsToolStripMenuItem";
-            presetsToolStripMenuItem.Size = new Size(174, 22);
+            presetsToolStripMenuItem.Size = new Size(180, 22);
             presetsToolStripMenuItem.Text = "Presets";
             // 
             // preferencesToolStripMenuItem
             // 
             preferencesToolStripMenuItem.Name = "preferencesToolStripMenuItem";
-            preferencesToolStripMenuItem.Size = new Size(174, 22);
+            preferencesToolStripMenuItem.Size = new Size(180, 22);
             preferencesToolStripMenuItem.Text = "Preferences";
             // 
             // toolsToolStripMenuItem
@@ -546,8 +546,7 @@
             // 
             // addDetailedPrefixToolStripMenuItem
             // 
-            addDetailedPrefixToolStripMenuItem.Checked = true;
-            addDetailedPrefixToolStripMenuItem.CheckState = CheckState.Checked;
+            addDetailedPrefixToolStripMenuItem.Enabled = false;
             addDetailedPrefixToolStripMenuItem.Name = "addDetailedPrefixToolStripMenuItem";
             addDetailedPrefixToolStripMenuItem.Size = new Size(184, 22);
             addDetailedPrefixToolStripMenuItem.Text = "Add prefix to images";

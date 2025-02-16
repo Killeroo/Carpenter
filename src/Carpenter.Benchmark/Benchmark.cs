@@ -58,7 +58,7 @@ namespace Carpenter.Tests
             //string rootDirectory = @"C:\Users\Kelpie\Desktop\WebsiteConversion\photos";
             //string schemaDirectory = @"C:\Users\Kelpie\Desktop\WebsiteConversion\photos\donegal-3";
             string rootDirectory = @"G:\My Drive\Website\photos.matthewcarney.net\digital";
-            string schemaDirectory = @"G:\My Drive\Website\photos.matthewcarney.net\digital\donegal-4";
+            string schemaDirectory = @"G:\My Drive\Website\photos.matthewcarney.net\digital\donegal-3";
             string tempPath = Path.Combine(Path.GetTempPath(), "Carpenter", "Benchmark");
             if (Directory.Exists(tempPath) == false)
             {

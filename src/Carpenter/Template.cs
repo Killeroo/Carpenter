@@ -387,11 +387,11 @@ namespace Carpenter
                     switch (imageTokenEntry.Value)
                     {
                         case Schema.Tokens.Image:
-                            line = line.Replace(imageTokenEntry.Key, section.PreviewImage);
+                            line = line.Replace(imageTokenEntry.Key, section.ImageUrl);
                             break;
 
-                        case Schema.Tokens.DetailedImage:
-                            line = line.Replace(imageTokenEntry.Key, section.DetailedImage);
+                        case Schema.Tokens.AlternateImage:
+                            line = line.Replace(imageTokenEntry.Key, section.AltImageUrl);
                             break;
                     }
                 }
@@ -402,14 +402,14 @@ namespace Carpenter
                     line = line.Replace("loading=\"lazy\"", "");
                 }
 
-                if (_schemaImages.ContainsKey(section.PreviewImage))
+                if (_schemaImages.ContainsKey(section.ImageUrl))
                 {
-                    line = line.Replace(Config.kTemplateImageHeightToken, _schemaImages[section.PreviewImage].height.ToString());
-                    line = line.Replace(Config.kTemplateImageWidthToken, _schemaImages[section.PreviewImage].width.ToString());
+                    line = line.Replace(Config.kTemplateImageHeightToken, _schemaImages[section.ImageUrl].height.ToString());
+                    line = line.Replace(Config.kTemplateImageWidthToken, _schemaImages[section.ImageUrl].width.ToString());
                 }
                 else
                 {
-                    Logger.Log(LogLevel.Warning, $"Could not find referenced image ({section.PreviewImage}) in directory, generated file might not render properly");
+                    Logger.Log(LogLevel.Warning, $"Could not find referenced image ({section.ImageUrl}) in directory, generated file might not render properly");
                 }
 
                 // Add the modified line into the outputted html

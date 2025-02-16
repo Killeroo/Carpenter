@@ -380,16 +380,16 @@ namespace PageDesigner.Forms
                 return;
             }
 
-            if (addDetailedPrefixToolStripMenuItem.Checked)
-            {
-                foreach (Control control in GridFlowLayoutPanel.Controls)
-                {
-                    if (control is GridPictureBox gridPictureBox)
-                    {
-                        gridPictureBox.DetailImageFilename = gridPictureBox.ImageFilename.Replace("_Preview", "_Detailed");
-                    }
-                }
-            }
+            //if (addDetailedPrefixToolStripMenuItem.Checked)
+            //{
+            //    foreach (Control control in GridFlowLayoutPanel.Controls)
+            //    {
+            //        if (control is GridPictureBox gridPictureBox)
+            //        {
+            //            gridPictureBox.DetailImageFilename = gridPictureBox.ImageFilename.Replace("_Preview", "_Detailed");
+            //        }
+            //    }
+            //}
 
             UpdateWorkingSchemaFromForm();
 
@@ -461,8 +461,8 @@ namespace PageDesigner.Forms
                     // Create standalone image from GridPictureBox
                     ImageSection currentImageSection = new()
                     {
-                        DetailedImage = gridPictureBox.DetailImageFilename,
-                        PreviewImage = gridPictureBox.ImageFilename
+                        AltImageUrl = gridPictureBox.DetailImageFilename,
+                        ImageUrl = gridPictureBox.ImageFilename
                     };
 
                     if (gridPictureBox.GetImageType() == GridPictureBox.ImageType.Standalone)
@@ -514,9 +514,9 @@ namespace PageDesigner.Forms
                     ImageSection? standaloneSection = section as ImageSection;
                     if (standaloneSection != null)
                     {
-                        string fileName = standaloneSection.PreviewImage;
+                        string fileName = standaloneSection.ImageUrl;
 
-                        AddLocalImageToGridLayout(standaloneSection.PreviewImage, standaloneSection.DetailedImage, true);
+                        AddLocalImageToGridLayout(standaloneSection.ImageUrl, standaloneSection.AltImageUrl, true);
                     }
                 }
                 else if (sectionType == typeof(ImageColumnSection))
@@ -537,7 +537,7 @@ namespace PageDesigner.Forms
                                 pictureBox = _pictureBoxBuffer.Dequeue();
                             }
 
-                            AddLocalImageToGridLayout(standaloneImage.PreviewImage, standaloneImage.DetailedImage, false, pictureBox);
+                            AddLocalImageToGridLayout(standaloneImage.ImageUrl, standaloneImage.AltImageUrl, false, pictureBox);
                         }
 
                         // Clear anything left in the buffer (this isn't great)
@@ -549,7 +549,7 @@ namespace PageDesigner.Forms
                         {
                             if (standaloneImage != null)
                             {
-                                AddLocalImageToGridLayout(standaloneImage.PreviewImage, standaloneImage.DetailedImage, false);
+                                AddLocalImageToGridLayout(standaloneImage.ImageUrl, standaloneImage.AltImageUrl, false);
 
                                 // Add the picturebox for the other column items
                                 GridPictureBox pictureBox = new();

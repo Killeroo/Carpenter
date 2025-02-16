@@ -37,7 +37,7 @@ namespace Carpenter
 
             // Layout specific tokens
             Image,
-            DetailedImage,
+            AlternateImage,
         };
 
         private enum ElementTags
@@ -79,8 +79,8 @@ namespace Carpenter
         /// </summary>
         public static readonly Dictionary<string, Tokens> LayoutTokenTable = new()
         {
-            { "%IMAGE", Tokens.Image }, // TODO: Can handle just 
-            { "%DETAILED_IMAGE", Tokens.DetailedImage },
+            { "%IMAGE", Tokens.Image },
+            { "%ALT_IMAGE", Tokens.AlternateImage },
             { "%GRID_TITLE", Tokens.GridTitle },
         };
 
@@ -99,7 +99,7 @@ namespace Carpenter
         private static readonly Dictionary<string, ElementTags> _layoutTagTable = new()
         {
             { "[LAYOUT]", ElementTags.Grid },
-            { "[IMAGE]", ElementTags.Standalone },
+            { "[IMAGE_STANDALONE]", ElementTags.Standalone },
             { "[IMAGE_COLUMN]", ElementTags.Column },
             { "[TITLE]", ElementTags.Title },
         };
@@ -210,8 +210,8 @@ namespace Carpenter
                 if (section is ImageSection standaloneSection)
                 {
                     ImageSection newSection = new ImageSection();
-                    newSection.DetailedImage = standaloneSection.DetailedImage;
-                    newSection.PreviewImage = standaloneSection.PreviewImage;
+                    newSection.AltImageUrl = standaloneSection.AltImageUrl;
+                    newSection.ImageUrl = standaloneSection.ImageUrl;
                     LayoutSections.Add(newSection);
                 }
                 else if (section is ImageColumnSection columnSection)
@@ -223,8 +223,8 @@ namespace Carpenter
                         if (innerSection is ImageSection innerStandaloneSection)
                         {
                             ImageSection newSection = new ImageSection();
-                            newSection.DetailedImage = innerStandaloneSection.DetailedImage;
-                            newSection.PreviewImage = innerStandaloneSection.PreviewImage;
+                            newSection.AltImageUrl = innerStandaloneSection.AltImageUrl;
+                            newSection.ImageUrl = innerStandaloneSection.ImageUrl;
                             newColumnSection.Sections.Add(newSection);
                         }
                     }
@@ -350,7 +350,7 @@ namespace Carpenter
             // Ok lets parse everything to the end of the file and construct our image grid
             int currentSectionIndex = -1;
             string imageUrl = string.Empty;
-            string detailedImageUrl = string.Empty;
+            string altImageUrl = string.Empty;
             string imageTitle = string.Empty;
             for (int i = photoSectionStartIndex; i < schemaFileContents.Length; i++)
             {
@@ -408,8 +408,8 @@ namespace Carpenter
                                 imageUrl = tokenValue;
                                 break;
 
-                            case Tokens.DetailedImage:
-                                detailedImageUrl = tokenValue;
+                            case Tokens.AlternateImage:
+                                altImageUrl = tokenValue;
                                 break;
 
                             case Tokens.GridTitle:
@@ -422,44 +422,48 @@ namespace Carpenter
                                 return false;
                         }
 
-                        // TODO: Make this check more robust so we definitely have 2 sections before adding to section (Maybe parse ahead in array?)
-                        // TODO: Don't assume this will be ordered image_url then detailed_image_url
-                        if (imageTitle != string.Empty || imageUrl != string.Empty && detailedImageUrl != string.Empty)
+                        if (imageUrl != string.Empty)
                         {
+                            ImageSection imageSectionToAdd = new();
+                            imageSectionToAdd.ImageUrl = imageUrl;
+                            
+                            // See if the next line contains an alt image definition.
+                            if (i != schemaFileContents.Length - 1 && schemaFileContents[i + 1].Contains(LayoutTokenTable.GetKeyOfValue(Tokens.AlternateImage)))
+                            {
+                                imageSectionToAdd.AltImageUrl = schemaFileContents[i++].Split('=').Last();
+                            }
+                            
                             if (LayoutSections[currentSectionIndex].GetType().Equals(typeof(ImageSection)))
                             {
-                                // If we are dealing with a standalone section
                                 var standaloneSection = LayoutSections[currentSectionIndex] as ImageSection;
-                                standaloneSection.PreviewImage = imageUrl;
-                                standaloneSection.DetailedImage = detailedImageUrl;
+                                standaloneSection.ImageUrl = imageSectionToAdd.ImageUrl;
+                                standaloneSection.AltImageUrl = imageSectionToAdd.AltImageUrl;
 
-                                Logger.Log(LogLevel.Verbose, $"Added single image section to photo grid (image_url={imageUrl} detailed_image_url={imageUrl})");
+                                Logger.Log(LogLevel.Verbose,
+                                    $"Added single image section to photo grid (image_url={imageUrl} detailed_image_url={imageUrl})");
                             }
                             else if (LayoutSections[currentSectionIndex].GetType().Equals(typeof(ImageColumnSection)))
                             {
                                 // If we are dealing with a column section
                                 var columnSection = LayoutSections[currentSectionIndex] as ImageColumnSection;
-                                columnSection.Sections.Add(new ImageSection
-                                {
-                                    PreviewImage = imageUrl,
-                                    DetailedImage = detailedImageUrl,
-                                });
+                                columnSection.Sections.Add(imageSectionToAdd);
 
-                                Logger.Log(LogLevel.Verbose, $"Added image to column section (image_url={imageUrl} detailed_image_url={imageUrl})");
+                                Logger.Log(LogLevel.Verbose,
+                                    $"Added image to column section (image_url={imageUrl} detailed_image_url={imageUrl})");
                             }
-                            else if (LayoutSections[currentSectionIndex].GetType().Equals(typeof(TitleSection)))
-                            {
-                                var titleSection = LayoutSections[currentSectionIndex] as TitleSection;
-                                titleSection.TitleText = imageTitle;
-
-                                Logger.Log(LogLevel.Verbose, $"Added image title section to photo grid (titile={imageTitle})");
-                            }
-
-                            // Blank the urls again
-                            imageUrl = string.Empty;
-                            detailedImageUrl = string.Empty;
-                            imageTitle = string.Empty;
                         }
+                        else if (imageTitle != string.Empty && LayoutSections[currentSectionIndex].GetType().Equals(typeof(TitleSection)))
+                        {
+                            var titleSection = LayoutSections[currentSectionIndex] as TitleSection;
+                            titleSection.TitleText = imageTitle;
+
+                            Logger.Log(LogLevel.Verbose, $"Added image title section to photo grid (titile={imageTitle})");
+                        }
+
+                        // Blank the urls again
+                        imageUrl = string.Empty;
+                        altImageUrl = string.Empty;
+                        imageTitle = string.Empty;
                     }
                 }
             }
@@ -544,7 +548,7 @@ namespace Carpenter
 
             // Just to save some lookups
             string imageUrlTokenName = LayoutTokenTable.GetKeyOfValue(Tokens.Image);
-            string detailedImageUrlTokenName = LayoutTokenTable.GetKeyOfValue(Tokens.DetailedImage);
+            string detailedImageUrlTokenName = LayoutTokenTable.GetKeyOfValue(Tokens.AlternateImage);
             string titleTokenName = LayoutTokenTable.GetKeyOfValue(Tokens.Title);
             string standaloneTag = _layoutTagTable.GetKeyOfValue(ElementTags.Standalone);
             string columnTag = _layoutTagTable.GetKeyOfValue(ElementTags.Column);
@@ -562,8 +566,8 @@ namespace Carpenter
                     ImageSection standaloneImageSection = (ImageSection)section;
 
                     schemaFileContents.Add(standaloneTag);
-                    schemaFileContents.Add(CreateNameValuePair(imageUrlTokenName, standaloneImageSection.PreviewImage));
-                    schemaFileContents.Add(CreateNameValuePair(detailedImageUrlTokenName, standaloneImageSection.DetailedImage));
+                    schemaFileContents.Add(CreateNameValuePair(imageUrlTokenName, standaloneImageSection.ImageUrl));
+                    schemaFileContents.Add(CreateNameValuePair(detailedImageUrlTokenName, standaloneImageSection.AltImageUrl));
 
                     Logger.Log(LogLevel.Verbose, "Added ImageSection to layout");
                 }
@@ -574,8 +578,8 @@ namespace Carpenter
                     schemaFileContents.Add(columnTag);
                     foreach (ImageSection columnItem in columnImageSection.Sections)
                     {
-                        schemaFileContents.Add(CreateNameValuePair(imageUrlTokenName, columnItem.PreviewImage));
-                        schemaFileContents.Add(CreateNameValuePair(detailedImageUrlTokenName, columnItem.DetailedImage));
+                        schemaFileContents.Add(CreateNameValuePair(imageUrlTokenName, columnItem.ImageUrl));
+                        schemaFileContents.Add(CreateNameValuePair(detailedImageUrlTokenName, columnItem.AltImageUrl));
                     }
 
                     Logger.Log(LogLevel.Verbose, "Added ImageColumnSection to layout");
@@ -619,12 +623,11 @@ namespace Carpenter
                 Logger.Log(LogLevel.Error, results.ToString());
                 return false;
             }
-            else
+            else if (results.FailedTests.Count > 0)
             {
                 Logger.Log(LogLevel.Warning, $"Schema is valid but some optional tests did not pass.");
                 Logger.Log(LogLevel.Warning, results.ToString());
             }
-
             return true;
         }
         
