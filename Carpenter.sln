@@ -3,17 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32328.378
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Carpenter", "src\Carpenter\Carpenter.csproj", "{4692333A-11FA-47F7-9DC7-CC388CB2DC07}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Carpenter", "Carpenter\Carpenter.csproj", "{4692333A-11FA-47F7-9DC7-CC388CB2DC07}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Carpenter.CommandLine", "src\Carpenter.CommandLine\Carpenter.CommandLine.csproj", "{9D4116A0-95D0-4CAA-9BD7-E273E649EC82}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Carpenter.CommandLine", "Carpenter.CommandLine\Carpenter.CommandLine.csproj", "{9D4116A0-95D0-4CAA-9BD7-E273E649EC82}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Carpenter.SiteViewer", "src\Carpenter.SiteViewer\Carpenter.SiteViewer.csproj", "{C3379CFC-1A5A-4E86-9A27-D7A01E75CE9E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Carpenter.SiteViewer", "Carpenter.SiteViewer\Carpenter.SiteViewer.csproj", "{C3379CFC-1A5A-4E86-9A27-D7A01E75CE9E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Carpenter.PageDesigner", "src\Carpenter.PageDesigner\Carpenter.PageDesigner.csproj", "{82AA01CD-2FAF-474B-87F8-4AAFC8A17217}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Carpenter.PageDesigner", "Carpenter.PageDesigner\Carpenter.PageDesigner.csproj", "{82AA01CD-2FAF-474B-87F8-4AAFC8A17217}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JpegMetadataExtractor", "src\JpegMetadataExtractor\JpegMetadataExtractor.csproj", "{C6AB61EC-CF85-4657-B3D6-AC504E9FC26C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JpegMetadataExtractor", "JpegMetadataExtractor\JpegMetadataExtractor.csproj", "{C6AB61EC-CF85-4657-B3D6-AC504E9FC26C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Carpenter.Benchmark", "src\Carpenter.Benchmark\Carpenter.Benchmark.csproj", "{030AC876-5A2F-460B-BC40-87C041D88C4F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Carpenter.Benchmark", "Carpenter.Benchmark\Carpenter.Benchmark.csproj", "{030AC876-5A2F-460B-BC40-87C041D88C4F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

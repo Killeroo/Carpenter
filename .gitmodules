@@ -1,3 +1,6 @@
 [submodule "src/JpegMetadataExtractor"]
 	path = src/JpegMetadataExtractor
 	url = https://github.com/Killeroo/JpegMetadataExtractor
+[submodule "JpegMetadataExtractor"]
+	path = JpegMetadataExtractor
+	url = https://github.com/Killeroo/JpegMetadataExtractor
