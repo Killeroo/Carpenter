@@ -144,7 +144,7 @@ namespace SiteViewer.Controls
         private void EditButton_Click(object sender, EventArgs e)
         {
 #if true
-            PageDesignerForm form = new(_directoryPath, _site.GetPath());
+            PageDesignerForm form = new(_directoryPath, _site.GetSiteRoot());
             form.Show();
 #else
             ProcessStartInfo startInfo = new(kPageDesignerAppName);
@@ -191,7 +191,7 @@ namespace SiteViewer.Controls
         private void CreateButton_Click(object sender, EventArgs e)
         {
 #if true
-            PageDesignerForm form = new(_directoryPath, _site.GetPath());
+            PageDesignerForm form = new(_directoryPath, _site.GetSiteRoot());
             form.Show();
 #else
             ProcessStartInfo startInfo = new(kPageDesignerAppName);

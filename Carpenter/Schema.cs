@@ -619,13 +619,13 @@ namespace Carpenter
         {
             if (!SchemaValidator.Run(this, out SchemaValidator.ValidationResults results))
             {
-                Logger.Log(LogLevel.Error, $"Schema validator failed! Some required tests did not pass.");
+                Logger.Log(LogLevel.Error, "Schema validator failed! Some required tests did not pass.");
                 Logger.Log(LogLevel.Error, results.ToString());
                 return false;
             }
             else if (results.FailedTests.Count > 0)
             {
-                Logger.Log(LogLevel.Warning, $"Schema is valid but some optional tests did not pass.");
+                Logger.Log(LogLevel.Warning, "Schema is valid but some optional tests did not pass.");
                 Logger.Log(LogLevel.Warning, results.ToString());
             }
             return true;

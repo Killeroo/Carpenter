@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Diagnostics;
-
+using System.Text.RegularExpressions;
 using JpegMetadataExtractor;
 using static Carpenter.Schema;
 
@@ -153,6 +153,7 @@ namespace Carpenter
             try
             {
                 _fileContents = File.ReadAllLines(path);
+                FindTags();
                 Logger.Log(LogLevel.Verbose, $"Template file loaded (\"{path}\")");
 
                 _loaded = true;
@@ -165,6 +166,25 @@ namespace Carpenter
             }
         }
 
+        internal struct Tag
+        {
+            private string Name;
+            private string Index;
+        }
+
+        private Dictionary<int, string> _tags = new();
+        private void FindTags()
+        {
+            for (int index = 0; index < _fileContents.Length; index++)
+            {
+                if (Regex.Match(_fileContents[index], Config.kTagRegexPattern).Success)
+                {
+                    _tags.Add(index, _fileContents[index].StripWhitespaces());
+                    Logger.Log(LogLevel.Warning, $"Found tag {_fileContents[index].StripWhitespaces()} @ {index}");
+                }
+            }
+        }
+        
         /// <summary>
         /// Generate a html preview for a given schema, a preview can be opened locally and will link to local files
         /// </summary>
@@ -216,7 +236,7 @@ namespace Carpenter
             // HACK: Assumes output directory also contains images
             _schemaImages.Clear();
             ImageMetadata metadata;
-            Logger.Log(LogLevel.Verbose, $"Caching image sizes in {outputPath}...");
+            Logger.Log(LogLevel.Verbose, $"Caching image sizes in {outputPath}..."); // TODO: Increase cache size so it can hold all images in the directory
             foreach (string imagePath in Directory.GetFiles(outputPath, "*.jpg"))
             {
                 // Fetch image dimensions
@@ -442,6 +462,18 @@ namespace Carpenter
                 // Add the modified line into the outputted html
                 outputContent.Add(line);
             }
+        }
+
+        
+        
+        public void GeneratePage(Schema page)
+        {
+            
+        }
+        
+        private void GenerateIndex(List<Schema> schemas)
+        {
+            
         }
 
         /// <summary>

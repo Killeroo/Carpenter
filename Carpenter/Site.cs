@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using JpegMetadataExtractor;
 
 namespace Carpenter
 {
@@ -44,9 +46,9 @@ namespace Carpenter
         public Dictionary<Options, string> OptionValues = new();
 
         /// <summary>
-        /// The path to the site file 
+        /// The path to the site config file 
         /// </summary>
-        private string _filePath = string.Empty;
+        private string _configFilePath = string.Empty;
 
         /// <summary>
         /// Denotes if the Site file was loaded correctly
@@ -69,7 +71,7 @@ namespace Carpenter
                     {
                         // Template is in root directory, append site root so it makes sense to anything
                         // that tries to fetch the template location
-                        return Path.Combine(GetPath(), value);
+                        return Path.Combine(GetSiteRoot(), value);
                     }
                     return value;
                 }
@@ -111,9 +113,9 @@ namespace Carpenter
         /// Gets the current root path of the Site
         /// </summary>
         /// <returns></returns>
-        public string GetPath()
+        public string GetSiteRoot()
         {
-            return Path.GetDirectoryName(_filePath);
+            return Path.GetDirectoryName(_configFilePath);
         }
 
         /// <summary>
@@ -124,14 +126,14 @@ namespace Carpenter
         /// <returns>If the site was successfully loaded or not</returns>
         public bool TryLoad(string path)
         {
-            _filePath = Path.Combine(path, Config.kSiteFileName);
+            _configFilePath = Path.Combine(path, Config.kSiteFileName);
             _loaded = false;
 
             // Try and load the site config file
             string[] fileContents = new string[0];
             try
             {
-                fileContents = File.ReadAllLines(_filePath);
+                fileContents = File.ReadAllLines(_configFilePath);
             }
             catch (Exception ex)
             {
@@ -159,7 +161,7 @@ namespace Carpenter
 
             if (IsValid())
             {
-                Logger.Log(LogLevel.Verbose, $"Site parsed ({_filePath})");
+                Logger.Log(LogLevel.Verbose, $"Site parsed ({_configFilePath})");
                 _loaded = true;
                 return true;
             }
@@ -194,7 +196,7 @@ namespace Carpenter
                     return false;
                 }
             }
-            if (string.IsNullOrEmpty(_filePath))
+            if (string.IsNullOrEmpty(_configFilePath))
             {
                 Logger.Log(LogLevel.Error, $"Sanity check failure! Site does not contain a valid file path");
                 return false;
@@ -208,7 +210,7 @@ namespace Carpenter
         private void Reset()
         {
             OptionValues.Clear();
-            _filePath = string.Empty;
+            _configFilePath = string.Empty;
             _loaded = false;
         }
 
@@ -228,6 +230,201 @@ namespace Carpenter
         public List<Schema> GetSchemasOrderedByDate()
         {
             throw new NotImplementedException();
+        }
+        
+        /// <summary>
+        /// Validates all Schemes found at the given path (searches for schemas inside each sub directory) returning the results for each found schema.
+        /// </summary>
+        /// <param name="path">The root path that contains all schemas, schemas are searched for in directories within this root path.</param>
+        /// <param name="results">The validation results for each found schema, ordered by the path to the schema and it's results</param>
+        public void ValidateAllSchemas(
+            out List<(string path, SchemaValidator.ValidationResults results)> results,
+            Action<bool /** Valid */, string /** Directory Name */, int /** NumProcessed */, int /** Total */> onSchemaValidation)
+        {
+            results = new List<(string path, SchemaValidator.ValidationResults results)>();
+            string siteRootPath = GetSiteRoot();
+            if (!_loaded || !Directory.Exists(siteRootPath))
+            {
+                return;
+            }
+
+            string[] directories = Directory.GetDirectories(siteRootPath);
+            for (int index = 0; index < directories.Length; index++)
+            {
+                string pathToSchema = Path.Combine(siteRootPath, Path.GetFileName(directories[index]), Config.kSchemaFileName);
+                if (!File.Exists(pathToSchema))
+                {
+                    continue;
+                }
+
+                SchemaValidator.Run(new Schema(pathToSchema), out SchemaValidator.ValidationResults schemaResults);
+                onSchemaValidation?.Invoke(schemaResults.FailedTests.Count == 0, Path.GetFileName(directories[index]), index, directories.Length);
+                results.Add((directories[index], schemaResults));
+            }
+        }
+
+        /// <summary>
+        /// Generates html pages for all schemas found in the root path.
+        /// </summary>
+        /// <param name="rootPath">Path to site file </param>
+        /// <param name="onDirectoryGenerated">Called each a schema is processed (sucessfully or not)</param>
+        public void GenerateAllPagesInSite(
+            Action<bool /** Successfully Generated */, string /** Directory Name */, int /** NumProcessed */, int /** Total */> onDirectoryGenerated)
+        {
+            string siteRootPath = GetSiteRoot();
+            if (!_loaded || Directory.Exists(siteRootPath))
+            {
+                return;
+            }
+
+            // The cache for the JpegParser is not threadsafe, so we have to turn it off
+            JpegParser.UseInternalCache = false;
+
+            const int kMaxThreadCount = 10;
+            Thread[] threads = new Thread[kMaxThreadCount];
+            Object lockObject = new();
+            string[] directories = Directory.GetDirectories(siteRootPath);
+            for (int i = 0; i < directories.Length; i++)
+            {
+                string pathToSchema = Path.Combine(siteRootPath, Path.GetFileName(directories[i]), Config.kSchemaFileName);
+                if (!File.Exists(pathToSchema))
+                {
+                    continue;
+                }
+                
+                bool schemaProcessed = false;
+                while (!schemaProcessed)
+                {
+                    for (int index = 0; index < kMaxThreadCount; index++)
+                    {
+                        if (threads[index] == null || !threads[index].IsAlive)
+                        {
+                            threads[index] = new (() =>
+                            {
+                                string currentDirectoryPath = Path.GetDirectoryName(pathToSchema);
+                                using Schema localSchema = new(pathToSchema);
+                                Template template = new(TemplatePath);
+                                bool wasGeneratedSuccessfully = template.GenerateHtmlForSchema(localSchema, this, currentDirectoryPath);
+
+                                lock (lockObject)
+                                {
+                                    onDirectoryGenerated?.Invoke(
+                                        wasGeneratedSuccessfully, 
+                                        currentDirectoryPath,
+                                        i,
+                                        directories.Length);
+                                }
+                            });
+                            threads[index].IsBackground = true;
+                            threads[index].Start();
+                            schemaProcessed = true;
+                            break;
+                        }
+                    }
+
+                    if (!schemaProcessed)
+                    {
+                        Thread.Sleep(1000);
+                    }
+                }
+            }
+
+            // Wait for threads to finish
+            bool threadStillRunning = true;
+            while (threadStillRunning)
+            {
+                threadStillRunning = false;
+                foreach (Thread thread in threads)
+                {
+                    threadStillRunning |= thread != null && thread.IsAlive;
+                }
+                Thread.Sleep(200);
+            }
+
+            return;
+        }
+
+        /// <summary>
+        /// Returns the paths to all images in the given path that are not referenced by any schemas
+        /// </summary>
+        /// <param name="path">Path to root of site</param>
+        public List<string> GetAllUnusedImages()
+        {
+            List<string> unusedImagePaths = new();
+            string siteRootPath = GetSiteRoot();
+            if (!_loaded || Directory.Exists(siteRootPath))
+            {
+                return unusedImagePaths;
+            }
+
+            string[] localDirectories = Directory.GetDirectories(siteRootPath);
+            for (int i = 0; i < localDirectories.Length; i++)
+            {
+                string localPath = Path.Combine(siteRootPath, Path.GetFileName(localDirectories[i]));
+                string localSchemaPath = Path.Combine(localPath, Config.kSchemaFileName);
+                if (File.Exists(localSchemaPath))
+                {
+                    // try and load the schema in the directory
+                    using Schema localSchema = new(localSchemaPath);
+
+                    // Construct a list of all referenced images in the schema so we can
+                    // work out what files aren't referenced
+                    List<string> referencedImages = new List<string>();
+                    foreach (Section section in localSchema.LayoutSections)
+                    {
+                        if (section is ImageColumnSection)
+                        {
+                            ImageColumnSection columnSection = section as ImageColumnSection;
+                            foreach (ImageSection innerImage in columnSection.Sections)
+                            {
+                                referencedImages.Add(innerImage.ImageUrl);
+                                if (!string.IsNullOrEmpty(innerImage.AltImageUrl))
+                                {
+                                    referencedImages.Add(innerImage.AltImageUrl);
+                                }
+                            }
+                        }
+                        else if (section is ImageSection)
+                        {
+                            ImageSection standaloneSection = section as ImageSection;
+                            referencedImages.Add(standaloneSection.ImageUrl);
+                            if (!string.IsNullOrEmpty(standaloneSection.AltImageUrl))
+                            {
+                                referencedImages.Add(standaloneSection.AltImageUrl);
+                            }
+                        }
+                    }
+
+                    // Loop through and find any files that aren't referenced in the schema 
+                    foreach (string imagePath in Directory.GetFiles(localPath, "*.jpg"))
+                    {
+                        string imageName = Path.GetFileName(imagePath);
+                        if (referencedImages.Contains(imageName) == false)
+                        {
+                            unusedImagePaths.Add(imagePath);
+                        }
+                    }
+                }
+            }
+
+            return unusedImagePaths;
+        }
+
+        /// <summary>
+        /// Remove all images that are not referenced by schemas in the site
+        /// </summary>
+        /// <param name="rootPath">Root path of site</param>
+        /// <returns>Number of images that were removed</returns>
+        public int RemoveAllUnusedImages()
+        {
+            int count = 0;
+            foreach (string imagePath in GetAllUnusedImages())
+            {
+                File.Delete(imagePath);
+                count++;
+            }
+
+            return count;
         }
     }
 }

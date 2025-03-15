@@ -140,7 +140,7 @@ namespace SiteViewer.Forms
         /// </summary>
         private void RemoveUnusedImages()
         {
-            int removedFiles = SiteUtils.RemoveAllUnusedImages(_rootPath);
+            int removedFiles = _site.RemoveAllUnusedImages();
             StateToolStripStatusLabel.Text = $"{removedFiles} files removed";
         }
 
@@ -412,7 +412,7 @@ namespace SiteViewer.Forms
             GenerateSiteBackgroundWorker.ReportProgress(0, "Generating pages...");
 
             SiteGenerationState state = new();
-            SiteUtils.GenerateAllPagesInSite(_rootPath, (bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
+            _site.GenerateAllPagesInSite((bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
             {
                 if (success)
                 {
@@ -555,7 +555,7 @@ namespace SiteViewer.Forms
             // Validate
             {
                 PublishSiteBackgroundWorker.ReportProgress(0, "Validating Schemas...");
-                SiteUtils.ValidateAllSchemas(_rootPath, out List<(string path, SchemaValidator.ValidationResults results)> siteResults,
+                _site.ValidateAllSchemas(out List<(string path, SchemaValidator.ValidationResults results)> siteResults,
                     (bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
                     {
                         PublishSiteBackgroundWorker.ReportProgress((100 * directoriesProcessed) / directoryCount, $"Validated {directoriesProcessed}/{directoryCount}");
@@ -588,7 +588,7 @@ namespace SiteViewer.Forms
             {
                 PublishSiteBackgroundWorker.ReportProgress(0, "Generating pages...");
                 SiteGenerationState state = new();
-                SiteUtils.GenerateAllPagesInSite(_rootPath, (bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
+                _site.GenerateAllPagesInSite((bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
                 {
                     if (success)
                     {
@@ -610,12 +610,12 @@ namespace SiteViewer.Forms
 
             // Cleanup
             {
-                int unusedImageCount = SiteUtils.GetAllUnusedImages(_rootPath).Count;
+                int unusedImageCount = _site.GetAllUnusedImages().Count;
                 if (unusedImageCount > 0)
                 {
                     if (MessageBox.Show($"{unusedImageCount} unused images found, would you like to remove them?", "Cleanup", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
-                        SiteUtils.RemoveAllUnusedImages(_rootPath);
+                        _site.RemoveAllUnusedImages();
                     }
                 }
             }
@@ -623,7 +623,12 @@ namespace SiteViewer.Forms
 
         private void ValidateButton_Click(object sender, EventArgs e)
         {
-            SiteUtils.ValidateAllSchemas(_rootPath, out List<(string path, SchemaValidator.ValidationResults results)> siteResults,
+            if (!_site.IsLoaded())
+            {
+                return;
+            }
+            
+            _site.ValidateAllSchemas(out List<(string path, SchemaValidator.ValidationResults results)> siteResults,
                 (bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
                 {
                     ToolStripProgressBar.Value = (100 * directoriesProcessed) / directoryCount;
