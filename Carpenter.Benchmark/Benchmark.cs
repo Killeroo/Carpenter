@@ -118,6 +118,7 @@ namespace Carpenter.Tests
                     Console.WriteLine("Failed to generate webpage");
                     return;
                 }
+                template.GenerateIndex(new List<Schema>());
             }
             WriteTimerToConsole(stopwatch, "Template.GenerateHtmlForSchema");
 

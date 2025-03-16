@@ -127,7 +127,7 @@ namespace Carpenter
         /// <summary>
         /// The raw contents of the loaded template html file
         /// </summary>
-        private string[] _fileContents;
+        private List<string> _fileContents;
 
         /// <summary>
         /// Was the template successfully loaded from a file
@@ -152,7 +152,7 @@ namespace Carpenter
         {
             try
             {
-                _fileContents = File.ReadAllLines(path);
+                _fileContents = File.ReadAllLines(path).ToList();
                 FindTags();
                 Logger.Log(LogLevel.Verbose, $"Template file loaded (\"{path}\")");
 
@@ -175,7 +175,7 @@ namespace Carpenter
         private Dictionary<int, string> _tags = new();
         private void FindTags()
         {
-            for (int index = 0; index < _fileContents.Length; index++)
+            for (int index = 0; index < _fileContents.Count; index++)
             {
                 Match tagMatch = Regex.Match(_fileContents[index], Config.kTagInHtmlRegexPattern);
                 if (tagMatch.Success)
@@ -464,15 +464,25 @@ namespace Carpenter
                 outputContent.Add(line);
             }
         }
-
-        
         
         public void GeneratePage(Schema page)
         {
             
         }
         
-        private void GenerateIndex(List<Schema> schemas)
+        public void GenerateIndex(List<Schema> schemas)
+        {
+            // Clear all tag placeholders
+            foreach (int tagIndex in _tags.Keys)
+            {
+                _fileContents.RemoveAt(tagIndex);
+            }
+
+            Dictionary<int, string> indexTags = _tags.Where(x => x.Value.Contains("index:")).ToDictionary(x => x.Key, x => x.Value);
+            Console.ReadLine();
+        }
+
+        private void ResolveTags(List<string> outContext, Dictionary<int, string> tags)
         {
             
         }
@@ -492,7 +502,7 @@ namespace Carpenter
 
             // Loop through the file contents to find each relevant section of the template
             // (The schema contains the class identifiers that represent where everything should go)
-            for (int i = 0; i < _fileContents.Length; i++)
+            for (int i = 0; i < _fileContents.Count; i++)
             {
                 string line = _fileContents[i];
 
@@ -542,7 +552,7 @@ namespace Carpenter
             // for a nested element
             Dictionary<int, string> duplicateElementTracker = new Dictionary<int, string>();
 
-            for (int i = startIndex; i < _fileContents.Length; i++)
+            for (int i = startIndex; i < _fileContents.Count; i++)
             {
                 string line = _fileContents[i];
 

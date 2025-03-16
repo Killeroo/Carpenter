@@ -117,12 +117,12 @@ namespace Carpenter
         /// <summary>
         /// Removes a section of an array from the supplied start to the end index
         /// </summary>
-        public static string[] RemoveSection(this string[] array, int start, int end)
+        public static string[] RemoveSection(this List<string> array, int start, int end)
         {
-            string[] result = new string[array.Length - (end - start)];
+            string[] result = new string[array.Count - (end - start)];
 
             int destinationCount = 0;
-            for (int i = 0; i < array.Length; i++)
+            for (int i = 0; i < array.Count; i++)
             {
                 if (i >= start && i <= end)
                 {
