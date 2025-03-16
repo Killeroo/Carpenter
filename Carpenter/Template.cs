@@ -177,9 +177,10 @@ namespace Carpenter
         {
             for (int index = 0; index < _fileContents.Length; index++)
             {
-                if (Regex.Match(_fileContents[index], Config.kTagRegexPattern).Success)
+                Match tagMatch = Regex.Match(_fileContents[index], Config.kTagInHtmlRegexPattern);
+                if (tagMatch.Success)
                 {
-                    _tags.Add(index, _fileContents[index].StripWhitespaces());
+                    _tags.Add(index, tagMatch.Value);
                     Logger.Log(LogLevel.Warning, $"Found tag {_fileContents[index].StripWhitespaces()} @ {index}");
                 }
             }

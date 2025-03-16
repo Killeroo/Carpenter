@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
 using JpegMetadataExtractor;
 
@@ -44,6 +45,11 @@ namespace Carpenter
         /// Contains all the current site option values
         /// </summary>
         public Dictionary<Options, string> OptionValues = new();
+        
+        /// <summary>
+        /// Contains all tags specified in the Site config file
+        /// </summary>
+        public Dictionary<string, List<string>> Tags = new();
 
         /// <summary>
         /// The path to the site config file 
@@ -142,22 +148,55 @@ namespace Carpenter
             }
 
             // Parse options
-            for (int i = 0; i < fileContents.Length; i++)
             {
-                string line = fileContents[i];
-                foreach (string optionTag in OptionsTable.Keys)
+                for (int i = 0; i < fileContents.Length; i++)
                 {
-                    if (line.Contains(optionTag))
+                    string line = fileContents[i];
+                    foreach (string optionTag in OptionsTable.Keys)
                     {
-                        OptionValues[OptionsTable[optionTag]] = line.GetTokenOrOptionValue();
-                        Logger.Log(LogLevel.Verbose, $"Site option {OptionsTable[optionTag]}={OptionValues[OptionsTable[optionTag]]}");
-                        break;
+                        if (line.Contains(optionTag))
+                        {
+                            OptionValues[OptionsTable[optionTag]] = line.GetTokenOrOptionValue();
+                            Logger.Log(LogLevel.Verbose,
+                                $"Site option {OptionsTable[optionTag]}={OptionValues[OptionsTable[optionTag]]}");
+                            break;
+                        }
                     }
                 }
             }
 
             // We have to strip forward slashes from any urls so we can process them consistently 
             OptionValues[Options.Url] = OptionValues[Options.Url].StripForwardSlashes();
+            
+            // Parse tags
+            {
+                bool FindPatternInLine(string line, string pattern, out string tag)
+                {
+                    Match tagMatch = Regex.Match(line, pattern);
+                    if (tagMatch.Success) {
+                        tag = tagMatch.Value;
+                    } else {
+                        tag = string.Empty;
+                    }
+                    return tagMatch.Success;
+                }
+                
+                for (int i = 0; i < fileContents.Length; i++)
+                {
+                    if (FindPatternInLine(fileContents[i], Config.kSiteConfigTagPattern, out string foundTag))
+                    {
+                        if (Tags.TryAdd(foundTag, new List<string>()))
+                        {
+                            Logger.Log(LogLevel.Warning, "Found tag " + foundTag);
+                            while (!FindPatternInLine(fileContents[++i], Config.kSiteConfigSectionPattern, out string _) && i < fileContents.Length)
+                            {
+                                Logger.Log(LogLevel.Warning, fileContents[i]);
+                                Tags[foundTag].Add(fileContents[i]);
+                            }
+                        }
+                    }
+                }
+            }
 
             if (IsValid())
             {
