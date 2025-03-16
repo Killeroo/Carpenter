@@ -57,8 +57,8 @@ namespace Carpenter.Tests
             //// TODO: Point at example project
             //string rootDirectory = @"C:\Users\Kelpie\Desktop\WebsiteConversion\photos";
             //string schemaDirectory = @"C:\Users\Kelpie\Desktop\WebsiteConversion\photos\donegal-3";
-            string rootDirectory = @"G:\My Drive\Website\photos.matthewcarney.net\digital";
-            string schemaDirectory = @"G:\My Drive\Website\photos.matthewcarney.net\digital\donegal-3";
+            string rootDirectory = @"G:\My Drive\Website\photos.matthewcarney.net\";
+            string schemaDirectory = @"G:\My Drive\Website\photos.matthewcarney.net\other\archive\donegal-3";
             string tempPath = Path.Combine(Path.GetTempPath(), "Carpenter", "Benchmark");
             if (Directory.Exists(tempPath) == false)
             {
@@ -118,7 +118,8 @@ namespace Carpenter.Tests
                     Console.WriteLine("Failed to generate webpage");
                     return;
                 }
-                template.GenerateIndex(new List<Schema>());
+
+                site.GenerateIndexPages();
             }
             WriteTimerToConsole(stopwatch, "Template.GenerateHtmlForSchema");
 

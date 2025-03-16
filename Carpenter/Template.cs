@@ -180,7 +180,7 @@ namespace Carpenter
                 Match tagMatch = Regex.Match(_fileContents[index], Config.kTagInHtmlRegexPattern);
                 if (tagMatch.Success)
                 {
-                    _tags.Add(index, tagMatch.Value);
+                    _tags.Add(index, tagMatch.Value); 
                     Logger.Log(LogLevel.Warning, $"Found tag {_fileContents[index].StripWhitespaces()} @ {index}");
                 }
             }
@@ -470,16 +470,149 @@ namespace Carpenter
             
         }
         
-        public void GenerateIndex(List<Schema> schemas)
+        private Dictionary<int, string> FindTags(List<string> content, string mustContainTerm)
         {
-            // Clear all tag placeholders
-            foreach (int tagIndex in _tags.Keys)
+            Dictionary<int, string> tags = new();
+            for (int index = 0; index < content.Count; index++)
             {
-                _fileContents.RemoveAt(tagIndex);
+                Match tagMatch = Regex.Match(content[index], Config.kTagInHtmlRegexPattern);
+                if (tagMatch.Success && tagMatch.Value.Contains(mustContainTerm))
+                {
+                    _tags.Add(index, tagMatch.Value); 
+                    Logger.Log(LogLevel.Warning, $"Found tag {content[index].StripWhitespaces()} @ {index}");
+                }
             }
 
-            Dictionary<int, string> indexTags = _tags.Where(x => x.Value.Contains("index:")).ToDictionary(x => x.Key, x => x.Value);
-            Console.ReadLine();
+            return tags;
+        }
+        
+        // TODO: Test by hooking up to site.GenerateIndexes
+        // TODO: Expand to normal page generation
+        // TODO: Add headers
+        // jobs a gooden
+        public void GenerateIndex(string relativePath, List<Schema> schemas, Site site)
+        {
+            if (site == null || schemas.Count == 0)
+            {
+                return;
+            }
+            
+            Dictionary<string, int> MonthStringToInt = new()
+            {
+                { "january", 1 },
+                { "february", 2 },
+                { "march", 3 },
+                { "april", 4 },
+                { "may", 5 },
+                { "june", 6 },
+                { "july", 7 },
+                { "august", 8 },
+                { "september", 9 },
+                { "october", 10 },
+                { "november", 11 },
+                { "december", 12 }
+            };
+
+            // Order schemas by date
+            List<Schema> schemasOrderedByDate;
+            Dictionary<DateTime, Schema> schemasWithDate = new();
+            foreach (Schema schema in schemas)
+            {
+                DateTime date = new(
+                    Convert.ToInt32(schema.TokenValues[Schema.Tokens.Year]),
+                    MonthStringToInt[schema.TokenValues[Schema.Tokens.Month].ToLower()],
+                    1);
+
+                while (schemasWithDate.ContainsKey(date))
+                {
+                    date = date.AddDays(1);
+                }
+                schemasWithDate.Add(date, schema);
+            }
+            schemasOrderedByDate = schemasWithDate.OrderByDescending(x => x.Key).Select(y => y.Value).ToList();
+
+            
+            Dictionary<int, string> tags = new();
+            while (tags.Count > 0)
+            {
+                // Find index tags
+                tags = FindTags(_fileContents, "index:");
+                 
+                // Clear all tag placeholders
+                foreach (int tagIndex in _tags.Keys)
+                {
+                    _fileContents.RemoveAt(tagIndex);
+                }
+
+                int baseOffset = 0;
+                foreach (KeyValuePair<int, string> tag in tags.OrderByDescending(x => x.Key))
+                {
+                    if (site.Tags.TryGetValue(tag.Value, out List<string> tagContents))
+                    {
+                        int indexOffset = tag.Key + baseOffset;
+                        if (tag.Value.Contains("foreach:"))
+                        {
+                            foreach (Schema schema in schemasOrderedByDate)
+                            {
+                                // Patch in the correct path to the schema based on it's local path relative to where the site file is
+                                Dictionary<Schema.Tokens, string> modifiedSchemaTokens = new(schema.TokenValues);
+                                modifiedSchemaTokens[Schema.Tokens.PageUrl] = string.Format("{0}/{1}/{2}/", site.Url, relativePath, 
+                                    modifiedSchemaTokens[Schema.Tokens.PageUrl]);
+                                
+                                // Get the dimensions for the thumbnail image
+                                (int width, int height) thumbnailDimensions = new(0, 0);
+                                if (schema.Thumbnail != string.Empty)
+                                {
+                                    string thumbnailFilename = schema.Thumbnail;
+                                    foreach (string imageFile in Directory.EnumerateFiles(schema.WorkingDirectory(),
+                                                 string.Format("*.{0}", Path.GetExtension(thumbnailFilename)),
+                                                 SearchOption.AllDirectories))
+                                    {
+                                        if (Path.GetFileName(imageFile) == thumbnailFilename)
+                                        {
+                                            ImageMetadata thumbnailData = JpegParser.GetMetadata(imageFile);
+                                            thumbnailDimensions = new (thumbnailData.Width, thumbnailData.Height);
+                                            break;
+                                        }
+                                    }
+                                }
+                                
+                                foreach (string line in tagContents)
+                                {
+                                    string processedLine = line;
+
+                                    // We still need to manually find and replace the image and width height tags
+                                    if ((thumbnailDimensions.width != 0 && thumbnailDimensions.height != 0) 
+                                        && (line.Contains(Config.kTemplateImageWidthToken) || line.Contains(Config.kTemplateImageHeightToken)))
+                                    {
+                                        processedLine = processedLine.Replace(Config.kTemplateImageWidthToken, thumbnailDimensions.width.ToString());
+                                        processedLine = processedLine.Replace(Config.kTemplateImageHeightToken, thumbnailDimensions.height.ToString());
+                                    }
+
+                                    // Process each line and replace them with values from the schema
+                                    foreach (KeyValuePair<string, Schema.Tokens> tokenEntry in Schema.TokenTable)
+                                    {
+                                        if (modifiedSchemaTokens.ContainsKey(tokenEntry.Value) && !Schema.OptionalTokens.Contains(tokenEntry.Value))
+                                        {
+                                            processedLine = processedLine.Replace(tokenEntry.Key, modifiedSchemaTokens[tokenEntry.Value]);
+                                        }
+                                    }
+
+                                    _fileContents.Insert(indexOffset++, processedLine);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            _fileContents.InsertRange(indexOffset, tagContents);
+                            indexOffset += tagContents.Count;
+                        }
+                        
+                        // Keep track of how many lines we added
+                        baseOffset += (tag.Key + baseOffset) - indexOffset;
+                    }
+                }
+            }
         }
 
         private void ResolveTags(List<string> outContext, Dictionary<int, string> tags)

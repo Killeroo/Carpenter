@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -259,7 +260,24 @@ namespace Carpenter
         /// <returns></returns>
         public List<Schema> GetSchemas()
         {
-            throw new NotImplementedException();
+            string siteRootPath = GetSiteRoot();
+            if (!_loaded || !Directory.Exists(siteRootPath))
+            {
+                return new List<Schema>();
+            }
+
+            List<Schema> foundSchemas = new();
+            string[] dirs = Directory.GetDirectories(siteRootPath, "*", SearchOption.AllDirectories);
+            foreach (string subDir in dirs)
+            {
+                string pathToSchema = Path.Combine(subDir, Config.kSchemaFileName);
+                if (File.Exists(pathToSchema))
+                {
+                    foundSchemas.Add(new Schema(pathToSchema));
+                }
+            }
+
+            return foundSchemas;
         }
 
         /// <summary>
@@ -464,6 +482,36 @@ namespace Carpenter
             }
 
             return count;
+        }
+
+        /// <summary>
+        /// Generates index pages for all directories that contains schemas in child directories
+        /// </summary>
+        public void GenerateIndexPages()
+        {
+            string siteRootPath = GetSiteRoot();
+            if (!_loaded || !Directory.Exists(siteRootPath))
+            {
+                return;
+            }
+            
+            // An index file is basically any path that contains multiple schemas in it's child directories
+            Dictionary<string, List<Schema>> foundIndexDirectories = new();
+            foreach (Schema schema in GetSchemas())
+            {
+                if (schema != null)
+                {
+                    string schemaParentDir = Path.GetDirectoryName(schema.WorkingDirectory());
+                    if (foundIndexDirectories.ContainsKey(schemaParentDir))
+                    {
+                        foundIndexDirectories[schemaParentDir].Add(schema);
+                    }
+                    else
+                    {
+                        foundIndexDirectories.Add(schemaParentDir, new List<Schema> { schema });
+                    }
+                }
+            }
         }
     }
 }
