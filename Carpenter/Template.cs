@@ -478,7 +478,7 @@ namespace Carpenter
                 Match tagMatch = Regex.Match(content[index], Config.kTagInHtmlRegexPattern);
                 if (tagMatch.Success && tagMatch.Value.Contains(mustContainTerm))
                 {
-                    _tags.Add(index, tagMatch.Value); 
+                    tags.Add(index, tagMatch.Value); 
                     Logger.Log(LogLevel.Warning, $"Found tag {content[index].StripWhitespaces()} @ {index}");
                 }
             }
@@ -530,18 +530,20 @@ namespace Carpenter
                 schemasWithDate.Add(date, schema);
             }
             schemasOrderedByDate = schemasWithDate.OrderByDescending(x => x.Key).Select(y => y.Value).ToList();
-
             
             Dictionary<int, string> tags = new();
+            List<string> generatedContents = new(_fileContents);
+            Dictionary<Schema.Tokens, string> tokenValues = new(schemas.First().TokenValues); // Use the token values from the first page to fill in the index fields
+            tags = FindTags(generatedContents, "index:");
             while (tags.Count > 0)
             {
                 // Find index tags
-                tags = FindTags(_fileContents, "index:");
+                tags = FindTags(generatedContents, "index:");
                  
                 // Clear all tag placeholders
                 foreach (int tagIndex in _tags.Keys)
                 {
-                    _fileContents.RemoveAt(tagIndex);
+                    generatedContents.RemoveAt(tagIndex);
                 }
 
                 int baseOffset = 0;
@@ -598,13 +600,13 @@ namespace Carpenter
                                         }
                                     }
 
-                                    _fileContents.Insert(indexOffset++, processedLine);
+                                    generatedContents.Insert(indexOffset++, processedLine);
                                 }
                             }
                         }
                         else
                         {
-                            _fileContents.InsertRange(indexOffset, tagContents);
+                            generatedContents.InsertRange(indexOffset, tagContents);
                             indexOffset += tagContents.Count;
                         }
                         
@@ -612,7 +614,20 @@ namespace Carpenter
                         baseOffset += (tag.Key + baseOffset) - indexOffset;
                     }
                 }
+
+                for (int index = 0; index < generatedContents.Count; index++)
+                {
+                    foreach (KeyValuePair<string, Tokens> token in Schema.TokenTable)
+                    {
+                        if (tokenValues.Keys.Contains(token.Value))
+                        {
+                            generatedContents[index] = generatedContents[index].Replace(token.Key, tokenValues[token.Value]);
+                        }
+                    }
+                }
             }
+            
+            File.WriteAllLines(Path.Combine(relativePath, "index.html"), generatedContents);
         }
 
         private void ResolveTags(List<string> outContext, Dictionary<int, string> tags)

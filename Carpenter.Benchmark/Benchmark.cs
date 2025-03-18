@@ -93,6 +93,9 @@ namespace Carpenter.Tests
             }
             WriteTimerToConsole(stopwatch, "Template.TryLoad");
 
+            site.GenerateIndexPages();
+            return;
+            
             stopwatch = Stopwatch.StartNew();
             {
                 if (schema.TryLoad(Path.Combine(schemaDirectory, Config.kSchemaFileName)) == false)
@@ -119,7 +122,6 @@ namespace Carpenter.Tests
                     return;
                 }
 
-                site.GenerateIndexPages();
             }
             WriteTimerToConsole(stopwatch, "Template.GenerateHtmlForSchema");
 

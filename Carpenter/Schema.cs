@@ -250,17 +250,7 @@ namespace Carpenter
             _loaded = false;
 
             // Read the file
-            string[] schemaFileContents;
-            try
-            {
-                schemaFileContents = File.ReadAllLines(path);
-            }
-            catch (Exception e)
-            {
-                Logger.Log(LogLevel.Error, $"Could not read schema file ({e.GetType()} exception occured)");
-                return false;
-            }
-
+            string[] schemaFileContents = File.ReadAllLines(path);
             _workingDirectory = Path.GetDirectoryName(path);
 
             // Sanity check size

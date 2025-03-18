@@ -176,6 +176,7 @@ namespace Carpenter
                     Match tagMatch = Regex.Match(line, pattern);
                     if (tagMatch.Success) {
                         tag = tagMatch.Value;
+                        Console.WriteLine("Found regex {0} for {1}", pattern, line);
                     } else {
                         tag = string.Empty;
                     }
@@ -189,8 +190,9 @@ namespace Carpenter
                         if (Tags.TryAdd(foundTag, new List<string>()))
                         {
                             Logger.Log(LogLevel.Warning, "Found tag " + foundTag);
-                            while (!FindPatternInLine(fileContents[++i], Config.kSiteConfigSectionPattern, out string _) && i < fileContents.Length)
+                            while (i + 1 < fileContents.Length && !FindPatternInLine(fileContents[i + 1], Config.kSiteConfigSectionPattern, out string _) && i < fileContents.Length)
                             {
+                                i++;
                                 Logger.Log(LogLevel.Warning, fileContents[i]);
                                 Tags[foundTag].Add(fileContents[i]);
                             }
@@ -267,17 +269,37 @@ namespace Carpenter
             }
 
             List<Schema> foundSchemas = new();
+            foreach (string path in GetPathsToSchemas())
+            {
+                foundSchemas.Add(new Schema(path));
+            }
+
+            return foundSchemas;
+        }
+
+        /// <summary>
+        /// Returns a list of all directory paths that contain files in the site
+        /// </summary>
+        public List<string> GetPathsToSchemas()
+        {
+            string siteRootPath = GetSiteRoot();
+            if (!_loaded || !Directory.Exists(siteRootPath))
+            {
+                return new List<string>();
+            }
+            
+            List<string> paths = new();
             string[] dirs = Directory.GetDirectories(siteRootPath, "*", SearchOption.AllDirectories);
             foreach (string subDir in dirs)
             {
                 string pathToSchema = Path.Combine(subDir, Config.kSchemaFileName);
                 if (File.Exists(pathToSchema))
                 {
-                    foundSchemas.Add(new Schema(pathToSchema));
+                    paths.Add(pathToSchema);
                 }
             }
-
-            return foundSchemas;
+            
+            return paths;
         }
 
         /// <summary>
@@ -299,24 +321,18 @@ namespace Carpenter
             Action<bool /** Valid */, string /** Directory Name */, int /** NumProcessed */, int /** Total */> onSchemaValidation)
         {
             results = new List<(string path, SchemaValidator.ValidationResults results)>();
-            string siteRootPath = GetSiteRoot();
-            if (!_loaded || !Directory.Exists(siteRootPath))
+            List<Schema> schemasToValidate = GetSchemas();
+            if (!_loaded || schemasToValidate.Count == 0)
             {
                 return;
             }
-
-            string[] directories = Directory.GetDirectories(siteRootPath);
-            for (int index = 0; index < directories.Length; index++)
+            
+            int index = 0;
+            foreach (Schema schema in GetSchemas())
             {
-                string pathToSchema = Path.Combine(siteRootPath, Path.GetFileName(directories[index]), Config.kSchemaFileName);
-                if (!File.Exists(pathToSchema))
-                {
-                    continue;
-                }
-
-                SchemaValidator.Run(new Schema(pathToSchema), out SchemaValidator.ValidationResults schemaResults);
-                onSchemaValidation?.Invoke(schemaResults.FailedTests.Count == 0, Path.GetFileName(directories[index]), index, directories.Length);
-                results.Add((directories[index], schemaResults));
+                SchemaValidator.Run(schema, out SchemaValidator.ValidationResults schemaResults);
+                onSchemaValidation?.Invoke(schemaResults.FailedTests.Count == 0, Path.GetFileName(schema.WorkingDirectory()), index++, schemasToValidate.Count);
+                results.Add((schema.WorkingDirectory(), schemaResults));
             }
         }
 
@@ -340,15 +356,10 @@ namespace Carpenter
             const int kMaxThreadCount = 10;
             Thread[] threads = new Thread[kMaxThreadCount];
             Object lockObject = new();
-            string[] directories = Directory.GetDirectories(siteRootPath);
-            for (int i = 0; i < directories.Length; i++)
+            List<string> schemaPaths = GetPathsToSchemas();
+            int processed = 0;
+            foreach (string schemaPath in schemaPaths)
             {
-                string pathToSchema = Path.Combine(siteRootPath, Path.GetFileName(directories[i]), Config.kSchemaFileName);
-                if (!File.Exists(pathToSchema))
-                {
-                    continue;
-                }
-                
                 bool schemaProcessed = false;
                 while (!schemaProcessed)
                 {
@@ -358,8 +369,8 @@ namespace Carpenter
                         {
                             threads[index] = new (() =>
                             {
-                                string currentDirectoryPath = Path.GetDirectoryName(pathToSchema);
-                                using Schema localSchema = new(pathToSchema);
+                                string currentDirectoryPath = Path.GetDirectoryName(schemaPath);
+                                using Schema localSchema = new(schemaPath);
                                 Template template = new(TemplatePath);
                                 bool wasGeneratedSuccessfully = template.GenerateHtmlForSchema(localSchema, this, currentDirectoryPath);
 
@@ -368,8 +379,8 @@ namespace Carpenter
                                     onDirectoryGenerated?.Invoke(
                                         wasGeneratedSuccessfully, 
                                         currentDirectoryPath,
-                                        i,
-                                        directories.Length);
+                                        processed++,
+                                        schemaPaths.Count);
                                 }
                             });
                             threads[index].IsBackground = true;
@@ -381,7 +392,7 @@ namespace Carpenter
 
                     if (!schemaProcessed)
                     {
-                        Thread.Sleep(1000);
+                        Thread.Sleep(100);
                     }
                 }
             }
@@ -415,14 +426,12 @@ namespace Carpenter
             }
 
             string[] localDirectories = Directory.GetDirectories(siteRootPath);
-            for (int i = 0; i < localDirectories.Length; i++)
+            foreach (string path in GetPathsToSchemas())
             {
-                string localPath = Path.Combine(siteRootPath, Path.GetFileName(localDirectories[i]));
-                string localSchemaPath = Path.Combine(localPath, Config.kSchemaFileName);
-                if (File.Exists(localSchemaPath))
+                if (File.Exists(path))
                 {
                     // try and load the schema in the directory
-                    using Schema localSchema = new(localSchemaPath);
+                    using Schema localSchema = new(path);
 
                     // Construct a list of all referenced images in the schema so we can
                     // work out what files aren't referenced
@@ -453,7 +462,7 @@ namespace Carpenter
                     }
 
                     // Loop through and find any files that aren't referenced in the schema 
-                    foreach (string imagePath in Directory.GetFiles(localPath, "*.jpg"))
+                    foreach (string imagePath in Directory.GetFiles(path, "*.jpg"))
                     {
                         string imageName = Path.GetFileName(imagePath);
                         if (referencedImages.Contains(imageName) == false)
@@ -494,6 +503,12 @@ namespace Carpenter
             {
                 return;
             }
+
+            if (!File.Exists(TemplatePath))
+            {
+                return;
+            }
+            Template template = new(TemplatePath);
             
             // An index file is basically any path that contains multiple schemas in it's child directories
             Dictionary<string, List<Schema>> foundIndexDirectories = new();
@@ -512,6 +527,12 @@ namespace Carpenter
                     }
                 }
             }
+
+            foreach (KeyValuePair<string, List<Schema>> indexDir in foundIndexDirectories)
+            {
+                template.GenerateIndex(indexDir.Key, indexDir.Value, this);
+            }
+
         }
     }
 }
