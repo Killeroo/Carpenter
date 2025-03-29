@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using JpegMetadataExtractor;
@@ -78,7 +79,7 @@ namespace Carpenter
                     {
                         // Template is in root directory, append site root so it makes sense to anything
                         // that tries to fetch the template location
-                        return Path.Combine(GetSiteRoot(), value);
+                        return Path.Combine(GetRootDir(), value);
                     }
                     return value;
                 }
@@ -120,7 +121,7 @@ namespace Carpenter
         /// Gets the current root path of the Site
         /// </summary>
         /// <returns></returns>
-        public string GetSiteRoot()
+        public string GetRootDir()
         {
             return Path.GetDirectoryName(_configFilePath);
         }
@@ -262,7 +263,7 @@ namespace Carpenter
         /// <returns></returns>
         public List<Schema> GetSchemas()
         {
-            string siteRootPath = GetSiteRoot();
+            string siteRootPath = GetRootDir();
             if (!_loaded || !Directory.Exists(siteRootPath))
             {
                 return new List<Schema>();
@@ -282,7 +283,7 @@ namespace Carpenter
         /// </summary>
         public List<string> GetPathsToSchemas()
         {
-            string siteRootPath = GetSiteRoot();
+            string siteRootPath = GetRootDir();
             if (!_loaded || !Directory.Exists(siteRootPath))
             {
                 return new List<string>();
@@ -308,7 +309,39 @@ namespace Carpenter
         /// <returns></returns>
         public List<Schema> GetSchemasOrderedByDate()
         {
-            throw new NotImplementedException();
+            Dictionary<string, int> MonthStringToInt = new()
+            {
+                { "january", 1 },
+                { "february", 2 },
+                { "march", 3 },
+                { "april", 4 },
+                { "may", 5 },
+                { "june", 6 },
+                { "july", 7 },
+                { "august", 8 },
+                { "september", 9 },
+                { "october", 10 },
+                { "november", 11 },
+                { "december", 12 }
+            };
+
+            // Order schemas by date
+            List<Schema> schemasOrderedByDate;
+            Dictionary<DateTime, Schema> schemasWithDate = new();
+            foreach (Schema schema in GetSchemas())
+            {
+                DateTime date = new(
+                    Convert.ToInt32(schema.TokenValues[Schema.Tokens.Year]),
+                    MonthStringToInt[schema.TokenValues[Schema.Tokens.Month].ToLower()],
+                    1);
+
+                while (schemasWithDate.ContainsKey(date))
+                {
+                    date = date.AddDays(1);
+                }
+                schemasWithDate.Add(date, schema);
+            }
+            return schemasWithDate.OrderByDescending(x => x.Key).Select(y => y.Value).ToList();
         }
         
         /// <summary>
@@ -344,7 +377,7 @@ namespace Carpenter
         public void GenerateAllPagesInSite(
             Action<bool /** Successfully Generated */, string /** Directory Name */, int /** NumProcessed */, int /** Total */> onDirectoryGenerated)
         {
-            string siteRootPath = GetSiteRoot();
+            string siteRootPath = GetRootDir();
             if (!_loaded || Directory.Exists(siteRootPath))
             {
                 return;
@@ -419,7 +452,7 @@ namespace Carpenter
         public List<string> GetAllUnusedImages()
         {
             List<string> unusedImagePaths = new();
-            string siteRootPath = GetSiteRoot();
+            string siteRootPath = GetRootDir();
             if (!_loaded || Directory.Exists(siteRootPath))
             {
                 return unusedImagePaths;
@@ -498,7 +531,7 @@ namespace Carpenter
         /// </summary>
         public void GenerateIndexPages()
         {
-            string siteRootPath = GetSiteRoot();
+            string siteRootPath = GetRootDir();
             if (!_loaded || !Directory.Exists(siteRootPath))
             {
                 return;
@@ -512,17 +545,14 @@ namespace Carpenter
             
             // An index file is basically any path that contains multiple schemas in it's child directories
             Dictionary<string, List<Schema>> foundIndexDirectories = new();
-            foreach (Schema schema in GetSchemas())
+            foreach (Schema schema in GetSchemasOrderedByDate())
             {
                 if (schema != null)
                 {
-                    string schemaParentDir = Path.GetDirectoryName(schema.WorkingDirectory());
-                    if (foundIndexDirectories.ContainsKey(schemaParentDir))
-                    {
+                    string schemaParentDir = Path.GetDirectoryName(schema.WorkingDirectory()).Replace(siteRootPath, "");
+                    if (foundIndexDirectories.ContainsKey(schemaParentDir)) {
                         foundIndexDirectories[schemaParentDir].Add(schema);
-                    }
-                    else
-                    {
+                    } else {
                         foundIndexDirectories.Add(schemaParentDir, new List<Schema> { schema });
                     }
                 }
