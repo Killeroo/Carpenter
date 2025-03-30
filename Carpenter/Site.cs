@@ -175,12 +175,7 @@ namespace Carpenter
                 bool FindPatternInLine(string line, string pattern, out string tag)
                 {
                     Match tagMatch = Regex.Match(line, pattern);
-                    if (tagMatch.Success) {
-                        tag = tagMatch.Value;
-                        Console.WriteLine("Found regex {0} for {1}", pattern, line);
-                    } else {
-                        tag = string.Empty;
-                    }
+                    tag = tagMatch.Success ? tagMatch.Value : string.Empty;
                     return tagMatch.Success;
                 }
                 
@@ -190,11 +185,10 @@ namespace Carpenter
                     {
                         if (Tags.TryAdd(foundTag, new List<string>()))
                         {
-                            Logger.Log(LogLevel.Warning, "Found tag " + foundTag);
+                            Logger.Log(LogLevel.Info, "Found tag " + foundTag);
                             while (i + 1 < fileContents.Length && !FindPatternInLine(fileContents[i + 1], Config.kSiteConfigSectionPattern, out string _) && i < fileContents.Length)
                             {
                                 i++;
-                                Logger.Log(LogLevel.Warning, fileContents[i]);
                                 Tags[foundTag].Add(fileContents[i]);
                             }
                         }

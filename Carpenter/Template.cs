@@ -487,7 +487,7 @@ namespace Carpenter
                         foundTag.Type = tagMatch.Groups[0].Value;
                     }
                     results.Add(foundTag); 
-                    Logger.Log(LogLevel.Warning, $"Found tag {content[index].StripWhitespaces()} @ {index}");
+                    Logger.Log(LogLevel.Info, $"Found tag {content[index].StripWhitespaces()} @ {index}");
                 }
             }
 
@@ -505,10 +505,10 @@ namespace Carpenter
                 return;
             }
 
-            if (!relativePath.Contains("other"))
-            {
-                return;
-            }
+            //if (!relativePath.Contains("other"))
+            //{
+            //    return;
+            //}
             
             List<Tag> tags = new();
             List<string> generatedContents = new(_fileContents);
