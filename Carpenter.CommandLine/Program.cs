@@ -19,37 +19,7 @@ namespace Carpenter.CommandLine
         // TODO: Possible arguments:
         // --schema = Specify one schema to process
         // --template = Specify a template file
-
-        /// <summary>
-        /// A simple class that allows us to convieniently time code that it wraps around
-        /// </summary>
-        /// <remarks>
-        /// Probably not super accurate, but accurate enough
-        /// </remarks>
-        private class TimerScope : IDisposable
-        {
-            public TimeSpan Elapsed => _stopwatch.Elapsed;
-
-            private Stopwatch _stopwatch = new();
-            private string _name = string.Empty;
-
-            public TimerScope(string timerName)
-            {
-                _stopwatch.Restart();
-                _name = timerName;
-            }
-
-            public void Dispose()
-            {
-                _stopwatch.Stop();
-            }
-
-            public override string ToString() 
-            {
-                return string.Format("{0} [{1}ms]", _name, Elapsed.Milliseconds);
-            }
-        }
-
+        
         static void Main(string[] args)
         {
             string rootDirectory = string.Empty;
@@ -92,6 +62,7 @@ namespace Carpenter.CommandLine
                 }
 
                 // Load the schema file
+                
                 string pathToSchemaFile = Path.Combine(directory, Config.kSchemaFileName);
                 Schema schema = new Schema();
                 if (!schema.TryLoad(pathToSchemaFile))

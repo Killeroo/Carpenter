@@ -369,7 +369,7 @@ namespace Carpenter
         /// <param name="rootPath">Path to site file </param>
         /// <param name="onDirectoryGenerated">Called each a schema is processed (sucessfully or not)</param>
         public void GenerateAllPagesInSite(
-            Action<bool /** Successfully Generated */, string /** Directory Name */, int /** NumProcessed */, int /** Total */> onDirectoryGenerated)
+            Action<bool /** Successfully Generated */, string /** Directory Name */, int /** NumProcessed */, int /** Total */>? onDirectoryGenerated)
         {
             string siteRootPath = GetRootDir();
             if (!_loaded || Directory.Exists(siteRootPath))

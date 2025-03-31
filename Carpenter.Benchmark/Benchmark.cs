@@ -82,7 +82,19 @@ namespace Carpenter.Tests
                 }
             }
             WriteTimerToConsole(stopwatch, "Site.TryLoad");
-
+            
+            stopwatch = Stopwatch.StartNew();
+            {
+                site.GenerateIndexPages();
+            }
+            WriteTimerToConsole(stopwatch, "Site.GenerateIndexPages");
+            
+            stopwatch = Stopwatch.StartNew();
+            {
+                site.GenerateAllPagesInSite(null);
+            }
+            WriteTimerToConsole(stopwatch, "Site.GenerateAllPagesInSite");
+            
             stopwatch = Stopwatch.StartNew();
             {
                 if (template.TryLoad(site.TemplatePath) == false)
@@ -92,9 +104,6 @@ namespace Carpenter.Tests
                 }
             }
             WriteTimerToConsole(stopwatch, "Template.TryLoad");
-
-            site.GenerateIndexPages();
-            return;
             
             stopwatch = Stopwatch.StartNew();
             {
