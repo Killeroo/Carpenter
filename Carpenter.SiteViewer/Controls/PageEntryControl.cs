@@ -40,11 +40,6 @@ namespace SiteViewer.Controls
         }
 
         /// <summary>
-        /// A reference of the root template used to generate all pages
-        /// </summary>
-        private Template _template;
-
-        /// <summary>
         /// A reference to the site currently being used for all pages
         /// </summary>
         private Site _site;
@@ -59,16 +54,14 @@ namespace SiteViewer.Controls
         /// </summary>
         private BuildState _buildState;
 
-        public PageEntryControl(string directoryPath, ButtonTypes buttonType, Template template, Site site)
+        public PageEntryControl(string directoryPath, ButtonTypes buttonType, Site site)
         {
             InitializeComponent();
 
-            Debug.Assert(template != null);
             Debug.Assert(site != null);
             Debug.Assert(Directory.Exists(directoryPath));
 
             _directoryPath = directoryPath;
-            _template = template;
             _site = site;
             DirectoryLabel.Text = Path.GetFileName(directoryPath);
 
@@ -162,26 +155,18 @@ namespace SiteViewer.Controls
                 return;
             }
 
-            if (_template == null)
-            {
-                return;
-            }
-
             string temp = Path.GetTempPath();
             using (Schema pageSchema = new(schemaPath))
             {
                 // Generate preview page
-                if (_template.GeneratePreviewHtmlForSchema(pageSchema, _site, _directoryPath, out string fileName))
+                HtmlGenerator.BuildHtmlForSchema(pageSchema, _site, true);
+                string previewPath = Path.Combine(_directoryPath, "index_Preview.html");
+                if (File.Exists(previewPath))
                 {
-                    // Open it with default app
-                    string previewPath = Path.Combine(_directoryPath, fileName);
-                    if (File.Exists(previewPath))
+                    Process.Start(new ProcessStartInfo(previewPath)
                     {
-                        Process.Start(new ProcessStartInfo(previewPath)
-                        {
-                            UseShellExecute = true
-                        });
-                    }
+                        UseShellExecute = true
+                    });
                 }
 
             }

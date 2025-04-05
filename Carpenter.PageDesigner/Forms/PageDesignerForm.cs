@@ -89,7 +89,6 @@ namespace PageDesigner.Forms
         private string _schemaPath;
         private Schema _workingSchema;
         private Schema _savedSchema;
-        private Template _template;
         private Site _site;
         private PreviewImageBox _selectedPreviewImageControl;
         private GridPictureBox _selectedGridImage;
@@ -109,22 +108,12 @@ namespace PageDesigner.Forms
 
             _workingPath = Environment.CurrentDirectory;
         }
-        public PageDesignerForm(string path, Template template, Site site) : this()
+        public PageDesignerForm(string path, Site site) : this()
         {
             if (Directory.Exists(path) == false)
             {
                 MessageBox.Show(
                     $"Could not find path, please check and try again",
-                    "Carpenter",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-                return;
-            }
-
-            if (template == null)
-            {
-                MessageBox.Show(
-                    $"Not provided valid Template, please check and try again",
                     "Carpenter",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
@@ -141,7 +130,6 @@ namespace PageDesigner.Forms
                 return;
             }
 
-            _template = template;
             _site = site;
             _workingPath = path;
             _schemaPath = Path.Combine(_workingPath, Config.kSchemaFileName);
@@ -171,20 +159,6 @@ namespace PageDesigner.Forms
             {
                 MessageBox.Show(
                     $"Could not parse site ({ex.GetType()}). Check format and try again.",
-                    "Carpenter",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-                return;
-            }
-
-            try
-            {
-                _template = new Template(_site.TemplatePath);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(
-                    $"Could not parse template ({ex.GetType()}). Check format and try again.",
                     "Carpenter",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
@@ -222,7 +196,7 @@ namespace PageDesigner.Forms
         // TODO: Move to utils 
         private string GeneratePreviewWebpage()
         {
-            if (_workingSchema == null || _template == null)
+            if (_workingSchema == null)
             {
                 return string.Empty;
             }
@@ -232,18 +206,15 @@ namespace PageDesigner.Forms
 
             // Generate preview page
             Stopwatch stopwatch = Stopwatch.StartNew();
-            if (_template.GeneratePreviewHtmlForSchema(_workingSchema, _site, _workingPath, out string previewFileName))
-            {
-                string previewPath = Path.Combine(_workingPath, previewFileName);
 
-                stopwatch.Stop();
-                statusToolStripStatusLabel.Text = string.Format("Generated Preview in {0}ms", stopwatch.ElapsedMilliseconds);
+            // TODO: Hadle exceptions
+            HtmlGenerator.BuildHtmlForSchema(_workingSchema, _site, true);
+            string previewPath = Path.Combine(_workingPath, "index_Preview.html");
 
-                return previewPath;
-            }
+            stopwatch.Stop();
+            statusToolStripStatusLabel.Text = string.Format("Generated Preview in {0}ms", stopwatch.ElapsedMilliseconds);
 
-            // TODO: Log error
-            return string.Empty;
+            return previewPath;
         }
 
         private void DisplayPreviewInNewProcess()

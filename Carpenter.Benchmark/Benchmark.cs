@@ -12,6 +12,7 @@ using System.ComponentModel;
 
 using Carpenter;
 using System.Runtime.CompilerServices;
+using JpegMetadataExtractor;
 
 namespace Carpenter.Tests
 {
@@ -70,7 +71,7 @@ namespace Carpenter.Tests
             Logger.EnableLevel(LogLevel.Info, false);
 
             Site site = new();
-            Template template = new();
+            HtmlGenerator htmlGenerator = new();
             Schema schema = new();
 
             Stopwatch stopwatch = Stopwatch.StartNew();
@@ -91,19 +92,9 @@ namespace Carpenter.Tests
             
             stopwatch = Stopwatch.StartNew();
             {
-                site.GenerateAllPagesInSite(null);
+                site.GenerateAllPagesInSite((_, _, processed, total) => {Console.Write("Generating pages... [{0}/{1}]\r", processed, total);});
             }
             WriteTimerToConsole(stopwatch, "Site.GenerateAllPagesInSite");
-            
-            stopwatch = Stopwatch.StartNew();
-            {
-                if (template.TryLoad(site.TemplatePath) == false)
-                {
-                    Console.WriteLine("Failed to read Template");
-                    return;
-                }
-            }
-            WriteTimerToConsole(stopwatch, "Template.TryLoad");
             
             stopwatch = Stopwatch.StartNew();
             {
@@ -115,37 +106,20 @@ namespace Carpenter.Tests
             }
             WriteTimerToConsole(stopwatch, "Schema.TryLoad");
 
-            // stopwatch = Stopwatch.StartNew();
-            // if (template.GeneratePreviewHtmlForSchema(schema, site, schemaDirectory, out string previewFilename) == false)
-            // {
-            //     Console.WriteLine("Failed to generate preview");
-            //     return;
-            // }
-            // WriteTimerToConsole(stopwatch, "Template.GeneratePreviewHtmlForSchema");
-            //
-            // stopwatch = Stopwatch.StartNew();
-            // {
-            //     Template otherTemplate = new Template(@"G:\My Drive\Website\photos.matthewcarney.net\template.html");
-            //     if (otherTemplate.GenerateHtmlForSchema(schema, site, schemaDirectory) == false)
-            //     {
-            //         Console.WriteLine("Failed to generate webpage");
-            //         return;
-            //     }
-            // }
-            // WriteTimerToConsole(stopwatch, "Template.GenerateHtmlForSchema");
-            
+            JpegParser.UseInternalCache = true;
+            JpegParser.CacheSize = 100;
+            JpegParser.ClearCache();
             stopwatch = Stopwatch.StartNew();
             {
-                template.GeneratePage(schema, site);
+                HtmlGenerator.BuildHtmlForSchema(schema, site);
             }
             WriteTimerToConsole(stopwatch, "Template.GeneratePage");
             
             stopwatch = Stopwatch.StartNew();
             {
-                template.GeneratePage(schema, site);
+                HtmlGenerator.BuildHtmlForSchema(schema, site);
             }
-            WriteTimerToConsole(stopwatch, "Template.GeneratePage (cached)");
-            return;
+            WriteTimerToConsole(stopwatch, "Template.GeneratePage (w/ cached image data)");
             
             stopwatch = Stopwatch.StartNew();
             {
@@ -175,7 +149,7 @@ namespace Carpenter.Tests
             {
                 new (10, ConsoleColor.Green),
                 new (50, ConsoleColor.Yellow),
-                new (100, ConsoleColor.Red),
+                new (100, ConsoleColor.Red)
             };
 
         static void WriteTimerToConsole(Stopwatch stopwatch, string name)

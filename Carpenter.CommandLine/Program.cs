@@ -34,10 +34,10 @@ namespace Carpenter.CommandLine
 
             // Load the template we will use for all pages, it should be in our root directory
             string pathToTemplateFile = Path.Combine(rootDirectory, "template.html");
-            Template template;
+            HtmlGenerator htmlGenerator;
             try
             {
-                template = new Template(pathToTemplateFile);
+                htmlGenerator = new HtmlGenerator(pathToTemplateFile);
             }
             catch (Exception ex)
             {
@@ -72,7 +72,7 @@ namespace Carpenter.CommandLine
                 }
 
                 // Finally generate the webpage
-                template.GenerateHtmlForSchema(schema, directory);
+                htmlGenerator.GenerateHtmlForSchema(schema, directory);
 
                 count++;
             }

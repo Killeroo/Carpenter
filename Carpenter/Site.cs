@@ -409,8 +409,7 @@ namespace Carpenter
                             {
                                 string currentDirectoryPath = Path.GetDirectoryName(schemaPath);
                                 using Schema localSchema = new(schemaPath);
-                                Template template = new(TemplatePath);
-                                template.GeneratePage(localSchema, this);
+                                HtmlGenerator.BuildHtmlForSchema(localSchema, this);
 
                                 lock (lockObject)
                                 {
@@ -541,12 +540,6 @@ namespace Carpenter
             {
                 return;
             }
-
-            if (!File.Exists(TemplatePath))
-            {
-                return;
-            }
-            Template template = new(TemplatePath);
             
             // An index file is basically any path that contains multiple schemas in it's child directories
             Dictionary<string, List<Schema>> foundIndexDirectories = new();
@@ -565,7 +558,7 @@ namespace Carpenter
 
             foreach (KeyValuePair<string, List<Schema>> indexDir in foundIndexDirectories)
             {
-                template.GenerateIndex(indexDir.Key, indexDir.Value, this);
+                HtmlGenerator.BuildHtmlForIndexDirectory(indexDir.Key, indexDir.Value, this);
             }
 
         }

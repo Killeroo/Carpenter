@@ -45,11 +45,9 @@ namespace SiteViewer.Forms
         private const string kPageDesignerAppName = "PageDesigner.exe";
 
         private FileSystemWatcher _fileSystemWatcher = null;
-        private Template _template = new Template();
-        private Site _site = new Site();
+        private Site _site = new();
         private string _rootPath = string.Empty;
         private string _lastCreatedPageName = string.Empty;
-        private string _templatePath = string.Empty;
 
         public SiteViewerForm()
         {
@@ -78,14 +76,6 @@ namespace SiteViewer.Forms
                 return;
             }
 
-            // The site file contains the template file location
-            _template = new Template();
-            _templatePath = _site.TemplatePath;
-            if (_template.TryLoad(_site.TemplatePath) == false)
-            {
-                return;
-            }
-
             // We have loaded everything we need! Render the pages in the root dir
             RefreshPageList();
 
@@ -110,12 +100,6 @@ namespace SiteViewer.Forms
         /// <param name="path">Path to run page designer in, will attempt to open a SCHEMA file in the path if one is available or will create a new one</param>
         public void RunPageDesigner(string path)
         {
-            if (_template == null)
-            {
-                Debug.Write("Could not open designer, template not loaded");
-                return;
-            }
-
 #if false
             PageDesignerForm form = new(path, _template, _site);
             form.ShowDialog();
@@ -358,7 +342,7 @@ namespace SiteViewer.Forms
             foreach (string directory in Directory.GetDirectories(_rootPath))
             {
                 bool schemaPresent = File.Exists(Path.Combine(_rootPath, directory, "SCHEMA"));
-                pageEntries.Add(new PageEntryControl(directory, schemaPresent ? PageEntryControl.ButtonTypes.Edit : PageEntryControl.ButtonTypes.Create, _template, _site));
+                pageEntries.Add(new PageEntryControl(directory, schemaPresent ? PageEntryControl.ButtonTypes.Edit : PageEntryControl.ButtonTypes.Create, _site));
             }
             pageEntries.Sort((x, y) => x.GetDirectoryName().CompareTo(y.GetDirectoryName()));
 
