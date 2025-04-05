@@ -236,7 +236,7 @@ namespace SiteViewer.Forms
 
                 // We have to modify the PAGE_URL to have the site URL included (as we do when generating HTML in template code
                 Dictionary<Schema.Tokens, string> modifiedSchemaTokens = new(schema.TokenValues);
-                modifiedSchemaTokens[Schema.Tokens.PageUrl] = string.Format("{0}/{1}/", _site.Url, modifiedSchemaTokens[Schema.Tokens.PageUrl]);
+                modifiedSchemaTokens.AddOrUpdate(Schema.Tokens.PageUrl, string.Format("{0}/{1}/", _site.Url, _site.GetSchemaRelativePath(schema)));
 
                 string generatedHtmlSnippet = string.Empty;
                 foreach (string line in kHtmlTemplate.Split(Environment.NewLine))

@@ -115,25 +115,34 @@ namespace Carpenter.Tests
             }
             WriteTimerToConsole(stopwatch, "Schema.TryLoad");
 
-            stopwatch = Stopwatch.StartNew();
-            if (template.GeneratePreviewHtmlForSchema(schema, site, schemaDirectory, out string previewFilename) == false)
-            {
-                Console.WriteLine("Failed to generate preview");
-                return;
-            }
-            WriteTimerToConsole(stopwatch, "Template.GeneratePreviewHtmlForSchema");
+            // stopwatch = Stopwatch.StartNew();
+            // if (template.GeneratePreviewHtmlForSchema(schema, site, schemaDirectory, out string previewFilename) == false)
+            // {
+            //     Console.WriteLine("Failed to generate preview");
+            //     return;
+            // }
+            // WriteTimerToConsole(stopwatch, "Template.GeneratePreviewHtmlForSchema");
+            //
+            // stopwatch = Stopwatch.StartNew();
+            // {
+            //     if (template.GenerateHtmlForSchema(schema, site, schemaDirectory) == false)
+            //     {
+            //         Console.WriteLine("Failed to generate webpage");
+            //         return;
+            //     }
+            // }
+            // WriteTimerToConsole(stopwatch, "Template.GenerateHtmlForSchema");
 
             stopwatch = Stopwatch.StartNew();
             {
-                if (template.GenerateHtmlForSchema(schema, site, schemaDirectory) == false)
+                template.GeneratePage(schema, site, site.GetRootDir());
                 {
-                    Console.WriteLine("Failed to generate webpage");
+                    // Console.WriteLine("Failed to generate webpage");
                     return;
                 }
-
             }
-            WriteTimerToConsole(stopwatch, "Template.GenerateHtmlForSchema");
-
+            WriteTimerToConsole(stopwatch, "Template.GeneratePage");
+            
             stopwatch = Stopwatch.StartNew();
             {
                 if (schema.TrySave(tempPath) == false)

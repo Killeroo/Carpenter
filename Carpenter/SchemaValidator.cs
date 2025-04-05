@@ -113,10 +113,6 @@ namespace Carpenter
                 }
                 return true;
             }),
-            new ValidationTest("TestUrlMatchesLocalPath", TestImportance.Optional, (Schema schema) =>
-            {
-                return schema.WorkingDirectory().Contains(schema.PageUrl);
-            }),
             new ValidationTest("TestSchemaHasThumbnailSet", TestImportance.Optional, (Schema schema) =>
             {
                 return schema.Thumbnail != string.Empty;
@@ -169,7 +165,9 @@ namespace Carpenter
                 bool testPassed = true;
                 foreach (Tokens token in Enum.GetValues(typeof(Tokens)))
                 {
-                    if (token < Tokens.Image && !Schema.OptionalTokens.Contains(token) && schema.TokenValues.ContainsKey(token))
+                    if (token < Tokens.Image 
+                        && !Schema.OptionalTokens.Contains(token) 
+                        && schema.TokenValues.ContainsKey(token))
                     {
                         testPassed &= schema.TokenValues[token] != string.Empty;
                     }

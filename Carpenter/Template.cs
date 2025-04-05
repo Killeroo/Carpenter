@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.IO;
 using System.Diagnostics;
@@ -284,7 +285,7 @@ namespace Carpenter
 
             // We want to copy and modify the schema token values to add the base site url to be used when adding the page url
             Dictionary<Schema.Tokens, string> modifiedTokenValues = new(schema.TokenValues);
-            modifiedTokenValues[Schema.Tokens.PageUrl] = string.Format("{0}/{1}", site.Url, modifiedTokenValues[Schema.Tokens.PageUrl]);
+            modifiedTokenValues.AddOrUpdate(Schema.Tokens.PageUrl, string.Format("{0}/{1}", site.Url, site.GetSchemaRelativePath(schema)));
 
             // We are almost there, go through the copy and replace all tokens with values from the schema
             for (int i = 0; i < templateCopy.Count; i++)
@@ -468,11 +469,6 @@ namespace Carpenter
             }
         }
         
-        public void GeneratePage(Schema page)
-        {
-            
-        }
-        
         private List<Tag> FindTags(List<string> content)
         {
             List<Tag> results = new();
@@ -494,21 +490,143 @@ namespace Carpenter
             return results;
         }
         
+        public void GeneratePage(Schema schema, Site site, string outputPath)
+        {
+            if (site == null || schema == null)
+            {
+                return;
+            }
+            
+            List<Tag> tags = new();
+            List<string> generatedContents = new(_fileContents);
+            Dictionary<Tokens, string> tokenValues = new();
+            do
+            {
+                // Find all tags
+                tags = FindTags(generatedContents);
+                
+                foreach (Tag tag in tags.Where(x => x.Type == "page").OrderByDescending(x => x.ArrayIndex))
+                {
+                    if (!site.Tags.TryGetValue(tag.Id, out List<string> tagContents)) // TODO: Skip for layout section
+                    {
+                        continue;
+                    }
+
+                    int offset = tag.ArrayIndex + 1;
+                    string padding = generatedContents[tag.ArrayIndex].Split("<!--").First();
+                    if (tag.Id == "page:layout")
+                    {
+                        Dictionary<Type, string> LayoutTypeToTagName = new()
+                        {
+                            { typeof(TitleSection), "layout:title" },
+                            { typeof(ImageSection), "layout:image-standalone" },
+                            { typeof(ImageColumnSection), "layout:image-column" },
+                        };
+                        
+                        // Generate the layout section!
+                        foreach (Section section in schema.LayoutSections)
+                        {
+                            if (!site.Tags.TryGetValue(LayoutTypeToTagName[section.GetType()], out List<string> sectionContents))
+                            {
+                                Debug.Assert(false); // We want to know when this fails;
+                                continue;
+                            }
+                            
+                            tokenValues.Clear();
+                            List<string> sectionContentsCopy = new(sectionContents); // TODO: Hate this, remove the amount of duplicates
+                            if (section is TitleSection asTitleSection)
+                            {
+                                tokenValues.Add(Tokens.GridTitle, asTitleSection.TitleText);
+                                ResolveTokens(tokenValues, ref sectionContentsCopy);
+                            }
+                            else if (section is ImageSection asImageSection)
+                            {
+                                tokenValues.Add(Tokens.Image, asImageSection.ImageUrl);
+                                tokenValues.Add(Tokens.AlternateImage, asImageSection.AltImageUrl);
+                                ResolveTokens(tokenValues, ref sectionContentsCopy);
+                            } 
+                            else if (section is ImageColumnSection asImageColumnSection)
+                            {
+                                List<Tag> sectionTags = FindTags(sectionContentsCopy);
+                                sectionTags = sectionTags.Where(x => x.Type.Contains("foreach")).ToList();
+                                Debug.Assert(sectionTags.Count > 0);
+                                
+                                // We only care about the first foreach tag we find.
+                                // Ideally we want to be able to resolve any tag recursively but that is for later.
+                                Debug.Assert(site.Tags.TryGetValue(LayoutTypeToTagName[typeof(ImageSection)], out List<string> imageSection));
+                                int innerOffset = sectionTags.First().ArrayIndex + 1;
+                                foreach (ImageSection innerImageSection in asImageColumnSection.Sections)
+                                {
+                                    List<string> imageSectionCopy = new(imageSection);
+                                    tokenValues.Clear();
+                                    tokenValues.Add(Tokens.Image, innerImageSection.ImageUrl);
+                                    tokenValues.Add(Tokens.AlternateImage, innerImageSection.AltImageUrl);
+                                    ResolveTokens(tokenValues, ref imageSectionCopy);
+                                    sectionContentsCopy.InsertRange(innerOffset, imageSectionCopy);
+                                    innerOffset += imageSectionCopy.Count;
+                                }
+                            }
+                            
+                            tagContents.AddRange(sectionContentsCopy);
+                        }
+                        
+                    }
+                    
+                    foreach (string line in tagContents)
+                    {
+                        generatedContents.Insert(offset, padding + line);
+                        offset++;
+                    }
+                }
+                
+                // Clear all tag placeholders
+                foreach (Tag tag in tags.OrderByDescending(x => x.ArrayIndex))
+                {
+                    generatedContents.RemoveAt(tag.ArrayIndex);
+                }
+
+                // Populate all tokens
+                for (int index = 0; index < generatedContents.Count; index++)
+                {
+                    foreach (KeyValuePair<string, Tokens> token in Schema.TokenTable)
+                    {
+                        if (schema.TokenValues.Keys.Contains(token.Value))
+                        {
+                            generatedContents[index] =
+                                generatedContents[index].Replace(token.Key, schema.TokenValues[token.Value]);
+                        }
+                    }
+                }
+            } while (tags.Count > 0);
+
+            File.WriteAllLines(Path.Combine(site.GetRootDir(), "test-index.html"), generatedContents);
+        }
+        
+        // TODO: Rename everything here, too much 'content'
+        void ResolveTokens(Dictionary<Schema.Tokens, string> tokenValues,
+            ref List<string> content)
+        {
+            for (int index = 0; index < content.Count; index++)
+            {
+                foreach (KeyValuePair<string, Tokens> token in Schema.TokenTable)
+                {
+                    if (tokenValues.TryGetValue(token.Value, out string? value))
+                    {
+                        content[index] = content[index].Replace(token.Key, value);
+                    }
+                }
+            }    
+        }
+        
         // TODO: Add a different template for indexes
         // TODO: Expand to normal page generation
         // TODO: Add headers
-        // jobs a gooden
         public void GenerateIndex(string relativePath, List<Schema> schemas, Site site)
         {
             if (site == null || schemas.Count == 0)
             {
                 return;
             }
-
-            //if (!relativePath.Contains("other"))
-            //{
-            //    return;
-            //}
             
             List<Tag> tags = new();
             List<string> generatedContents = new(_fileContents);
@@ -580,7 +698,7 @@ namespace Carpenter
             modifiedSchemaTokens[Schema.Tokens.PageUrl] = string.Format("{0}{1}/{2}", 
                 site.Url,
                 relativePath.Replace("\\", "/"),
-                modifiedSchemaTokens[Schema.Tokens.PageUrl]);
+                site.GetSchemaRelativePath(schema));
 
             // Get the dimensions for the thumbnail image
             (int width, int height) thumbnailDimensions = new(0, 0);
@@ -630,11 +748,6 @@ namespace Carpenter
             }
 
             return generatedContents;
-        }
-
-        private void ResolveTags(List<string> outContext, Dictionary<int, string> tags)
-        {
-           
         }
 
         /// <summary>

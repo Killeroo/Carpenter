@@ -197,7 +197,6 @@ namespace PageDesigner.Forms
 
         private void AddTextboxCallbacks()
         {
-            PageUrlTextBox.TextChanged += FormTextBox_TextChanged;
             TitleTextBox.TextChanged += FormTextBox_TextChanged;
             ThumbnailTextBox.TextChanged += FormTextBox_TextChanged;
             LocationTextBox.TextChanged += FormTextBox_TextChanged;
@@ -210,7 +209,6 @@ namespace PageDesigner.Forms
 
         private void RemoveTextboxCallbacks()
         {
-            PageUrlTextBox.TextChanged -= FormTextBox_TextChanged;
             TitleTextBox.TextChanged -= FormTextBox_TextChanged;
             ThumbnailTextBox.TextChanged -= FormTextBox_TextChanged;
             LocationTextBox.TextChanged -= FormTextBox_TextChanged;
@@ -307,7 +305,6 @@ namespace PageDesigner.Forms
                 }
             }
 
-            PageUrlTextBox.Text = folderName == string.Empty ? Settings.Default.PageUrlLastUsedValue : folderName;
             TitleTextBox.Text = title == string.Empty ? Settings.Default.TitleLastUsedValue : title;
             MonthTextBox.Text = month == string.Empty ? Settings.Default.MonthLastUsedValue : month;
             YearTextBox.Text = year == string.Empty ? Settings.Default.YearLastUsedValue : year;
@@ -416,7 +413,6 @@ namespace PageDesigner.Forms
 
             // Save whatever values we entered for next time!
             Settings.Default.ThumbnailLastUsedValue = ThumbnailTextBox.Text;
-            Settings.Default.PageUrlLastUsedValue = PageUrlTextBox.Text;
             Settings.Default.TitleLastUsedValue = TitleTextBox.Text;
             Settings.Default.LocationLastUsedValue = LocationTextBox.Text;
             Settings.Default.MonthLastUsedValue = MonthTextBox.Text;
@@ -434,7 +430,6 @@ namespace PageDesigner.Forms
             }
 
             // Update tokens values from page
-            _workingSchema.PageUrl = PageUrlTextBox.Text;
             _workingSchema.Title = TitleTextBox.Text;
             _workingSchema.Location = LocationTextBox.Text;
             _workingSchema.Month = MonthTextBox.Text;
@@ -579,7 +574,6 @@ namespace PageDesigner.Forms
                 return _workingSchema.TokenValues[token];
             }
 
-            PageUrlTextBox.Text = GetTokenFromSchema(Schema.Tokens.PageUrl, Settings.Default.PageUrlLastUsedValue);
             TitleTextBox.Text = GetTokenFromSchema(Schema.Tokens.Title, Settings.Default.TitleLastUsedValue);
             LocationTextBox.Text = GetTokenFromSchema(Schema.Tokens.Location, Settings.Default.LocationLastUsedValue);
             MonthTextBox.Text = GetTokenFromSchema(Schema.Tokens.Month, Settings.Default.MonthLastUsedValue);

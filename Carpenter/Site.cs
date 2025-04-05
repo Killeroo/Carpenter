@@ -127,6 +127,19 @@ namespace Carpenter
         }
 
         /// <summary>
+        /// Returns the path to the schema file relative to the root directory of the site.
+        /// </summary>
+        public string GetSchemaRelativePath(Schema schema)
+        {
+            if (_loaded == false || _configFilePath == string.Empty)
+            {
+                return string.Empty;
+            }
+
+            return schema.WorkingDirectory().Replace(_configFilePath, String.Empty);
+        }
+
+        /// <summary>
         /// Try and load a site at the given path
         /// </summary>
         /// <param name="pathToSiteFile"></param>
@@ -185,7 +198,6 @@ namespace Carpenter
                     {
                         if (Tags.TryAdd(foundTag, new List<string>()))
                         {
-                            Logger.Log(LogLevel.Info, "Found tag " + foundTag);
                             while (i + 1 < fileContents.Length && !FindPatternInLine(fileContents[i + 1], Config.kSiteConfigSectionPattern, out string _) && i < fileContents.Length)
                             {
                                 i++;

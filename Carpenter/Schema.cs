@@ -24,7 +24,7 @@ namespace Carpenter
         public enum Tokens
         {
             // Page tokens
-            PageUrl,
+            PageUrl, // Note: Not specified in schema file, generated dynamically in template.cs
             Location,
             Title,
             Month,
@@ -62,7 +62,9 @@ namespace Carpenter
             { "%CAMERA", Tokens.Camera },
             { "%AUTHOR", Tokens.Author },
             { "%THUMBNAIL", Tokens.Thumbnail },
-            { "%DESCRIPTION", Tokens.Description }
+            { "%DESCRIPTION", Tokens.Description },
+            { "%IMAGE", Tokens.Image },
+            { "%ALT_IMAGE", Tokens.AlternateImage }
         };
 
         /// <summary>
@@ -90,7 +92,8 @@ namespace Carpenter
         public static readonly HashSet<Tokens> OptionalTokens = new()
         {
             Tokens.Description,
-            Tokens.GridTitle
+            Tokens.GridTitle,
+            Tokens.PageUrl
         };
 
         /// <summary>
@@ -130,11 +133,6 @@ namespace Carpenter
         /// <summary>
         /// Accessors for Token values
         /// </summary>
-        public string PageUrl 
-        {
-            get { return TokenValues.TryGetValue(Tokens.PageUrl, out string value) ? value : string.Empty; }
-            set { TokenValues.AddOrUpdate(Tokens.PageUrl, value); }
-        }
         public string Location 
         {
             get { return TokenValues.TryGetValue(Tokens.Location, out string value) ? value : string.Empty; }
@@ -298,9 +296,6 @@ namespace Carpenter
                     }
                 }
             }
-
-            // We have to strip forward slashes from any urls so we can process them consistently 
-            TokenValues[Tokens.PageUrl] = TokenValues[Tokens.PageUrl].StripForwardSlashes();
 
             // Parse options in file
             for (int i = 0; i < schemaFileContents.Length; i++)
@@ -503,6 +498,9 @@ namespace Carpenter
             schemaFileContents.Add(kTokensTag);
             foreach (KeyValuePair<Tokens, string> tokenPair in TokenValues)
             {
+                // This tag is generated so don't bother saving it a file
+                if (tokenPair.Key == Tokens.PageUrl) continue;
+                
                 // Ok we need to find what the string for the given token type is
                 // use the original TokenTable for that
                 string tokenName = TokenTable.GetKeyOfValue(tokenPair.Key);
