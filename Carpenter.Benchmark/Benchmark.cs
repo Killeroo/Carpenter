@@ -125,23 +125,27 @@ namespace Carpenter.Tests
             //
             // stopwatch = Stopwatch.StartNew();
             // {
-            //     if (template.GenerateHtmlForSchema(schema, site, schemaDirectory) == false)
+            //     Template otherTemplate = new Template(@"G:\My Drive\Website\photos.matthewcarney.net\template.html");
+            //     if (otherTemplate.GenerateHtmlForSchema(schema, site, schemaDirectory) == false)
             //     {
             //         Console.WriteLine("Failed to generate webpage");
             //         return;
             //     }
             // }
             // WriteTimerToConsole(stopwatch, "Template.GenerateHtmlForSchema");
-
+            
             stopwatch = Stopwatch.StartNew();
             {
-                template.GeneratePage(schema, site, site.GetRootDir());
-                {
-                    // Console.WriteLine("Failed to generate webpage");
-                    return;
-                }
+                template.GeneratePage(schema, site);
             }
             WriteTimerToConsole(stopwatch, "Template.GeneratePage");
+            
+            stopwatch = Stopwatch.StartNew();
+            {
+                template.GeneratePage(schema, site);
+            }
+            WriteTimerToConsole(stopwatch, "Template.GeneratePage (cached)");
+            return;
             
             stopwatch = Stopwatch.StartNew();
             {

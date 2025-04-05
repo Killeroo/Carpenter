@@ -136,7 +136,7 @@ namespace Carpenter
                 return string.Empty;
             }
 
-            return schema.WorkingDirectory().Replace(_configFilePath, String.Empty);
+            return schema.WorkingDirectory().Replace(Path.GetDirectoryName(_configFilePath), String.Empty);
         }
 
         /// <summary>
@@ -383,8 +383,7 @@ namespace Carpenter
         public void GenerateAllPagesInSite(
             Action<bool /** Successfully Generated */, string /** Directory Name */, int /** NumProcessed */, int /** Total */>? onDirectoryGenerated)
         {
-            string siteRootPath = GetRootDir();
-            if (!_loaded || Directory.Exists(siteRootPath))
+            if (!_loaded)
             {
                 return;
             }
@@ -411,12 +410,12 @@ namespace Carpenter
                                 string currentDirectoryPath = Path.GetDirectoryName(schemaPath);
                                 using Schema localSchema = new(schemaPath);
                                 Template template = new(TemplatePath);
-                                bool wasGeneratedSuccessfully = template.GenerateHtmlForSchema(localSchema, this, currentDirectoryPath);
+                                template.GeneratePage(localSchema, this);
 
                                 lock (lockObject)
                                 {
                                     onDirectoryGenerated?.Invoke(
-                                        wasGeneratedSuccessfully, 
+                                        true, // TODO: Lol Nah 
                                         currentDirectoryPath,
                                         processed++,
                                         schemaPaths.Count);

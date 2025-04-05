@@ -38,6 +38,10 @@ namespace Carpenter
             // Layout specific tokens
             Image,
             AlternateImage,
+            
+            // Image specific tokens
+            ImageWidth,
+            ImageHeight
         };
 
         private enum ElementTags
@@ -64,7 +68,9 @@ namespace Carpenter
             { "%THUMBNAIL", Tokens.Thumbnail },
             { "%DESCRIPTION", Tokens.Description },
             { "%IMAGE", Tokens.Image },
-            { "%ALT_IMAGE", Tokens.AlternateImage }
+            { "%ALT_IMAGE", Tokens.AlternateImage },
+            { "%WIDTH", Tokens.ImageWidth },
+            { "%HEIGHT", Tokens.ImageHeight }
         };
 
         /// <summary>
