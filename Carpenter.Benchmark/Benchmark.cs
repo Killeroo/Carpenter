@@ -71,7 +71,6 @@ namespace Carpenter.Tests
             Logger.EnableLevel(LogLevel.Info, false);
 
             Site site = new();
-            HtmlGenerator htmlGenerator = new();
             Schema schema = new();
 
             Stopwatch stopwatch = Stopwatch.StartNew();
