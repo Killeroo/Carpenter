@@ -54,6 +54,7 @@ namespace SiteViewer.Forms
         public SiteViewerForm()
         {
             InitializeComponent();
+            FileTreeView.LabelEdit = true;
             FileTreeView.NodeMouseClick += (sender, args) => FileTreeView.SelectedNode = args.Node;
             EnableDoubleBuffering(FileTreeView);
         }
@@ -110,7 +111,7 @@ namespace SiteViewer.Forms
             form.ShowDialog();
 #else
             ProcessStartInfo startInfo = new(kPageDesignerAppName);
-            startInfo.Arguments = $"\"{path}\" \"{_rootPath}\"";
+            startInfo.Arguments = $"\"{path}\" \"{_site.GetRootDir()}\"";
             Process.Start(startInfo);
 #endif
         }
@@ -571,6 +572,8 @@ namespace SiteViewer.Forms
                 {
                     ContextMenuStrip contextMenu = new();
                     contextMenu.Items.Add("New Page...", null, (sender, args) => ShowNewPageDialog(Path.GetDirectoryName(e.Node.Tag as string)));
+                    contextMenu.Items.Add("Rename", null, (sender, args) => e.Node.BeginEdit());
+                    // Show in explorer
                     contextMenu.Show(this, e.Location, ToolStripDropDownDirection.Right);
                 }
             }
@@ -591,5 +594,30 @@ namespace SiteViewer.Forms
 
         [DllImport("user32.dll")]
         private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wp, IntPtr lp);
+
+        private void FileTreeView_AfterLabelEdit(object sender, NodeLabelEditEventArgs e)
+        {
+            // TODO: Update the directory
+        }
+
+        private void FileTreeView_BeforeLabelEdit(object sender, NodeLabelEditEventArgs e)
+        {
+            // Don't allow editing if it isn't a directory
+            if (!Directory.Exists(e.Node.Tag as string))
+            {
+                e.CancelEdit = true;
+            }
+        }
+
+        private void FileTreeView_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.F2 || e.KeyCode == Keys.Enter)
+            {
+                if (Directory.Exists(FileTreeView.SelectedNode.Tag as string))
+                {
+                    FileTreeView.SelectedNode.BeginEdit();
+                }
+            }
+        }
     }
 }

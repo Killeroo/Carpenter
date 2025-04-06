@@ -143,24 +143,24 @@
             // toolStripSeparator2
             // 
             toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(177, 6);
+            toolStripSeparator2.Size = new Size(159, 6);
             // 
             // openInExplorerToolStripMenuItem
             // 
             openInExplorerToolStripMenuItem.Name = "openInExplorerToolStripMenuItem";
-            openInExplorerToolStripMenuItem.Size = new Size(180, 22);
+            openInExplorerToolStripMenuItem.Size = new Size(162, 22);
             openInExplorerToolStripMenuItem.Text = "Open in Explorer";
             openInExplorerToolStripMenuItem.Click += openInExplorerToolStripMenuItem_Click;
             // 
             // toolStripSeparator3
             // 
             toolStripSeparator3.Name = "toolStripSeparator3";
-            toolStripSeparator3.Size = new Size(177, 6);
+            toolStripSeparator3.Size = new Size(159, 6);
             // 
             // exitToolStripMenuItem
             // 
             exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            exitToolStripMenuItem.Size = new Size(180, 22);
+            exitToolStripMenuItem.Size = new Size(162, 22);
             exitToolStripMenuItem.Text = "Exit";
             exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
@@ -174,14 +174,14 @@
             // siteToolStripMenuItem
             // 
             siteToolStripMenuItem.Name = "siteToolStripMenuItem";
-            siteToolStripMenuItem.Size = new Size(180, 22);
+            siteToolStripMenuItem.Size = new Size(93, 22);
             siteToolStripMenuItem.Text = "Site";
             siteToolStripMenuItem.Click += siteToolStripMenuItem_Click;
             // 
             // toolStripSeparator4
             // 
             toolStripSeparator4.Name = "toolStripSeparator4";
-            toolStripSeparator4.Size = new Size(177, 6);
+            toolStripSeparator4.Size = new Size(90, 6);
             // 
             // toolsToolStripMenuItem
             // 
@@ -250,8 +250,11 @@
             FileTreeView.SelectedImageIndex = 0;
             FileTreeView.Size = new Size(528, 352);
             FileTreeView.TabIndex = 10;
+            FileTreeView.BeforeLabelEdit += FileTreeView_BeforeLabelEdit;
+            FileTreeView.AfterLabelEdit += FileTreeView_AfterLabelEdit;
             FileTreeView.NodeMouseClick += FileTreeView_NodeMouseClick;
             FileTreeView.NodeMouseDoubleClick += FileTreeView_NodeMouseDoubleClick;
+            FileTreeView.KeyDown += FileTreeView_KeyDown;
             // 
             // FileTreeImageList
             // 
