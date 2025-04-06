@@ -22,6 +22,8 @@ using SiteViewer.Controls;
 using PageDesigner.Forms;
 using static System.Windows.Forms.AxHost;
 using Carpenter.SiteViewer.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using System.Runtime.InteropServices;
 
 
 namespace SiteViewer.Forms
@@ -52,6 +54,8 @@ namespace SiteViewer.Forms
         public SiteViewerForm()
         {
             InitializeComponent();
+            FileTreeView.NodeMouseClick += (sender, args) => FileTreeView.SelectedNode = args.Node;
+            EnableDoubleBuffering(FileTreeView);
         }
 
         /// <summary>
@@ -78,6 +82,7 @@ namespace SiteViewer.Forms
 
             // We have loaded everything we need! Render the pages in the root dir
             RefreshPageList();
+            PopulateTreeView();
 
             // Save path to settings
             Settings.Default.LastLoadedRootPath = path;
@@ -101,7 +106,7 @@ namespace SiteViewer.Forms
         public void RunPageDesigner(string path)
         {
 #if false
-            PageDesignerForm form = new(path, _template, _site);
+            PageDesignerForm form = new(path, _site.GetRootDir());
             form.ShowDialog();
 #else
             ProcessStartInfo startInfo = new(kPageDesignerAppName);
@@ -128,156 +133,73 @@ namespace SiteViewer.Forms
             StateToolStripStatusLabel.Text = $"{removedFiles} files removed";
         }
 
-        /// <summary>
-        /// Generate headers for each page in the rootPath/site.
-        /// </summary>
-        /// <remarks>
-        /// A header in this context is a small snippet of HTML for each page that can be used on a landing page.
-        /// </remarks>
-        private void GeneratePageHeaders()
+        private void PopulateTreeView()
         {
-            if (Directory.Exists(PathTextBox.Text) == false)
-            {
+            // Clear the tree
+            FileTreeView.Nodes.Clear();
+
+            // If entered directory doesnt exist, dont bother rendering tree
+            if (!Directory.Exists(PathTextBox.Text))
                 return;
-            }
 
-            // TODO: Should probably put this somewhere else
-            const string kHtmlTemplate = @"
-<div class=""container"">
-    <a href=""%PAGE_URL/"">
-        <img class=""preview_image"" src=""%PAGE_URL/%THUMBNAIL"" width=""%WIDTH"" height=""%HEIGHT"" style=""width:100%"">
-
-        <div style=""margin-left: 1em;"">
-            <h3 style=""margin-top: 0; margin-bottom: 0;"">%TITLE</h3>
-            <p style=""color: black"">%MONTH %YEAR - %CAMERA - Digital</p>
-        </div>
-    </a>
-</div>
-";
-
-            Dictionary<string, int> MonthStringToInt = new()
+            void AddDirectoryToTreeView(TreeNodeCollection CurrentNodes, string currentDirectory)
             {
-                { "january", 1 },
-                { "february", 2 },
-                { "march", 3 },
-                { "april", 4 },
-                { "may", 5 },
-                { "june", 6 },
-                { "july", 7 },
-                { "august", 8 },
-                { "september", 9 },
-                { "october", 10 },
-                { "november", 11 },
-                { "december", 12 }
-            };
+                // Get folders and files
+                string[] dirs = Directory.GetDirectories(currentDirectory);
+                string[] files = Directory.GetFiles(currentDirectory);
 
-            Dictionary<DateTime, Schema> schemasWithDate = new();
-            foreach (string directory in Directory.EnumerateDirectories(PathTextBox.Text))
-            {
-                Schema schema = new();
-                if (schema.TryLoad(Path.Combine(directory, Config.kSchemaFileName)))
+                foreach (string dir in dirs)
                 {
-                    DateTime date = new(
-                        Convert.ToInt32(schema.TokenValues[Schema.Tokens.Year]),
-                        MonthStringToInt[schema.TokenValues[Schema.Tokens.Month].ToLower()],
-                        1);
+                    DirectoryInfo dirInfo = new DirectoryInfo(dir);
+                    TreeNode node = new TreeNode(dirInfo.Name, 0, 1);
 
-                    while (schemasWithDate.ContainsKey(date))
+                    try
                     {
-                        date = date.AddDays(1);
-                    }
-                    schemasWithDate.Add(date, schema);
-                }
-            }
+                        node.Tag = dir;  //keep the directory's full path in the tag for use later
 
-            List<KeyValuePair<DateTime, Schema>> schemasOrderedByDate = schemasWithDate.OrderByDescending(x => x.Key).ToList();
-            List<string> generatedPageEntries = new();
-            foreach (KeyValuePair<DateTime, Schema> entry in schemasOrderedByDate)
-            {
-                Schema schema = entry.Value;
-
-                int thumbnailWidth = 0;
-                int thumbnailHeight = 0;
-                if (schema.Thumbnail != string.Empty)
-                {
-                    string thumbnailFilename = schema.Thumbnail;
-                    foreach (string imageFile in Directory.EnumerateFiles(PathTextBox.Text, string.Format("*.{0}", Path.GetExtension(thumbnailFilename)), SearchOption.AllDirectories))
-                    {
-                        if (Path.GetFileName(imageFile) == thumbnailFilename)
+                        if (dirInfo.GetFiles().Count() > 0 || dirInfo.GetDirectories().Count() > 0)
                         {
-                            var imageMetadata = JpegParser.GetMetadata(imageFile);
-                            thumbnailWidth = imageMetadata.Width;
-                            thumbnailHeight = imageMetadata.Height;
-                            break;
+                            AddDirectoryToTreeView(node.Nodes, dir);
                         }
                     }
-                }
-                else
-                {
-                    // No thumbnail, skip generating this page
-                    continue;
-                }
-
-                // We have to modify the PAGE_URL to have the site URL included (as we do when generating HTML in template code
-                Dictionary<Schema.Tokens, string> modifiedSchemaTokens = new(schema.TokenValues);
-                modifiedSchemaTokens.AddOrUpdate(Schema.Tokens.PageUrl, string.Format("{0}/{1}/", _site.Url, _site.GetSchemaRelativePath(schema)));
-
-                string generatedHtmlSnippet = string.Empty;
-                foreach (string line in kHtmlTemplate.Split(Environment.NewLine))
-                {
-                    string processedLine = line;
-
-                    // We still need to manually find and replace the image and width height tags
-                    if (line.Contains(Config.kTemplateImageWidthToken) || line.Contains(Config.kTemplateImageHeightToken))
+                    catch (UnauthorizedAccessException)
                     {
-                        processedLine = processedLine.Replace(Config.kTemplateImageWidthToken, thumbnailWidth.ToString());
-                        processedLine = processedLine.Replace(Config.kTemplateImageHeightToken, thumbnailHeight.ToString());
+                        //if an unauthorized access exception occured display a locked folder
+                        node.ImageIndex = 12;
+                        node.SelectedImageIndex = 12;
                     }
-
-                    // Process each line and replace them with values from the schema
-                    foreach (KeyValuePair<string, Schema.Tokens> tokenEntry in Schema.TokenTable)
+                    finally
                     {
-                        if (schema.TokenValues.ContainsKey(tokenEntry.Value) && !Schema.OptionalTokens.Contains(tokenEntry.Value))
-                        {
-                            processedLine = processedLine.Replace(tokenEntry.Key, schema.TokenValues[tokenEntry.Value]);
-                        }
+                        CurrentNodes.Add(node);
                     }
-                    generatedHtmlSnippet += processedLine + Environment.NewLine;
                 }
-                generatedPageEntries.Add(generatedHtmlSnippet);
-            }
 
-
-            List<string> GenerateHeadersIntoColumns(bool singleColumn)
-            {
-                List<string> columns = new() { string.Empty, string.Empty };
-                for (int index = 0; index < generatedPageEntries.Count; index++)
+                foreach (string file in files)
                 {
-                    int columnIndex = singleColumn ? 0 : index % 2;
-                    columns[columnIndex] += generatedPageEntries[index];
+                    // Creat new node with file name
+                    TreeNode node = new TreeNode(Path.GetFileName(file), 0, 1);
+
+                    // Display file image on node
+                    node.ImageIndex = 13;
+                    node.SelectedImageIndex = 13;
+                    node.Tag = file;
+
+                    if (file.Contains("SCHEMA") || file.Contains(".html") || file.Contains(".jpg"))
+                    {
+                        // Add to node
+                        CurrentNodes.Add(node);
+                    }
                 }
-                return columns;
             }
 
-            GeneratedPageHeadersForm generatedTextForm = new GeneratedPageHeadersForm();
-
-            List<string> splitGeneratedHeaders = GenerateHeadersIntoColumns(false);
-            if (splitGeneratedHeaders.Count == 2)
-            {
-                generatedTextForm.SetLeftText(splitGeneratedHeaders[0]);
-                generatedTextForm.SetRightText(splitGeneratedHeaders[1]);
-            }
-
-            generatedTextForm.SetSingleColumn(GenerateHeadersIntoColumns(true)[0]);
-            generatedTextForm.StartPosition = FormStartPosition.CenterParent;
-            generatedTextForm.Show(this);
+            AddDirectoryToTreeView(FileTreeView.Nodes, PathTextBox.Text);
         }
 
         #region Form Functionality
 
-        private void ShowNewPageDialog()
+        private void ShowNewPageDialog(string path)
         {
-            PageCreateForm pageCreateDialog = new(_rootPath, _lastCreatedPageName);
+            PageCreateForm pageCreateDialog = new(path, _lastCreatedPageName);
             pageCreateDialog.StartPosition = FormStartPosition.CenterParent;
             //pageCreateDialog.MdiParent = this;
             //pageCreateDialog.Location = new Point(Location.X + (Size.Width - (pageCreateDialog.Width/2)), Location.Y - (Size.Height - (pageCreateDialog.Height/2)));
@@ -287,7 +209,7 @@ namespace SiteViewer.Forms
             {
                 _lastCreatedPageName = pageCreateDialog.CurrentPageName;
 
-                string newDirectory = Path.Combine(_rootPath, pageCreateDialog.CurrentPageName);
+                string newDirectory = Path.Combine(path, pageCreateDialog.CurrentPageName);
                 try
                 {
                     Directory.CreateDirectory(newDirectory);
@@ -313,13 +235,13 @@ namespace SiteViewer.Forms
 
         private void EnablePageEntryButtons(bool shouldEnable)
         {
-            foreach (Control control in TableLayoutPanel.Controls)
-            {
-                if (control is PageEntryControl entry)
-                {
-                    entry.EnableButtons(shouldEnable);
-                }
-            }
+            //foreach (Control control in TableLayoutPanel.Controls)
+            //{
+            //    if (control is PageEntryControl entry)
+            //    {
+            //        entry.EnableButtons(shouldEnable);
+            //    }
+            //}
         }
 
         private void SetupFileSystemWatcher(string path)
@@ -347,8 +269,8 @@ namespace SiteViewer.Forms
             pageEntries.Sort((x, y) => x.GetDirectoryName().CompareTo(y.GetDirectoryName()));
 
             // Add to form
-            TableLayoutPanel.Controls.Clear();
-            TableLayoutPanel.Controls.AddRange(pageEntries.ToArray());
+            //TableLayoutPanel.Controls.Clear();
+            //TableLayoutPanel.Controls.AddRange(pageEntries.ToArray());
         }
 
         #endregion
@@ -369,11 +291,6 @@ namespace SiteViewer.Forms
         private void PathTextBox_TextChanged(object sender, EventArgs e)
         {
             TryLoadDirectory(PathTextBox.Text);
-        }
-
-        private void NewFolderButton_Click(object sender, EventArgs e)
-        {
-            ShowNewPageDialog();
         }
 
         private void GenerateAllButton_Click(object sender, EventArgs e)
@@ -428,27 +345,27 @@ namespace SiteViewer.Forms
             }
             if (e.UserState is SiteGenerationState progressState)
             {
-                foreach (Control control in TableLayoutPanel.Controls)
-                {
-                    if (control is PageEntryControl entry)
-                    {
-                        // Status has already been set, we don't need to reset it
-                        if (entry.GetBuildState() != PageEntryControl.BuildState.Pending)
-                        {
-                            continue;
-                        }
+                //foreach (Control control in TableLayoutPanel.Controls)
+                //{
+                //    if (control is PageEntryControl entry)
+                //    {
+                //        // Status has already been set, we don't need to reset it
+                //        if (entry.GetBuildState() != PageEntryControl.BuildState.Pending)
+                //        {
+                //            continue;
+                //        }
 
-                        if (progressState.SuccessfulPaths.Contains(entry.GetDirectoryPath()))
-                        {
-                            entry.SetBuildStatus(PageEntryControl.BuildState.Success);
-                        }
+                //        if (progressState.SuccessfulPaths.Contains(entry.GetDirectoryPath()))
+                //        {
+                //            entry.SetBuildStatus(PageEntryControl.BuildState.Success);
+                //        }
 
-                        if (progressState.FailedPaths.Contains(entry.GetDirectoryPath()))
-                        {
-                            entry.SetBuildStatus(PageEntryControl.BuildState.Failure);
-                        }
-                    }
-                }
+                //        if (progressState.FailedPaths.Contains(entry.GetDirectoryPath()))
+                //        {
+                //            entry.SetBuildStatus(PageEntryControl.BuildState.Failure);
+                //        }
+                //    }
+                //}
 
                 if (!string.IsNullOrEmpty(progressState.Message))
                 {
@@ -472,13 +389,6 @@ namespace SiteViewer.Forms
             RemoveUnusedImages();
         }
 
-        private void generateHeadersToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-
-            // TODO: Merge these into one
-            GeneratePageHeaders();
-        }
-
         private void openInExplorerToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (Directory.Exists(PathTextBox.Text) == false)
@@ -494,18 +404,6 @@ namespace SiteViewer.Forms
             Close();
         }
 
-        private void newPageToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowNewPageDialog();
-        }
-
-        private void GenerateHeadersToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            // TODO: Merge these into one
-            GeneratePageHeaders();
-
-        }
-
         private void siteToolStripMenuItem_Click(object sender, EventArgs e)
         {
             GenerateAllPagesInBackgroundWorker();
@@ -515,13 +413,13 @@ namespace SiteViewer.Forms
 
         private void ResetUIForGenerateOrPublish()
         {
-            foreach (Control control in TableLayoutPanel.Controls)
-            {
-                if (control is PageEntryControl entry)
-                {
-                    entry.SetBuildStatus(PageEntryControl.BuildState.Pending);
-                }
-            }
+            //foreach (Control control in TableLayoutPanel.Controls)
+            //{
+            //    if (control is PageEntryControl entry)
+            //    {
+            //        entry.SetBuildStatus(PageEntryControl.BuildState.Pending);
+            //    }
+            //}
 
             PublishButton.Enabled = false;
             GenerateAllButton.Enabled = false;
@@ -611,7 +509,7 @@ namespace SiteViewer.Forms
             {
                 return;
             }
-            
+
             _site.ValidateAllSchemas(out List<(string path, SchemaValidator.ValidationResults results)> siteResults,
                 (bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
                 {
@@ -638,5 +536,60 @@ namespace SiteViewer.Forms
                 }
             }
         }
+
+        private void FileTreeView_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            if (Path.GetFileName(e.Node.Tag as string) == "SCHEMA")
+            {
+                RunPageDesigner(Path.GetDirectoryName(e.Node.Tag as string));
+            }
+            else
+            {
+                // Open it with default app
+                Process.Start(new ProcessStartInfo(e.Node.Tag as string)
+                {
+                    UseShellExecute = true
+                });
+            }
+        }
+
+        private void FileTreeView_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                if (Path.GetFileName(e.Node.Tag as string) == "SCHEMA")
+                {
+                    ContextMenuStrip contextMenu = new();
+                    contextMenu.Items.Add("Edit", null, (sender, args) => RunPageDesigner(Path.GetDirectoryName(e.Node.Tag as string)));
+                    contextMenu.Items.Add("Open in Notepad", null, (sender, args) => Process.Start("notepad.exe", e.Node.Tag as string));
+                    contextMenu.Items.Add(new ToolStripSeparator());
+                    contextMenu.Items.Add("Build", null, (sender, args) => HtmlGenerator.BuildHtmlForSchema(new Schema(e.Node.Tag as string), _site));
+                    contextMenu.Items.Add("Build Preview", null, (sender, args) => HtmlGenerator.BuildHtmlForSchema(new Schema(e.Node.Tag as string), _site, false));
+                    contextMenu.Show(this, e.Location, ToolStripDropDownDirection.Right);
+                }
+                else if (Directory.Exists(e.Node.Tag as string))
+                {
+                    ContextMenuStrip contextMenu = new();
+                    contextMenu.Items.Add("New Page...", null, (sender, args) => ShowNewPageDialog(Path.GetDirectoryName(e.Node.Tag as string)));
+                    contextMenu.Show(this, e.Location, ToolStripDropDownDirection.Right);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Source: https://stackoverflow.com/a/73824330
+        /// </summary>
+        /// <param name="control"></param>
+        public static void EnableDoubleBuffering(Control control)
+        {
+            SendMessage(control.Handle, TVM_SETEXTENDEDSTYLE, (IntPtr)TVS_EX_DOUBLEBUFFER, (IntPtr)TVS_EX_DOUBLEBUFFER);
+        }
+
+        private const int TVM_SETEXTENDEDSTYLE = 0x1100 + 44;
+        private const int TVM_GETEXTENDEDSTYLE = 0x1100 + 45;
+        private const int TVS_EX_DOUBLEBUFFER = 0x0004;
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wp, IntPtr lp);
     }
 }

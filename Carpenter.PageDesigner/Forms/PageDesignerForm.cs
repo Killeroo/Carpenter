@@ -135,7 +135,7 @@ namespace PageDesigner.Forms
             _schemaPath = Path.Combine(_workingPath, Config.kSchemaFileName);
             this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
         }
-        public PageDesignerForm(string path, string siteRootPath) : this()
+        public PageDesignerForm(string? path, string? siteRootPath) : this()
         {
             if (Directory.Exists(path) == false || Directory.Exists(siteRootPath) == false)
             {

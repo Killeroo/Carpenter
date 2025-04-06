@@ -28,19 +28,18 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SiteViewerForm));
             OpenFolderButton = new Button();
-            TableLayoutPanel = new TableLayoutPanel();
             PathTextBox = new TextBox();
             StatusStrip = new StatusStrip();
             ToolStripProgressBar = new ToolStripProgressBar();
             StateToolStripStatusLabel = new ToolStripStatusLabel();
             GenerateAllButton = new Button();
-            NewFolderButton = new Button();
             GenerateSiteBackgroundWorker = new System.ComponentModel.BackgroundWorker();
             FolderBrowser = new FolderBrowserDialog();
             menuStrip = new MenuStrip();
             fileToolStripMenuItem = new ToolStripMenuItem();
-            newFPageToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator2 = new ToolStripSeparator();
             openInExplorerToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator3 = new ToolStripSeparator();
@@ -48,18 +47,23 @@
             generateToolStripMenuItem = new ToolStripMenuItem();
             siteToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator4 = new ToolStripSeparator();
-            GenerateHeadersToolStripMenuItem = new ToolStripMenuItem();
             toolsToolStripMenuItem = new ToolStripMenuItem();
             removeUnusedImagesToolStripMenuItem = new ToolStripMenuItem();
             toolStripSeparator1 = new ToolStripSeparator();
-            generateHeaders1ColumnToolStripMenuItem = new ToolStripMenuItem();
             aboutToolStripMenuItem = new ToolStripMenuItem();
             PublishButton = new Button();
             backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             PublishSiteBackgroundWorker = new System.ComponentModel.BackgroundWorker();
             ValidateButton = new Button();
+            FileTreeView = new TreeView();
+            FileTreeImageList = new ImageList(components);
+            contextMenuStrip1 = new ContextMenuStrip(components);
+            toolStripMenuItem1 = new ToolStripMenuItem();
+            toolStripMenuItem2 = new ToolStripMenuItem();
+            toolStripMenuItem3 = new ToolStripMenuItem();
             StatusStrip.SuspendLayout();
             menuStrip.SuspendLayout();
+            contextMenuStrip1.SuspendLayout();
             SuspendLayout();
             // 
             // OpenFolderButton
@@ -70,21 +74,6 @@
             OpenFolderButton.TabIndex = 0;
             OpenFolderButton.Text = "...";
             OpenFolderButton.UseVisualStyleBackColor = true;
-            // 
-            // TableLayoutPanel
-            // 
-            TableLayoutPanel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            TableLayoutPanel.AutoScroll = true;
-            TableLayoutPanel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            TableLayoutPanel.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
-            TableLayoutPanel.ColumnCount = 1;
-            TableLayoutPanel.ColumnStyles.Add(new ColumnStyle());
-            TableLayoutPanel.Location = new Point(12, 56);
-            TableLayoutPanel.Name = "TableLayoutPanel";
-            TableLayoutPanel.RowCount = 1;
-            TableLayoutPanel.RowStyles.Add(new RowStyle());
-            TableLayoutPanel.Size = new Size(529, 352);
-            TableLayoutPanel.TabIndex = 1;
             // 
             // PathTextBox
             // 
@@ -127,17 +116,6 @@
             GenerateAllButton.UseVisualStyleBackColor = true;
             GenerateAllButton.Click += GenerateAllButton_Click;
             // 
-            // NewFolderButton
-            // 
-            NewFolderButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            NewFolderButton.Location = new Point(282, 415);
-            NewFolderButton.Name = "NewFolderButton";
-            NewFolderButton.Size = new Size(75, 22);
-            NewFolderButton.TabIndex = 5;
-            NewFolderButton.Text = "New Folder";
-            NewFolderButton.UseVisualStyleBackColor = true;
-            NewFolderButton.Click += NewFolderButton_Click;
-            // 
             // GenerateSiteBackgroundWorker
             // 
             GenerateSiteBackgroundWorker.WorkerReportsProgress = true;
@@ -157,45 +135,38 @@
             // 
             // fileToolStripMenuItem
             // 
-            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { newFPageToolStripMenuItem, toolStripSeparator2, openInExplorerToolStripMenuItem, toolStripSeparator3, exitToolStripMenuItem });
+            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { toolStripSeparator2, openInExplorerToolStripMenuItem, toolStripSeparator3, exitToolStripMenuItem });
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             fileToolStripMenuItem.Size = new Size(37, 20);
             fileToolStripMenuItem.Text = "File";
             // 
-            // newFPageToolStripMenuItem
-            // 
-            newFPageToolStripMenuItem.Name = "newFPageToolStripMenuItem";
-            newFPageToolStripMenuItem.Size = new Size(162, 22);
-            newFPageToolStripMenuItem.Text = "New Page...";
-            newFPageToolStripMenuItem.Click += newPageToolStripMenuItem_Click;
-            // 
             // toolStripSeparator2
             // 
             toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(159, 6);
+            toolStripSeparator2.Size = new Size(177, 6);
             // 
             // openInExplorerToolStripMenuItem
             // 
             openInExplorerToolStripMenuItem.Name = "openInExplorerToolStripMenuItem";
-            openInExplorerToolStripMenuItem.Size = new Size(162, 22);
+            openInExplorerToolStripMenuItem.Size = new Size(180, 22);
             openInExplorerToolStripMenuItem.Text = "Open in Explorer";
             openInExplorerToolStripMenuItem.Click += openInExplorerToolStripMenuItem_Click;
             // 
             // toolStripSeparator3
             // 
             toolStripSeparator3.Name = "toolStripSeparator3";
-            toolStripSeparator3.Size = new Size(159, 6);
+            toolStripSeparator3.Size = new Size(177, 6);
             // 
             // exitToolStripMenuItem
             // 
             exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            exitToolStripMenuItem.Size = new Size(162, 22);
+            exitToolStripMenuItem.Size = new Size(180, 22);
             exitToolStripMenuItem.Text = "Exit";
             exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
             // generateToolStripMenuItem
             // 
-            generateToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { siteToolStripMenuItem, toolStripSeparator4, GenerateHeadersToolStripMenuItem });
+            generateToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { siteToolStripMenuItem, toolStripSeparator4 });
             generateToolStripMenuItem.Name = "generateToolStripMenuItem";
             generateToolStripMenuItem.Size = new Size(66, 20);
             generateToolStripMenuItem.Text = "Generate";
@@ -203,25 +174,18 @@
             // siteToolStripMenuItem
             // 
             siteToolStripMenuItem.Name = "siteToolStripMenuItem";
-            siteToolStripMenuItem.Size = new Size(117, 22);
+            siteToolStripMenuItem.Size = new Size(180, 22);
             siteToolStripMenuItem.Text = "Site";
             siteToolStripMenuItem.Click += siteToolStripMenuItem_Click;
             // 
             // toolStripSeparator4
             // 
             toolStripSeparator4.Name = "toolStripSeparator4";
-            toolStripSeparator4.Size = new Size(114, 6);
-            // 
-            // GenerateHeadersToolStripMenuItem
-            // 
-            GenerateHeadersToolStripMenuItem.Name = "GenerateHeadersToolStripMenuItem";
-            GenerateHeadersToolStripMenuItem.Size = new Size(117, 22);
-            GenerateHeadersToolStripMenuItem.Text = "Headers";
-            GenerateHeadersToolStripMenuItem.Click += GenerateHeadersToolStripMenuItem_Click;
+            toolStripSeparator4.Size = new Size(177, 6);
             // 
             // toolsToolStripMenuItem
             // 
-            toolsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { removeUnusedImagesToolStripMenuItem, toolStripSeparator1, generateHeaders1ColumnToolStripMenuItem });
+            toolsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { removeUnusedImagesToolStripMenuItem, toolStripSeparator1 });
             toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             toolsToolStripMenuItem.Size = new Size(46, 20);
             toolsToolStripMenuItem.Text = "Tools";
@@ -237,13 +201,6 @@
             // 
             toolStripSeparator1.Name = "toolStripSeparator1";
             toolStripSeparator1.Size = new Size(198, 6);
-            // 
-            // generateHeaders1ColumnToolStripMenuItem
-            // 
-            generateHeaders1ColumnToolStripMenuItem.Name = "generateHeaders1ColumnToolStripMenuItem";
-            generateHeaders1ColumnToolStripMenuItem.Size = new Size(201, 22);
-            generateHeaders1ColumnToolStripMenuItem.Text = "Generate Page Headers";
-            generateHeaders1ColumnToolStripMenuItem.Click += generateHeadersToolStripMenuItem_Click;
             // 
             // aboutToolStripMenuItem
             // 
@@ -284,19 +241,74 @@
             ValidateButton.UseVisualStyleBackColor = true;
             ValidateButton.Click += ValidateButton_Click;
             // 
+            // FileTreeView
+            // 
+            FileTreeView.ImageIndex = 0;
+            FileTreeView.ImageList = FileTreeImageList;
+            FileTreeView.Location = new Point(12, 56);
+            FileTreeView.Name = "FileTreeView";
+            FileTreeView.SelectedImageIndex = 0;
+            FileTreeView.Size = new Size(528, 352);
+            FileTreeView.TabIndex = 10;
+            FileTreeView.NodeMouseClick += FileTreeView_NodeMouseClick;
+            FileTreeView.NodeMouseDoubleClick += FileTreeView_NodeMouseDoubleClick;
+            // 
+            // FileTreeImageList
+            // 
+            FileTreeImageList.ColorDepth = ColorDepth.Depth8Bit;
+            FileTreeImageList.ImageStream = (ImageListStreamer)resources.GetObject("FileTreeImageList.ImageStream");
+            FileTreeImageList.TransparentColor = Color.Transparent;
+            FileTreeImageList.Images.SetKeyName(0, "image_1.png");
+            FileTreeImageList.Images.SetKeyName(1, "image_2.png");
+            FileTreeImageList.Images.SetKeyName(2, "image_3.png");
+            FileTreeImageList.Images.SetKeyName(3, "image_4.png");
+            FileTreeImageList.Images.SetKeyName(4, "image_5.png");
+            FileTreeImageList.Images.SetKeyName(5, "image_6.png");
+            FileTreeImageList.Images.SetKeyName(6, "image_7.png");
+            FileTreeImageList.Images.SetKeyName(7, "image_8.png");
+            FileTreeImageList.Images.SetKeyName(8, "image_9.png");
+            FileTreeImageList.Images.SetKeyName(9, "image_10.png");
+            FileTreeImageList.Images.SetKeyName(10, "image_11.png");
+            FileTreeImageList.Images.SetKeyName(11, "image_12.png");
+            FileTreeImageList.Images.SetKeyName(12, "image_13.png");
+            FileTreeImageList.Images.SetKeyName(13, "image_14.png");
+            // 
+            // contextMenuStrip1
+            // 
+            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { toolStripMenuItem1, toolStripMenuItem2, toolStripMenuItem3 });
+            contextMenuStrip1.Name = "contextMenuStrip1";
+            contextMenuStrip1.Size = new Size(181, 70);
+            // 
+            // toolStripMenuItem1
+            // 
+            toolStripMenuItem1.Name = "toolStripMenuItem1";
+            toolStripMenuItem1.Size = new Size(180, 22);
+            toolStripMenuItem1.Text = "toolStripMenuItem1";
+            // 
+            // toolStripMenuItem2
+            // 
+            toolStripMenuItem2.Name = "toolStripMenuItem2";
+            toolStripMenuItem2.Size = new Size(180, 22);
+            toolStripMenuItem2.Text = "toolStripMenuItem2";
+            // 
+            // toolStripMenuItem3
+            // 
+            toolStripMenuItem3.Name = "toolStripMenuItem3";
+            toolStripMenuItem3.Size = new Size(180, 22);
+            toolStripMenuItem3.Text = "toolStripMenuItem3";
+            // 
             // SiteViewerForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(553, 462);
+            Controls.Add(FileTreeView);
             Controls.Add(ValidateButton);
             Controls.Add(PublishButton);
-            Controls.Add(NewFolderButton);
             Controls.Add(GenerateAllButton);
             Controls.Add(StatusStrip);
             Controls.Add(menuStrip);
             Controls.Add(PathTextBox);
-            Controls.Add(TableLayoutPanel);
             Controls.Add(OpenFolderButton);
             MainMenuStrip = menuStrip;
             Name = "SiteViewerForm";
@@ -306,6 +318,7 @@
             StatusStrip.PerformLayout();
             menuStrip.ResumeLayout(false);
             menuStrip.PerformLayout();
+            contextMenuStrip1.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -313,13 +326,11 @@
         #endregion
 
         private Button OpenFolderButton;
-        private TableLayoutPanel TableLayoutPanel;
         private TextBox PathTextBox;
         private StatusStrip StatusStrip;
         private ToolStripStatusLabel StateToolStripStatusLabel;
         private ToolStripProgressBar ToolStripProgressBar;
         private Button GenerateAllButton;
-        private Button NewFolderButton;
         private System.ComponentModel.BackgroundWorker GenerateSiteBackgroundWorker;
         private FolderBrowserDialog FolderBrowser;
         private MenuStrip menuStrip;
@@ -328,7 +339,6 @@
         private ToolStripSeparator toolStripSeparator1;
         private ToolStripMenuItem generateHeaders1ColumnToolStripMenuItem;
         private ToolStripMenuItem fileToolStripMenuItem;
-        private ToolStripMenuItem newFPageToolStripMenuItem;
         private ToolStripSeparator toolStripSeparator2;
         private ToolStripMenuItem openInExplorerToolStripMenuItem;
         private ToolStripSeparator toolStripSeparator3;
@@ -342,5 +352,11 @@
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private System.ComponentModel.BackgroundWorker PublishSiteBackgroundWorker;
         private Button ValidateButton;
+        private TreeView FileTreeView;
+        private ImageList FileTreeImageList;
+        private ContextMenuStrip contextMenuStrip1;
+        private ToolStripMenuItem toolStripMenuItem1;
+        private ToolStripMenuItem toolStripMenuItem2;
+        private ToolStripMenuItem toolStripMenuItem3;
     }
 }

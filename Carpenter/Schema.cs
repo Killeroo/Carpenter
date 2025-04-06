@@ -203,6 +203,7 @@ namespace Carpenter
             }
 
             _loaded = otherSchema._loaded;
+            _workingDirectory = otherSchema._workingDirectory;
 
             TokenValues = new Dictionary<Tokens, string>(otherSchema.TokenValues);
             OptionValues = new Dictionary<Options, string>(otherSchema.OptionValues);
