@@ -249,13 +249,13 @@ namespace SiteViewer.Forms
         {
             _fileSystemWatcher = new FileSystemWatcher();
             _fileSystemWatcher.Path = path;
-            _fileSystemWatcher.Filter = "*.*";
-            _fileSystemWatcher.NotifyFilter = NotifyFilters.DirectoryName;
+            _fileSystemWatcher.Filter = "SCHEMA";
+            _fileSystemWatcher.NotifyFilter = NotifyFilters.DirectoryName | NotifyFilters.FileName | NotifyFilters.LastWrite;
             _fileSystemWatcher.EnableRaisingEvents = true;
             _fileSystemWatcher.Created += FileSystemWatcher_Modification;
             _fileSystemWatcher.Renamed += FileSystemWatcher_Modification;
             _fileSystemWatcher.Deleted += FileSystemWatcher_Modification;
-            //_fileSystemWatcher.IncludeSubdirectories = true;
+            _fileSystemWatcher.IncludeSubdirectories = true;
         }
 
         private void RefreshPageList()
@@ -467,7 +467,7 @@ namespace SiteViewer.Forms
                 }
             }
 
-            // Generate
+            // Generate pages
             {
                 PublishSiteBackgroundWorker.ReportProgress(0, "Generating pages...");
                 SiteGenerationState state = new();
@@ -489,6 +489,11 @@ namespace SiteViewer.Forms
                     }
                     catch (InvalidOperationException) { /** Ey don't worry about it */ }
                 });
+            }
+
+            // Generate indexes
+            {
+
             }
 
             // Cleanup

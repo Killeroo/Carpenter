@@ -255,10 +255,13 @@ namespace Carpenter
                     List<Tag> sectionTags = FindTags(sectionContentsCopy);
                     sectionTags = sectionTags.Where(x => x.Type.Contains("foreach")).ToList();
                     Debug.Assert(sectionTags.Count > 0);
-                    
+
                     // We only care about the first foreach tag we find.
                     // Ideally we want to be able to resolve any tag recursively but that is for later.
-                    Debug.Assert(site.Tags.TryGetValue(LayoutTypeToTagName[typeof(ImageSection)], out List<string> imageSection));
+                    if (!site.Tags.TryGetValue(LayoutTypeToTagName[typeof(ImageSection)], out List<string> imageSection))
+                    {
+                        continue;
+                    }
                     int innerOffset = sectionTags.First().ArrayIndex + 1;
                     string padding = sectionContentsCopy[sectionTags.First().ArrayIndex].Split("<!--").First();
                     foreach (ImageSection innerImageSection in asImageColumnSection.Sections)

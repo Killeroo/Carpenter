@@ -82,6 +82,116 @@ namespace PageDesigner.Forms
             }
         }
 
+        /// <summary>
+        /// Stores and calculates the aspect ratio of an image
+        /// </summary>
+        public struct AspectRatio
+        {
+            public readonly int Width;
+            public readonly int Height;
+
+            public AspectRatio(int width, int height)
+            {
+                // TODO: Where or why is this reversed?????
+                Width = height;
+                Height = width;
+            }
+
+            public int CalculateHeight(int width)
+            {
+                Debug.Assert(Width != 0);
+                Debug.Assert(Height != 0);
+
+                int factor = width / Width;
+                return Height * factor;
+            }
+
+            public int CalculateWidth(int height)
+            {
+                Debug.Assert(Width != 0);
+                Debug.Assert(Height != 0);
+
+                int factor = height / Height;
+                return Width * factor;
+            }
+
+            public override string ToString()
+            {
+                return string.Format("{0}:{1}", Width, Height);
+            }
+        }
+
+        /// <remarks>
+        /// https://stackoverflow.com/a/24199315
+        /// </remarks>
+        private const int MaxResizeImageCacheSize = 30;
+        private static Queue<int> _resizeHashes = new();
+        private static Dictionary<int, Bitmap> _resizeImageCache = new();
+        private static Bitmap ResizeImage(string path, Image sourceImage, int width, int height)
+        {
+            // TODO: How unique really is this
+            int hash = path.GetHashCode() * width * height;
+            if (_resizeImageCache.ContainsKey(hash))
+            {
+                return _resizeImageCache[hash];
+            }
+
+            Rectangle destRect = new(0, 0, width, height);
+            Bitmap destImage = new(width, height);
+
+            destImage.SetResolution(sourceImage.HorizontalResolution, sourceImage.VerticalResolution);
+
+            using (Graphics graphics = Graphics.FromImage(destImage))
+            {
+                graphics.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+                graphics.CompositingQuality = CompositingQuality.HighQuality;
+                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                graphics.SmoothingMode = SmoothingMode.HighQuality;
+                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+
+                using (ImageAttributes attributes = new())
+                {
+                    attributes.SetWrapMode(WrapMode.TileFlipXY);
+                    graphics.DrawImage(sourceImage, destRect, 0, 0, sourceImage.Width, sourceImage.Height, GraphicsUnit.Pixel, attributes);
+                }
+            }
+
+            // Remove oldest item from cache when limit reached
+            if (_resizeImageCache.Count > MaxResizeImageCacheSize)
+            {
+                _resizeImageCache.Remove(_resizeHashes.Dequeue());
+            }
+            _resizeImageCache.Add(hash, destImage);
+            _resizeHashes.Enqueue(hash);
+
+            return destImage;
+        }
+
+        /// <summary>
+        /// Returns the greatest common factor of 2 numbers, used when caculating the aspect ratio of an image
+        /// </summary>
+        /// <remarks>
+        /// https://stackoverflow.com/a/20824923
+        /// </remarks>
+        private static int GreatestCommonFactor(int a, int b)
+        {
+            while (b != 0)
+            {
+                int temp = b;
+                b = a % b;
+                a = temp;
+            }
+            return a;
+        }
+
+        /// <summary>
+        /// Calculates the lowest common factor of 2 numbers
+        /// </summary>
+        private static int LowestCommonMultiple(int a, int b)
+        {
+            return (a / GreatestCommonFactor(a, b)) * b;
+        }
+
         private const string kUnsavedTitleString = " *";
         private const string kImageFileFilter = "Image Files(*.JPG;*.JPEG)|*.JPG;*.JPEG|All files (*.*)|*.*";
 
@@ -669,7 +779,7 @@ namespace PageDesigner.Forms
                 targetWidth -= 20;// 10; 
                 int targetHeight = ar.CalculateHeight(targetWidth);
 
-                return ImageUtils.ResizeImage(localImagePath, sourceImage, targetWidth, targetHeight);
+                return ResizeImage(localImagePath, sourceImage, targetWidth, targetHeight);
             }
         }
 
@@ -779,7 +889,7 @@ namespace PageDesigner.Forms
                 int targetHeight = ar.CalculateHeight(targetWidth);
 
                 // Resize
-                Image resizedImage = ImageUtils.ResizeImage(localImagePath, sourceImage, targetWidth, targetHeight);
+                Image resizedImage = ResizeImage(localImagePath, sourceImage, targetWidth, targetHeight);
 
                 // Setup image
                 pictureBox.Image = resizedImage;
@@ -837,7 +947,7 @@ namespace PageDesigner.Forms
                     targetHeight *= 2;
                 }
 
-                Image resizedImage = ImageUtils.ResizeImage(localImagePath, sourceImage, targetWidth, targetHeight);
+                Image resizedImage = ResizeImage(localImagePath, sourceImage, targetWidth, targetHeight);
 
                 // Create image (or re-use image) and add it to the grid
                 GridPictureBox gridPictureBox = null;
