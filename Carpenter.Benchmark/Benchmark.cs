@@ -68,7 +68,7 @@ namespace Carpenter.Tests
 
             Console.WriteLine($"Carpenter v{Config.kVersion} - Static photo webpage generator");
 
-            Logger.EnableLevel(LogLevel.Info, false);
+            Logger.SetLogLevel(LogLevel.Info);
 
             Site site = new();
             Schema schema = new();
@@ -91,7 +91,7 @@ namespace Carpenter.Tests
             
             stopwatch = Stopwatch.StartNew();
             {
-                site.GenerateAllPagesInSite((_, _, processed, total) => {Console.Write("Generating pages... [{0}/{1}]\r", processed, total);});
+                site.GenerateAllSchemas((_, _, processed, total) => {Console.Write("Generating pages... [{0}/{1}]\r", processed, total);});
             }
             WriteTimerToConsole(stopwatch, "Site.GenerateAllPagesInSite");
             

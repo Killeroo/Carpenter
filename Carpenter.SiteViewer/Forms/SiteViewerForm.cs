@@ -314,7 +314,7 @@ namespace SiteViewer.Forms
             GenerateSiteBackgroundWorker.ReportProgress(0, "Generating pages...");
 
             SiteGenerationState state = new();
-            _site.GenerateAllPagesInSite((bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
+            _site.GenerateAllSchemas((bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
             {
                 if (success)
                 {
@@ -471,7 +471,7 @@ namespace SiteViewer.Forms
             {
                 PublishSiteBackgroundWorker.ReportProgress(0, "Generating pages...");
                 SiteGenerationState state = new();
-                _site.GenerateAllPagesInSite((bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
+                _site.GenerateAllSchemas((bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
                 {
                     if (success)
                     {

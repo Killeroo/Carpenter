@@ -2,7 +2,8 @@
   "profiles": {
     "CommandLine": {
       "commandName": "Project",
-      "workingDirectory": "C:\\Users\\Kelpie\\Desktop\\WebsiteConversion\\photos"
+      "workingDirectory": "G:\\My Drive\\Website\\photos.matthewcarney.net",
+      "commandLineArgs": "--build"
     }
   }
 }

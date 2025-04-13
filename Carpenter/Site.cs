@@ -350,29 +350,43 @@ namespace Carpenter
             return schemasWithDate.OrderByDescending(x => x.Key).Select(y => y.Value).ToList();
         }
         
+        public bool Publish()
+        {
+            if (!ValidateAllSchemas(out List<(string path, SchemaValidator.ValidationResults results)> _)) {
+                return false;
+            }
+            GenerateAllSchemas();
+            GenerateIndexPages();
+            RemoveAllUnusedImages();
+            return true;
+        }
+        
         /// <summary>
         /// Validates all Schemes found at the given path (searches for schemas inside each sub directory) returning the results for each found schema.
         /// </summary>
         /// <param name="path">The root path that contains all schemas, schemas are searched for in directories within this root path.</param>
         /// <param name="results">The validation results for each found schema, ordered by the path to the schema and it's results</param>
-        public void ValidateAllSchemas(
+        public bool ValidateAllSchemas(
             out List<(string path, SchemaValidator.ValidationResults results)> results,
-            Action<bool /** Valid */, string /** Directory Name */, int /** NumProcessed */, int /** Total */> onSchemaValidation)
+            Action<bool /** Valid */, string /** Directory Name */, int /** NumProcessed */, int /** Total */>? onSchemaValidation = null)
         {
             results = new List<(string path, SchemaValidator.ValidationResults results)>();
             List<Schema> schemasToValidate = GetSchemas();
             if (!_loaded || schemasToValidate.Count == 0)
             {
-                return;
+                return false;
             }
             
             int index = 0;
+            bool passed = true;
             foreach (Schema schema in GetSchemas())
             {
-                SchemaValidator.Run(schema, out SchemaValidator.ValidationResults schemaResults);
+                passed &= SchemaValidator.Run(schema, out SchemaValidator.ValidationResults schemaResults);
                 onSchemaValidation?.Invoke(schemaResults.FailedTests.Count == 0, Path.GetFileName(schema.WorkingDirectory()), index++, schemasToValidate.Count);
                 results.Add((schema.WorkingDirectory(), schemaResults));
             }
+
+            return passed;
         }
 
         /// <summary>
@@ -380,8 +394,8 @@ namespace Carpenter
         /// </summary>
         /// <param name="rootPath">Path to site file </param>
         /// <param name="onDirectoryGenerated">Called each a schema is processed (sucessfully or not)</param>
-        public void GenerateAllPagesInSite(
-            Action<bool /** Successfully Generated */, string /** Directory Name */, int /** NumProcessed */, int /** Total */>? onDirectoryGenerated)
+        public void GenerateAllSchemas(
+            Action<bool /** Successfully Generated */, string /** Directory Name */, int /** NumProcessed */, int /** Total */>? onDirectoryGenerated = null)
         {
             if (!_loaded)
             {
@@ -396,9 +410,11 @@ namespace Carpenter
             Object lockObject = new();
             List<string> schemaPaths = GetPathsToSchemas();
             int processed = 0;
+            Logger.Log(LogLevel.Info, $"Generating HTML for {schemaPaths.Count} Schemas with {kMaxThreadCount} threads...");
             foreach (string schemaPath in schemaPaths)
             {
                 bool schemaProcessed = false;
+                Logger.Log(LogLevel.Verbose, $"Processing \"{schemaPath}\"...");
                 while (!schemaProcessed)
                 {
                     for (int index = 0; index < kMaxThreadCount; index++)
@@ -419,16 +435,20 @@ namespace Carpenter
                                         processed++,
                                         schemaPaths.Count);
                                 }
+                                
+                                Logger.Log(LogLevel.Verbose, $"Thread finished for path: {schemaPath}");
                             });
                             threads[index].IsBackground = true;
                             threads[index].Start();
                             schemaProcessed = true;
+                            Logger.Log(LogLevel.Verbose, "Starting generator thread...");
                             break;
                         }
                     }
 
                     if (!schemaProcessed)
                     {
+                        Logger.Log(LogLevel.Verbose, "All threads in used. Waiting for one to become available...");
                         Thread.Sleep(100);
                     }
                 }
@@ -438,15 +458,18 @@ namespace Carpenter
             bool threadStillRunning = true;
             while (threadStillRunning)
             {
+                Logger.Log(LogLevel.Verbose, "=============================");
                 threadStillRunning = false;
+                int index = 0;
                 foreach (Thread thread in threads)
                 {
                     threadStillRunning |= thread != null && thread.IsAlive;
+                    Logger.Log(LogLevel.Verbose, $"Thread {index++} running: {threadStillRunning} (null={thread == null} alive={thread.IsAlive})");
                 }
                 Thread.Sleep(200);
             }
-
-            return;
+            
+            Logger.Log(LogLevel.Info, "Finished generating HTML for all Schemas.");
         }
 
         /// <summary>
@@ -457,7 +480,7 @@ namespace Carpenter
         {
             List<string> unusedImagePaths = new();
             string siteRootPath = GetRootDir();
-            if (!_loaded || Directory.Exists(siteRootPath))
+            if (!_loaded || !Directory.Exists(siteRootPath))
             {
                 return unusedImagePaths;
             }
@@ -505,11 +528,13 @@ namespace Carpenter
                         if (referencedImages.Contains(imageName) == false)
                         {
                             unusedImagePaths.Add(imagePath);
+                            Logger.Log(LogLevel.Verbose, $"Found unreferenced image: {imageName}");
                         }
                     }
                 }
             }
 
+            Logger.Log(LogLevel.Info, $"Found {unusedImagePaths.Count} unused images");
             return unusedImagePaths;
         }
 
@@ -523,10 +548,20 @@ namespace Carpenter
             int count = 0;
             foreach (string imagePath in GetAllUnusedImages())
             {
-                File.Delete(imagePath);
+                try
+                {
+                    File.Delete(imagePath);
+                    Logger.Log(LogLevel.Verbose, $"Deleted image: {imagePath}");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    Logger.Log(LogLevel.Warning, $"Failed to delete image: {imagePath} [{e.GetType()}]");
+                }
                 count++;
             }
 
+            Logger.Log(LogLevel.Info, $"Removed {count} unused images from Site");
             return count;
         }
 
@@ -560,7 +595,6 @@ namespace Carpenter
             {
                 HtmlGenerator.BuildHtmlForIndexDirectory(indexDir.Key, indexDir.Value, this);
             }
-
         }
     }
 }

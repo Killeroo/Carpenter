@@ -50,6 +50,13 @@ namespace Carpenter
             /// </summary>
             public int Length;
         }
+        
+        private static readonly Dictionary<Type, string> LayoutTypeToTagName = new()
+        {
+            { typeof(TitleSection), "layout:title" },
+            { typeof(ImageSection), "layout:image-standalone" },
+            { typeof(ImageColumnSection), "layout:image-column" },
+        };
 
         /// <summary>
         /// The number of image elements that will be added to the generated html before the lazy loading parameter is added 
@@ -75,6 +82,7 @@ namespace Carpenter
             List<Tag> tags = new();
             List<string> generatedContents = new(File.ReadAllLines(site.TemplatePath));
             Dictionary<Tokens, string> tokenValues = new(schemas.First().TokenValues); // Use the token values from the first page to fill in the index fields
+            Logger.Log(LogLevel.Verbose, $"Generating Index for \"{relativePathToDir}\"...");
             do
             {
                 // Find all tags
@@ -94,6 +102,7 @@ namespace Carpenter
                         List<string> generateSections = new();
                         foreach (Schema schema in schemas)
                         {
+                            Logger.Log(LogLevel.Verbose, $"Adding \"{schema.Title}\"...");
                             generateSections.AddRange(GenerateSchemaSection(schema, site, relativePathToDir, tagSection));
                         }
                         tagSection = generateSections;
@@ -126,10 +135,11 @@ namespace Carpenter
                 }
             } while (tags.Count > 0);
 
+            Logger.Log(LogLevel.Info, $"Generated Index Page for {schemas.Count} schemas @ \"{relativePathToDir}\"");
             File.WriteAllLines(Path.Combine(site.GetRootDir() + relativePathToDir, "index.html"), generatedContents);
         }
 
-        public static void BuildHtmlForSchema(Schema schema, Site site, bool isLocalPreview = false)
+        public static void BuildHtmlForSchema(Schema? schema, Site? site, bool isLocalPreview = false)
         {
             if (site == null || schema == null)
             {
@@ -210,18 +220,12 @@ namespace Carpenter
                 }
             }
 
+            Logger.Log(LogLevel.Info, $"Generated HTML for schema \"{schema.Title}\"");
             File.WriteAllLines(Path.Combine(schema.WorkingDirectory(), string.Format("index{0}.html", isLocalPreview ? "_Preview" : "")), generatedContents);
         }
 
         private static List<string> GenerateLayoutSection(Schema schema, Site site)
         {
-            Dictionary<Type, string> LayoutTypeToTagName = new()
-            {
-                { typeof(TitleSection), "layout:title" },
-                { typeof(ImageSection), "layout:image-standalone" },
-                { typeof(ImageColumnSection), "layout:image-column" },
-            };
-            
             // Generate the layout section!
             List<string> output = new();
             Dictionary<Tokens, string> tokenValues = new();
@@ -243,7 +247,7 @@ namespace Carpenter
                 }
                 else if (section is ImageSection asImageSection)
                 {
-                    rawData =JpegParser.GetRawMetadata(Path.Combine(schema.WorkingDirectory(), asImageSection.ImageUrl));
+                    rawData = JpegParser.GetRawMetadata(Path.Combine(schema.WorkingDirectory(), asImageSection.ImageUrl));
                     tokenValues.Add(Tokens.ImageWidth, rawData.FrameData.Width.ToString());
                     tokenValues.Add(Tokens.ImageHeight, rawData.FrameData.Height.ToString());
                     tokenValues.Add(Tokens.Image, asImageSection.ImageUrl);
@@ -324,7 +328,7 @@ namespace Carpenter
                         foundTag.Type = tagMatch.Groups[0].Value;
                     }
                     results.Add(foundTag); 
-                    Logger.Log(LogLevel.Info, $"Found tag {content[index].StripWhitespaces()} @ {index}");
+                    //Logger.Log(LogLevel.Verbose, $"Found tag {content[index].StripWhitespaces()} @ {index}");
                 }
             }
 

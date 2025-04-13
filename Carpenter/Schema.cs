@@ -432,7 +432,7 @@ namespace Carpenter
                                 standaloneSection.AltImageUrl = imageSectionToAdd.AltImageUrl;
 
                                 Logger.Log(LogLevel.Verbose,
-                                    $"Added single image section to photo grid (image_url={imageUrl} detailed_image_url={imageUrl})");
+                                    $"Added single image section to photo grid (image_url={imageUrl} alternate_image_url={imageUrl})");
                             }
                             else if (LayoutSections[currentSectionIndex].GetType().Equals(typeof(ImageColumnSection)))
                             {
@@ -441,7 +441,7 @@ namespace Carpenter
                                 columnSection.Sections.Add(imageSectionToAdd);
 
                                 Logger.Log(LogLevel.Verbose,
-                                    $"Added image to column section (image_url={imageUrl} detailed_image_url={imageUrl})");
+                                    $"Added image to column section (image_url={imageUrl} alternate_image_url={imageUrl})");
                             }
                         }
                         else if (imageTitle != string.Empty && LayoutSections[currentSectionIndex].GetType().Equals(typeof(TitleSection)))
