@@ -37,7 +37,7 @@ namespace Carpenter
         private static LogLevel _currentLogLevel = LogLevel.Info;
         private static Dictionary<string, string> _cachedFileNames = new();
 
-        private struct LogEntry
+        private class LogEntry
         {
             public LogLevel LogLevel;
             public string Message;
@@ -48,7 +48,7 @@ namespace Carpenter
 
         private static Thread _loggingThread = null;
         private static Object _loggingLock = new();
-        private static ConcurrentQueue<LogEntry> _messageQueue = new();
+        private static BlockingCollection<LogEntry> _messageQueue = new();
         private static ConcurrentBag<LogEntry> _messagePool = new();
 
         public static void Log(LogLevel level, string message, [CallerFilePath] string sourceFilePath = "")
@@ -64,6 +64,12 @@ namespace Carpenter
                 {
                     _loggingThread = new Thread(() => ProcessLogBuffer()) { IsBackground = true };
                     _loggingThread.Start();
+                    
+                    AppDomain.CurrentDomain.ProcessExit += (sender, args) =>
+                    {
+                        _messageQueue.CompleteAdding();
+                        _loggingThread.Join(2000);
+                    };
                 }
             }
             
@@ -76,78 +82,54 @@ namespace Carpenter
             logEntry.Source = sourceFilePath;
             logEntry.ThreadId = Environment.CurrentManagedThreadId;
             logEntry.Timestamp = DateTime.Now.ToString("HH:mm:ss.ff");
-            _messageQueue.Enqueue(logEntry);
+            _messageQueue.Add(logEntry);
         }
 
         private static void ProcessLogBuffer()
         {
-            while (true)
+            foreach (LogEntry entry in _messageQueue.GetConsumingEnumerable())
             {
-                if (!_messageQueue.TryDequeue(out LogEntry entry))
+                if (!LogColors.TryGetValue(entry.LogLevel, out ConsoleColor logColor))
                 {
-                    Thread.Sleep(50);
-                    continue;
+                    logColor = ConsoleColor.Gray;
                 }
-                
-                LogMessage(entry);
-            }
-        }
-
-        public static void Flush()
-        {
-            if (!_messageQueue.IsEmpty)
-            {
-                foreach (LogEntry logEntry in _messageQueue)
-                {
-                    LogMessage(logEntry);
-
-                }
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void LogMessage(LogEntry entry)
-        {
-            if (!LogColors.TryGetValue(entry.LogLevel, out ConsoleColor logColor))
-            {
-                logColor = ConsoleColor.Gray;
-            }
-            Console.ForegroundColor = logColor;
-
-            if (_showTimestamp)
-            {
-                Console.Write($"[{entry.Timestamp}] ");
-            }
-
-            if (_showCurrentThread) 
-            {
-                ConsoleColor threadColor = (ConsoleColor) (((entry.ThreadId * 23) ^ (entry.ThreadId >> 6)) % 16);
-                Console.ForegroundColor = threadColor;
-                Console.Write($"[{entry.ThreadId}] ");
                 Console.ForegroundColor = logColor;
-            }
-    
-            if (_showFilename && !string.IsNullOrEmpty(entry.Source))
-            {
-                if (!_cachedFileNames.TryGetValue(entry.Source, out string formattedFileName))
+
+                if (_showTimestamp)
                 {
-                    int lastDirChar = entry.Source.LastIndexOf(Path.DirectorySeparatorChar);
-                    if (lastDirChar != -1)
-                    {
-                        formattedFileName = entry.Source.Substring(
-                            lastDirChar + 1,
-                            entry.Source.Length - lastDirChar - 1 /* Skip dir separator */ - 3 /* Skip '.cs' */);
-                        _cachedFileNames.Add(entry.Source, formattedFileName);
-                    }
+                    Console.Write($"[{entry.Timestamp}] ");
                 }
 
-                Console.Write($"[{formattedFileName}] ");
-            }
-    
-            Console.WriteLine(entry.Message);
-            Console.ResetColor();
+                if (_showCurrentThread) 
+                {
+                    ConsoleColor threadColor = (ConsoleColor) (((entry.ThreadId * 23) ^ (entry.ThreadId >> 6)) % 16);
+                    Console.ForegroundColor = threadColor;
+                    Console.Write($"[{entry.ThreadId}] ");
+                    Console.ForegroundColor = logColor;
+                }
 
-            _messagePool.Add(entry);
+                if (_showFilename && !string.IsNullOrEmpty(entry.Source))
+                {
+                    if (!_cachedFileNames.TryGetValue(entry.Source, out string formattedFileName))
+                    {
+                        int lastDirChar = entry.Source.LastIndexOf(Path.DirectorySeparatorChar);
+                        if (lastDirChar != -1)
+                        {
+                            formattedFileName = entry.Source.Substring(
+                                lastDirChar + 1,
+                                entry.Source.Length - lastDirChar - 1 /* Skip dir separator */ - 3 /* Skip '.cs' */);
+                            _cachedFileNames.Add(entry.Source, formattedFileName);
+                        }
+                    }
+
+                    Console.Write($"[{formattedFileName}] ");
+                }
+
+                Console.WriteLine(entry.Message);
+                Console.ResetColor();
+
+                _messagePool.Add(entry);
+            }
         }
 
         private static ConsoleColor GetColorForInt(int input)

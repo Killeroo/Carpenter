@@ -69,7 +69,7 @@ namespace Carpenter.CommandLine
 
         static void Main(string[] args)
         {
-            Logger.SetLogLevel(LogLevel.Info);
+            Logger.SetLogLevel(LogLevel.Verbose);
             
             CommandLineContext context = new();
             try
@@ -218,7 +218,7 @@ namespace Carpenter.CommandLine
                 }
             }
 
-            Logger.Flush();
+            //Logger.Flush();
             // stopwatch.Stop();
             //Logger.Log(LogLevel.Info, $"Website generation completed. {count} pages created in {stopwatch.ElapsedMilliseconds}ms.");
         }

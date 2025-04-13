@@ -2,8 +2,7 @@
   "profiles": {
     "CommandLine": {
       "commandName": "Project",
-      "workingDirectory": "G:\\My Drive\\Website\\photos.matthewcarney.net",
-      "commandLineArgs": "--build"
+      "commandLineArgs": "--validate \"G:\\My Drive\\Website\\photos.matthewcarney.net\\"
     }
   }
 }

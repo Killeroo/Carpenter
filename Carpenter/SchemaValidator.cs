@@ -196,7 +196,7 @@ namespace Carpenter
             })
         };
 
-        public static bool Run(Schema schemaToTest, out ValidationResults results)
+        public static bool Run(Schema? schemaToTest, out ValidationResults results)
         {
             results = new();
             if (schemaToTest == null)
@@ -204,10 +204,17 @@ namespace Carpenter
                 return false;
             }
 
+            Logger.Log(LogLevel.Verbose, $"Running Validation Tests for Schema \"{schemaToTest.Title}\"...");
             bool bValidationsPassed = true;
             foreach (ValidationTest validation in Tests)
             {
-                if (!validation.Test(schemaToTest))
+                bool testPassed = validation.Test(schemaToTest);
+                
+                LogLevel level = testPassed ? LogLevel.Verbose : validation.Importance == TestImportance.Optional ? LogLevel.Warning : LogLevel.Error;
+                string passString = testPassed ? "PASSED" : "FAILED";
+                Logger.Log(level, $"Test \"{validation.Name}\" ({validation.Importance}): {passString}");
+                
+                if (!testPassed)
                 {
                     results.FailedTests.Add(new (validation.Name, validation.Importance));
                     if (validation.Importance == TestImportance.Required)
@@ -220,6 +227,7 @@ namespace Carpenter
                     results.PassedTests.Add(new(validation.Name, validation.Importance));
                 }
             }
+            Logger.Log(LogLevel.Info, $"Validation completed for \"{schemaToTest.Title}\". {results.ToString()}");
 
             return bValidationsPassed;
         }
