@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CefSharp.WinForms.NETCore" Version="128.4.90" />
+    <PackageReference Include="CefSharp.WinForms.NETCore" Version="134.3.90" />
   </ItemGroup>
 
   <ItemGroup>
