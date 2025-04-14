@@ -69,7 +69,7 @@ namespace Carpenter.CommandLine
 
         static void Main(string[] args)
         {
-            Logger.SetLogLevel(LogLevel.Verbose);
+            Logger.SetLogLevel(LogLevel.Info);
             
             CommandLineContext context = new();
             try

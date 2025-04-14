@@ -227,7 +227,7 @@ namespace Carpenter
                     results.PassedTests.Add(new(validation.Name, validation.Importance));
                 }
             }
-            Logger.Log(LogLevel.Info, $"Validation completed for \"{schemaToTest.Title}\". {results.ToString()}");
+            Logger.Log(LogLevel.Info, $"Validation completed for \"{schemaToTest.Title}\": {results.ToString()}");
 
             return bValidationsPassed;
         }

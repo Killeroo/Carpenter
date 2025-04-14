@@ -98,8 +98,8 @@ namespace Carpenter
         public static readonly HashSet<Tokens> OptionalTokens = new()
         {
             Tokens.Description,
-            Tokens.GridTitle,
-            Tokens.PageUrl
+            Tokens.GridTitle
+            // Tokens.PageUrl
         };
 
         /// <summary>
@@ -618,7 +618,8 @@ namespace Carpenter
                 Logger.Log(LogLevel.Error, results.ToString());
                 return false;
             }
-            else if (results.FailedTests.Count > 0)
+            
+            if (results.FailedTests.Count > 0)
             {
                 Logger.Log(LogLevel.Warning, "Schema is valid but some optional tests did not pass.");
                 Logger.Log(LogLevel.Warning, results.ToString());

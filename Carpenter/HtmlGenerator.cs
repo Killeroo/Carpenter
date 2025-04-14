@@ -345,10 +345,10 @@ namespace Carpenter
 
             // Patch in the correct path to the schema based on it's local path relative to where the site file is
             Dictionary<Schema.Tokens, string> modifiedSchemaTokens = new(schema.TokenValues);
-            modifiedSchemaTokens[Schema.Tokens.PageUrl] = string.Format("{0}{1}/{2}", 
+            modifiedSchemaTokens[Schema.Tokens.PageUrl] = string.Format("{0}{1}/{2}",
                 site.Url,
-                relativePath.Replace("\\", "/"),
-                site.GetSchemaRelativePath(schema));
+                relativePath.Replace(Path.DirectorySeparatorChar, '/'),
+                Path.GetFileName(schema.WorkingDirectory()));
 
             // Get the dimensions for the thumbnail image
             (int width, int height) thumbnailDimensions = new(0, 0);
@@ -356,7 +356,7 @@ namespace Carpenter
             {
                 string thumbnailFilename = schema.Thumbnail;
                 foreach (string imageFile in Directory.EnumerateFiles(schema.WorkingDirectory(),
-                             string.Format("*.{0}", Path.GetExtension(thumbnailFilename)),
+                             "*" + Path.GetExtension(thumbnailFilename),
                              SearchOption.AllDirectories))
                 {
                     if (Path.GetFileName(imageFile) == thumbnailFilename)
