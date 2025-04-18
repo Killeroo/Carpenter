@@ -1,4 +1,4 @@
-# Carpenter - Static Photo Webpage Generator
+# Carpenter - Static Website Generator
 
 Carpenter is a very basic tool intended to generate static webpages, mainly for showcasing photographs. 
 
