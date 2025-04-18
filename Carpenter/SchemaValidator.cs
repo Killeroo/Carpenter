@@ -59,7 +59,7 @@ namespace Carpenter
 
                 if (FailedTests.Count > 0)
                 {
-                    foreach (TestResult testResult in FailedTests)
+                    foreach (TestResult testResult in FailedTests.OrderBy(x => x.Importance))
                     {
                         outputString += Environment.NewLine;
                         outputString += string.Format("- [{0}] {1}", testResult.Importance, testResult.Name);
@@ -78,11 +78,11 @@ namespace Carpenter
                     bool bExists = true;
                     if (!string.IsNullOrEmpty(section.ImageUrl))
                     {
-                        bExists &= File.Exists(Path.Combine(schema._workingDirectory, section.ImageUrl));
+                        bExists &= File.Exists(Path.Combine(schema.WorkingDirectory(), section.ImageUrl));
                     }
                     if (!string.IsNullOrEmpty(section.AltImageUrl))
                     {
-                        bExists &= File.Exists(Path.Combine(schema._workingDirectory, section.AltImageUrl));
+                        bExists &= File.Exists(Path.Combine(schema.WorkingDirectory(), section.AltImageUrl));
                     }
                     return bExists;
                 };
@@ -206,15 +206,16 @@ namespace Carpenter
 
             Logger.Log(LogLevel.Verbose, $"Running Validation Tests for Schema \"{schemaToTest.Title}\"...");
             bool bValidationsPassed = true;
+            bool bTestsFailed = false;
             foreach (ValidationTest validation in Tests)
             {
                 bool testPassed = validation.Test(schemaToTest);
-                
                 string passString = testPassed ? "PASSED" : "FAILED";
                 Logger.Log(LogLevel.Verbose, $"Test \"{validation.Name}\" ({validation.Importance}): {passString}");
                 
                 if (!testPassed)
                 {
+                    bTestsFailed = true;
                     results.FailedTests.Add(new (validation.Name, validation.Importance));
                     if (validation.Importance == TestImportance.Required)
                     {
@@ -226,7 +227,8 @@ namespace Carpenter
                     results.PassedTests.Add(new(validation.Name, validation.Importance));
                 }
             }
-            Logger.Log(LogLevel.Info, $"Validation completed for \"{schemaToTest.Title}\": {results.ToString()}");
+            Logger.Log(!bValidationsPassed ? LogLevel.Error : bTestsFailed ? LogLevel.Warning : LogLevel.Info,
+                $"Validation completed for \"{schemaToTest.Title}\": {results.ToString()}");
 
             return bValidationsPassed;
         }

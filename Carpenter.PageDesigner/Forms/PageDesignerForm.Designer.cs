@@ -33,29 +33,32 @@
             groupBox1 = new GroupBox();
             imageList1 = new ImageList(components);
             groupBox2 = new GroupBox();
-            DescriptionTextBox = new TextBox();
+            tableLayoutPanel3 = new TableLayoutPanel();
             label2 = new Label();
+            DescriptionTextBox = new TextBox();
+            tableLayoutPanel1 = new TableLayoutPanel();
             ThumbnailTextBox = new TextBox();
-            label1 = new Label();
-            CameraTextBox = new TextBox();
+            TitleTextBox = new TextBox();
             label9 = new Label();
-            AuthorTextBox = new TextBox();
+            label1 = new Label();
+            label5 = new Label();
+            LocationTextBox = new TextBox();
+            label4 = new Label();
+            CameraTextBox = new TextBox();
             label8 = new Label();
-            YearTextBox = new TextBox();
+            AuthorTextBox = new TextBox();
             label7 = new Label();
             MonthTextBox = new TextBox();
             label6 = new Label();
-            LocationTextBox = new TextBox();
-            label5 = new Label();
-            TitleTextBox = new TextBox();
-            label4 = new Label();
+            YearTextBox = new TextBox();
             PreviewButton = new Button();
             GenerateButton = new Button();
             groupBox3 = new GroupBox();
-            DetailedImageTextBox = new TextBox();
+            tableLayoutPanel2 = new TableLayoutPanel();
             PreviewImageTextBox = new TextBox();
-            label10 = new Label();
+            DetailedImageTextBox = new TextBox();
             label11 = new Label();
+            label10 = new Label();
             SaveButton = new Button();
             menuStrip1 = new MenuStrip();
             toolStripMenuItem1 = new ToolStripMenuItem();
@@ -96,7 +99,10 @@
             LivePreviewGenerateTimer = new System.Windows.Forms.Timer(components);
             groupBox1.SuspendLayout();
             groupBox2.SuspendLayout();
+            tableLayoutPanel3.SuspendLayout();
+            tableLayoutPanel1.SuspendLayout();
             groupBox3.SuspendLayout();
+            tableLayoutPanel2.SuspendLayout();
             menuStrip1.SuspendLayout();
             groupBox4.SuspendLayout();
             statusStrip1.SuspendLayout();
@@ -104,21 +110,24 @@
             // 
             // ImagePreviewFlowLayoutPanel
             // 
+            ImagePreviewFlowLayoutPanel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             ImagePreviewFlowLayoutPanel.AutoScroll = true;
+            ImagePreviewFlowLayoutPanel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             ImagePreviewFlowLayoutPanel.Location = new Point(5, 20);
             ImagePreviewFlowLayoutPanel.Margin = new Padding(3, 2, 3, 2);
             ImagePreviewFlowLayoutPanel.Name = "ImagePreviewFlowLayoutPanel";
-            ImagePreviewFlowLayoutPanel.Size = new Size(434, 166);
+            ImagePreviewFlowLayoutPanel.Size = new Size(434, 193);
             ImagePreviewFlowLayoutPanel.TabIndex = 0;
             // 
             // groupBox1
             // 
+            groupBox1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             groupBox1.Controls.Add(ImagePreviewFlowLayoutPanel);
-            groupBox1.Location = new Point(549, 284);
+            groupBox1.Location = new Point(549, 317);
             groupBox1.Margin = new Padding(3, 2, 3, 2);
             groupBox1.Name = "groupBox1";
             groupBox1.Padding = new Padding(3, 2, 3, 2);
-            groupBox1.Size = new Size(444, 190);
+            groupBox1.Size = new Size(444, 217);
             groupBox1.TabIndex = 5;
             groupBox1.TabStop = false;
             groupBox1.Text = "Available Images";
@@ -131,172 +140,226 @@
             // 
             // groupBox2
             // 
-            groupBox2.Controls.Add(DescriptionTextBox);
-            groupBox2.Controls.Add(label2);
-            groupBox2.Controls.Add(ThumbnailTextBox);
-            groupBox2.Controls.Add(label1);
-            groupBox2.Controls.Add(CameraTextBox);
-            groupBox2.Controls.Add(label9);
-            groupBox2.Controls.Add(AuthorTextBox);
-            groupBox2.Controls.Add(label8);
-            groupBox2.Controls.Add(YearTextBox);
-            groupBox2.Controls.Add(label7);
-            groupBox2.Controls.Add(MonthTextBox);
-            groupBox2.Controls.Add(label6);
-            groupBox2.Controls.Add(LocationTextBox);
-            groupBox2.Controls.Add(label5);
-            groupBox2.Controls.Add(TitleTextBox);
-            groupBox2.Controls.Add(label4);
+            groupBox2.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            groupBox2.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            groupBox2.Controls.Add(tableLayoutPanel3);
+            groupBox2.Controls.Add(tableLayoutPanel1);
             groupBox2.Location = new Point(549, 26);
             groupBox2.Margin = new Padding(3, 2, 3, 2);
             groupBox2.Name = "groupBox2";
             groupBox2.Padding = new Padding(3, 2, 3, 2);
-            groupBox2.Size = new Size(444, 192);
+            groupBox2.Size = new Size(444, 213);
             groupBox2.TabIndex = 7;
             groupBox2.TabStop = false;
             groupBox2.Text = "Page Details";
             // 
+            // tableLayoutPanel3
+            // 
+            tableLayoutPanel3.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            tableLayoutPanel3.ColumnCount = 2;
+            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 80F));
+            tableLayoutPanel3.Controls.Add(label2, 0, 0);
+            tableLayoutPanel3.Controls.Add(DescriptionTextBox, 1, 0);
+            tableLayoutPanel3.Location = new Point(8, 148);
+            tableLayoutPanel3.Name = "tableLayoutPanel3";
+            tableLayoutPanel3.RowCount = 1;
+            tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            tableLayoutPanel3.Size = new Size(430, 60);
+            tableLayoutPanel3.TabIndex = 20;
+            // 
+            // label2
+            // 
+            label2.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            label2.Location = new Point(3, 0);
+            label2.Name = "label2";
+            label2.Size = new Size(80, 60);
+            label2.TabIndex = 18;
+            label2.Text = "Description";
+            label2.TextAlign = ContentAlignment.MiddleCenter;
+            // 
             // DescriptionTextBox
             // 
-            DescriptionTextBox.Location = new Point(80, 132);
+            DescriptionTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            DescriptionTextBox.Location = new Point(89, 2);
             DescriptionTextBox.Margin = new Padding(3, 2, 3, 2);
             DescriptionTextBox.Multiline = true;
             DescriptionTextBox.Name = "DescriptionTextBox";
             DescriptionTextBox.ScrollBars = ScrollBars.Vertical;
-            DescriptionTextBox.Size = new Size(358, 50);
+            DescriptionTextBox.Size = new Size(338, 56);
             DescriptionTextBox.TabIndex = 19;
             // 
-            // label2
+            // tableLayoutPanel1
             // 
-            label2.AutoSize = true;
-            label2.Location = new Point(8, 146);
-            label2.Name = "label2";
-            label2.Size = new Size(67, 15);
-            label2.TabIndex = 18;
-            label2.Text = "Description";
+            tableLayoutPanel1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            tableLayoutPanel1.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            tableLayoutPanel1.ColumnCount = 4;
+            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
+            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
+            tableLayoutPanel1.Controls.Add(ThumbnailTextBox, 1, 0);
+            tableLayoutPanel1.Controls.Add(TitleTextBox, 1, 1);
+            tableLayoutPanel1.Controls.Add(label9, 0, 3);
+            tableLayoutPanel1.Controls.Add(label1, 0, 0);
+            tableLayoutPanel1.Controls.Add(label5, 0, 2);
+            tableLayoutPanel1.Controls.Add(LocationTextBox, 1, 2);
+            tableLayoutPanel1.Controls.Add(label4, 0, 1);
+            tableLayoutPanel1.Controls.Add(CameraTextBox, 1, 3);
+            tableLayoutPanel1.Controls.Add(label8, 2, 2);
+            tableLayoutPanel1.Controls.Add(AuthorTextBox, 3, 2);
+            tableLayoutPanel1.Controls.Add(label7, 2, 1);
+            tableLayoutPanel1.Controls.Add(MonthTextBox, 3, 0);
+            tableLayoutPanel1.Controls.Add(label6, 2, 0);
+            tableLayoutPanel1.Controls.Add(YearTextBox, 3, 1);
+            tableLayoutPanel1.Location = new Point(8, 21);
+            tableLayoutPanel1.Name = "tableLayoutPanel1";
+            tableLayoutPanel1.RowCount = 4;
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
+            tableLayoutPanel1.Size = new Size(430, 121);
+            tableLayoutPanel1.TabIndex = 17;
             // 
             // ThumbnailTextBox
             // 
-            ThumbnailTextBox.Location = new Point(80, 21);
+            ThumbnailTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            ThumbnailTextBox.Location = new Point(89, 2);
             ThumbnailTextBox.Margin = new Padding(3, 2, 3, 2);
             ThumbnailTextBox.Name = "ThumbnailTextBox";
-            ThumbnailTextBox.Size = new Size(154, 23);
+            ThumbnailTextBox.Size = new Size(123, 23);
             ThumbnailTextBox.TabIndex = 17;
             // 
-            // label1
+            // TitleTextBox
             // 
-            label1.AutoSize = true;
-            label1.Location = new Point(9, 25);
-            label1.Name = "label1";
-            label1.Size = new Size(64, 15);
-            label1.TabIndex = 16;
-            label1.Text = "Thumbnail";
-            // 
-            // CameraTextBox
-            // 
-            CameraTextBox.Location = new Point(80, 105);
-            CameraTextBox.Margin = new Padding(3, 2, 3, 2);
-            CameraTextBox.Name = "CameraTextBox";
-            CameraTextBox.Size = new Size(154, 23);
-            CameraTextBox.TabIndex = 15;
+            TitleTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            TitleTextBox.Location = new Point(89, 32);
+            TitleTextBox.Margin = new Padding(3, 2, 3, 2);
+            TitleTextBox.Name = "TitleTextBox";
+            TitleTextBox.Size = new Size(123, 23);
+            TitleTextBox.TabIndex = 5;
             // 
             // label9
             // 
-            label9.AutoSize = true;
-            label9.Location = new Point(17, 109);
+            label9.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            label9.Location = new Point(3, 90);
             label9.Name = "label9";
-            label9.Size = new Size(48, 15);
+            label9.Size = new Size(80, 31);
             label9.TabIndex = 14;
             label9.Text = "Camera";
+            label9.TextAlign = ContentAlignment.MiddleCenter;
             // 
-            // AuthorTextBox
+            // label1
             // 
-            AuthorTextBox.Location = new Point(299, 77);
-            AuthorTextBox.Margin = new Padding(3, 2, 3, 2);
-            AuthorTextBox.Name = "AuthorTextBox";
-            AuthorTextBox.Size = new Size(139, 23);
-            AuthorTextBox.TabIndex = 13;
+            label1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            label1.Location = new Point(3, 0);
+            label1.Name = "label1";
+            label1.Size = new Size(80, 30);
+            label1.TabIndex = 16;
+            label1.Text = "Thumbnail";
+            label1.TextAlign = ContentAlignment.MiddleCenter;
+            // 
+            // label5
+            // 
+            label5.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            label5.Location = new Point(3, 60);
+            label5.Name = "label5";
+            label5.Size = new Size(80, 30);
+            label5.TabIndex = 6;
+            label5.Text = "Location";
+            label5.TextAlign = ContentAlignment.MiddleCenter;
+            // 
+            // LocationTextBox
+            // 
+            LocationTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            LocationTextBox.Location = new Point(89, 62);
+            LocationTextBox.Margin = new Padding(3, 2, 3, 2);
+            LocationTextBox.Name = "LocationTextBox";
+            LocationTextBox.Size = new Size(123, 23);
+            LocationTextBox.TabIndex = 7;
+            // 
+            // label4
+            // 
+            label4.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            label4.Location = new Point(3, 30);
+            label4.Name = "label4";
+            label4.Size = new Size(80, 30);
+            label4.TabIndex = 4;
+            label4.Text = "Title";
+            label4.TextAlign = ContentAlignment.MiddleCenter;
+            // 
+            // CameraTextBox
+            // 
+            CameraTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            CameraTextBox.Location = new Point(89, 92);
+            CameraTextBox.Margin = new Padding(3, 2, 3, 2);
+            CameraTextBox.Name = "CameraTextBox";
+            CameraTextBox.Size = new Size(123, 23);
+            CameraTextBox.TabIndex = 15;
             // 
             // label8
             // 
-            label8.AutoSize = true;
-            label8.Location = new Point(244, 82);
+            label8.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            label8.Location = new Point(218, 60);
             label8.Name = "label8";
-            label8.Size = new Size(44, 15);
+            label8.Size = new Size(80, 30);
             label8.TabIndex = 12;
             label8.Text = "Author";
+            label8.TextAlign = ContentAlignment.MiddleCenter;
             // 
-            // YearTextBox
+            // AuthorTextBox
             // 
-            YearTextBox.Location = new Point(299, 49);
-            YearTextBox.Margin = new Padding(3, 2, 3, 2);
-            YearTextBox.Name = "YearTextBox";
-            YearTextBox.Size = new Size(139, 23);
-            YearTextBox.TabIndex = 11;
+            AuthorTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            AuthorTextBox.Location = new Point(304, 62);
+            AuthorTextBox.Margin = new Padding(3, 2, 3, 2);
+            AuthorTextBox.Name = "AuthorTextBox";
+            AuthorTextBox.Size = new Size(123, 23);
+            AuthorTextBox.TabIndex = 13;
             // 
             // label7
             // 
-            label7.AutoSize = true;
-            label7.Location = new Point(252, 52);
+            label7.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            label7.Location = new Point(218, 30);
             label7.Name = "label7";
-            label7.Size = new Size(29, 15);
+            label7.Size = new Size(80, 30);
             label7.TabIndex = 10;
             label7.Text = "Year";
+            label7.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // MonthTextBox
             // 
-            MonthTextBox.Location = new Point(299, 21);
+            MonthTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            MonthTextBox.Location = new Point(304, 2);
             MonthTextBox.Margin = new Padding(3, 2, 3, 2);
             MonthTextBox.Name = "MonthTextBox";
-            MonthTextBox.Size = new Size(139, 23);
+            MonthTextBox.Size = new Size(123, 23);
             MonthTextBox.TabIndex = 9;
             // 
             // label6
             // 
-            label6.AutoSize = true;
-            label6.Location = new Point(245, 25);
+            label6.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            label6.Location = new Point(218, 0);
             label6.Name = "label6";
-            label6.Size = new Size(43, 15);
+            label6.Size = new Size(80, 30);
             label6.TabIndex = 8;
             label6.Text = "Month";
+            label6.TextAlign = ContentAlignment.MiddleCenter;
             // 
-            // LocationTextBox
+            // YearTextBox
             // 
-            LocationTextBox.Location = new Point(80, 77);
-            LocationTextBox.Margin = new Padding(3, 2, 3, 2);
-            LocationTextBox.Name = "LocationTextBox";
-            LocationTextBox.Size = new Size(154, 23);
-            LocationTextBox.TabIndex = 7;
-            // 
-            // label5
-            // 
-            label5.AutoSize = true;
-            label5.Location = new Point(15, 82);
-            label5.Name = "label5";
-            label5.Size = new Size(53, 15);
-            label5.TabIndex = 6;
-            label5.Text = "Location";
-            // 
-            // TitleTextBox
-            // 
-            TitleTextBox.Location = new Point(80, 49);
-            TitleTextBox.Margin = new Padding(3, 2, 3, 2);
-            TitleTextBox.Name = "TitleTextBox";
-            TitleTextBox.Size = new Size(154, 23);
-            TitleTextBox.TabIndex = 5;
-            // 
-            // label4
-            // 
-            label4.AutoSize = true;
-            label4.Location = new Point(27, 52);
-            label4.Name = "label4";
-            label4.Size = new Size(29, 15);
-            label4.TabIndex = 4;
-            label4.Text = "Title";
+            YearTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            YearTextBox.Location = new Point(304, 32);
+            YearTextBox.Margin = new Padding(3, 2, 3, 2);
+            YearTextBox.Name = "YearTextBox";
+            YearTextBox.Size = new Size(123, 23);
+            YearTextBox.TabIndex = 11;
             // 
             // PreviewButton
             // 
-            PreviewButton.Location = new Point(858, 478);
+            PreviewButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            PreviewButton.Location = new Point(858, 538);
             PreviewButton.Margin = new Padding(3, 2, 3, 2);
             PreviewButton.Name = "PreviewButton";
             PreviewButton.Size = new Size(66, 25);
@@ -307,7 +370,8 @@
             // 
             // GenerateButton
             // 
-            GenerateButton.Location = new Point(927, 478);
+            GenerateButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            GenerateButton.Location = new Point(927, 538);
             GenerateButton.Margin = new Padding(3, 2, 3, 2);
             GenerateButton.Name = "GenerateButton";
             GenerateButton.Size = new Size(66, 25);
@@ -318,58 +382,81 @@
             // 
             // groupBox3
             // 
-            groupBox3.Controls.Add(DetailedImageTextBox);
-            groupBox3.Controls.Add(PreviewImageTextBox);
-            groupBox3.Controls.Add(label10);
-            groupBox3.Controls.Add(label11);
-            groupBox3.Location = new Point(549, 222);
+            groupBox3.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            groupBox3.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            groupBox3.Controls.Add(tableLayoutPanel2);
+            groupBox3.Location = new Point(549, 243);
             groupBox3.Margin = new Padding(3, 2, 3, 2);
             groupBox3.Name = "groupBox3";
             groupBox3.Padding = new Padding(3, 2, 3, 2);
-            groupBox3.Size = new Size(444, 58);
+            groupBox3.Size = new Size(444, 70);
             groupBox3.TabIndex = 12;
             groupBox3.TabStop = false;
             groupBox3.Text = "Image";
             // 
-            // DetailedImageTextBox
+            // tableLayoutPanel2
             // 
-            DetailedImageTextBox.Location = new Point(297, 25);
-            DetailedImageTextBox.Margin = new Padding(3, 2, 3, 2);
-            DetailedImageTextBox.Name = "DetailedImageTextBox";
-            DetailedImageTextBox.Size = new Size(141, 23);
-            DetailedImageTextBox.TabIndex = 7;
-            DetailedImageTextBox.TextChanged += DetailedImageTextBox_TextChanged;
+            tableLayoutPanel2.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            tableLayoutPanel2.ColumnCount = 4;
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
+            tableLayoutPanel2.Controls.Add(PreviewImageTextBox, 1, 0);
+            tableLayoutPanel2.Controls.Add(DetailedImageTextBox, 3, 0);
+            tableLayoutPanel2.Controls.Add(label11, 0, 0);
+            tableLayoutPanel2.Controls.Add(label10, 2, 0);
+            tableLayoutPanel2.Location = new Point(8, 21);
+            tableLayoutPanel2.Name = "tableLayoutPanel2";
+            tableLayoutPanel2.RowCount = 1;
+            tableLayoutPanel2.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            tableLayoutPanel2.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            tableLayoutPanel2.Size = new Size(430, 38);
+            tableLayoutPanel2.TabIndex = 8;
             // 
             // PreviewImageTextBox
             // 
-            PreviewImageTextBox.Location = new Point(80, 25);
+            PreviewImageTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            PreviewImageTextBox.Location = new Point(89, 2);
             PreviewImageTextBox.Margin = new Padding(3, 2, 3, 2);
             PreviewImageTextBox.Name = "PreviewImageTextBox";
-            PreviewImageTextBox.Size = new Size(148, 23);
+            PreviewImageTextBox.Size = new Size(123, 23);
             PreviewImageTextBox.TabIndex = 6;
             PreviewImageTextBox.TextChanged += PreviewImageTextBox_TextChanged;
             // 
-            // label10
+            // DetailedImageTextBox
             // 
-            label10.AutoSize = true;
-            label10.Location = new Point(241, 28);
-            label10.Name = "label10";
-            label10.Size = new Size(55, 15);
-            label10.TabIndex = 5;
-            label10.Text = "Alt name";
+            DetailedImageTextBox.Location = new Point(304, 2);
+            DetailedImageTextBox.Margin = new Padding(3, 2, 3, 2);
+            DetailedImageTextBox.Name = "DetailedImageTextBox";
+            DetailedImageTextBox.Size = new Size(123, 23);
+            DetailedImageTextBox.TabIndex = 7;
+            DetailedImageTextBox.TextChanged += DetailedImageTextBox_TextChanged;
             // 
             // label11
             // 
-            label11.AutoSize = true;
-            label11.Location = new Point(7, 28);
+            label11.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            label11.Location = new Point(3, 0);
             label11.Name = "label11";
-            label11.Size = new Size(55, 15);
+            label11.Size = new Size(80, 38);
             label11.TabIndex = 4;
             label11.Text = "Filename";
+            label11.TextAlign = ContentAlignment.MiddleCenter;
+            // 
+            // label10
+            // 
+            label10.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            label10.Location = new Point(218, 0);
+            label10.Name = "label10";
+            label10.Size = new Size(80, 38);
+            label10.TabIndex = 5;
+            label10.Text = "Alt name";
+            label10.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // SaveButton
             // 
-            SaveButton.Location = new Point(786, 478);
+            SaveButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            SaveButton.Location = new Point(786, 538);
             SaveButton.Margin = new Padding(3, 2, 3, 2);
             SaveButton.Name = "SaveButton";
             SaveButton.Size = new Size(66, 25);
@@ -587,31 +674,35 @@
             // 
             // groupBox4
             // 
+            groupBox4.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
+            groupBox4.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             groupBox4.Controls.Add(GridFlowLayoutPanel);
             groupBox4.Location = new Point(10, 26);
             groupBox4.Margin = new Padding(3, 2, 3, 2);
             groupBox4.Name = "groupBox4";
             groupBox4.Padding = new Padding(3, 2, 3, 2);
-            groupBox4.Size = new Size(533, 477);
+            groupBox4.Size = new Size(533, 537);
             groupBox4.TabIndex = 15;
             groupBox4.TabStop = false;
             groupBox4.Text = "Photo Grid";
             // 
             // GridFlowLayoutPanel
             // 
+            GridFlowLayoutPanel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             GridFlowLayoutPanel.AutoScroll = true;
+            GridFlowLayoutPanel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             GridFlowLayoutPanel.BorderStyle = BorderStyle.FixedSingle;
             GridFlowLayoutPanel.Location = new Point(7, 20);
             GridFlowLayoutPanel.Margin = new Padding(3, 2, 3, 2);
             GridFlowLayoutPanel.Name = "GridFlowLayoutPanel";
-            GridFlowLayoutPanel.Size = new Size(521, 453);
+            GridFlowLayoutPanel.Size = new Size(521, 513);
             GridFlowLayoutPanel.TabIndex = 6;
             // 
             // statusStrip1
             // 
             statusStrip1.ImageScalingSize = new Size(20, 20);
             statusStrip1.Items.AddRange(new ToolStripItem[] { statusToolStripStatusLabel, toolStripProgressBar1 });
-            statusStrip1.Location = new Point(0, 511);
+            statusStrip1.Location = new Point(0, 571);
             statusStrip1.Name = "statusStrip1";
             statusStrip1.Padding = new Padding(1, 0, 10, 0);
             statusStrip1.Size = new Size(1001, 22);
@@ -638,25 +729,31 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1001, 533);
+            ClientSize = new Size(1001, 593);
             Controls.Add(statusStrip1);
+            Controls.Add(groupBox3);
             Controls.Add(groupBox4);
             Controls.Add(SaveButton);
-            Controls.Add(groupBox3);
             Controls.Add(GenerateButton);
             Controls.Add(PreviewButton);
             Controls.Add(groupBox2);
             Controls.Add(groupBox1);
             Controls.Add(menuStrip1);
             MainMenuStrip = menuStrip1;
+            MinimumSize = new Size(1017, 572);
             Name = "PageDesignerForm";
             Text = "Carpenter";
             Load += PageDesignerForm_Load;
+            Resize += PageDesignerForm_Resize;
             groupBox1.ResumeLayout(false);
             groupBox2.ResumeLayout(false);
-            groupBox2.PerformLayout();
+            tableLayoutPanel3.ResumeLayout(false);
+            tableLayoutPanel3.PerformLayout();
+            tableLayoutPanel1.ResumeLayout(false);
+            tableLayoutPanel1.PerformLayout();
             groupBox3.ResumeLayout(false);
-            groupBox3.PerformLayout();
+            tableLayoutPanel2.ResumeLayout(false);
+            tableLayoutPanel2.PerformLayout();
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
             groupBox4.ResumeLayout(false);
@@ -735,5 +832,8 @@
         private ToolStripMenuItem openInNotepadToolStripMenuItem;
         private TextBox DescriptionTextBox;
         private Label label2;
+        private TableLayoutPanel tableLayoutPanel1;
+        private TableLayoutPanel tableLayoutPanel2;
+        private TableLayoutPanel tableLayoutPanel3;
     }
 }

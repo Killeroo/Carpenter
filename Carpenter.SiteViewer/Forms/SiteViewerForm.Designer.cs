@@ -68,6 +68,8 @@
             // 
             // OpenFolderButton
             // 
+            OpenFolderButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            OpenFolderButton.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             OpenFolderButton.Location = new Point(512, 27);
             OpenFolderButton.Name = "OpenFolderButton";
             OpenFolderButton.Size = new Size(28, 22);
@@ -77,6 +79,7 @@
             // 
             // PathTextBox
             // 
+            PathTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             PathTextBox.Location = new Point(12, 27);
             PathTextBox.Name = "PathTextBox";
             PathTextBox.Size = new Size(494, 23);
@@ -108,6 +111,7 @@
             // GenerateAllButton
             // 
             GenerateAllButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            GenerateAllButton.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             GenerateAllButton.Location = new Point(461, 414);
             GenerateAllButton.Name = "GenerateAllButton";
             GenerateAllButton.Size = new Size(80, 22);
@@ -211,6 +215,7 @@
             // PublishButton
             // 
             PublishButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            PublishButton.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             PublishButton.Location = new Point(12, 414);
             PublishButton.Name = "PublishButton";
             PublishButton.Size = new Size(80, 22);
@@ -233,6 +238,7 @@
             // ValidateButton
             // 
             ValidateButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            ValidateButton.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             ValidateButton.Location = new Point(375, 414);
             ValidateButton.Name = "ValidateButton";
             ValidateButton.Size = new Size(80, 22);
@@ -243,6 +249,7 @@
             // 
             // FileTreeView
             // 
+            FileTreeView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             FileTreeView.ImageIndex = 0;
             FileTreeView.ImageList = FileTreeImageList;
             FileTreeView.Location = new Point(12, 56);
@@ -314,6 +321,8 @@
             Controls.Add(PathTextBox);
             Controls.Add(OpenFolderButton);
             MainMenuStrip = menuStrip;
+            MaximumSize = new Size(1000, 1000);
+            MinimumSize = new Size(569, 501);
             Name = "SiteViewerForm";
             Text = "Carpenter";
             Load += MainForm_Load;

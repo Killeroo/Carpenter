@@ -34,6 +34,7 @@ namespace Carpenter
         private static bool _showTimestamp = true;
         private static bool _showFilename = true;
         private static bool _showCurrentThread = true;
+        private static bool _printLogLevel = true;
         private static LogLevel _currentLogLevel = LogLevel.Info;
         private static Dictionary<string, string> _cachedFileNames = new();
 
@@ -99,15 +100,20 @@ namespace Carpenter
                 {
                     Console.Write($"[{entry.Timestamp}] ");
                 }
-
+                
+                if (_printLogLevel)
+                {
+                    Console.Write($"[{entry.LogLevel.ToString()}] ");
+                }
+                
                 if (_showCurrentThread) 
                 {
                     ConsoleColor threadColor = (ConsoleColor) (((entry.ThreadId * 23) ^ (entry.ThreadId >> 6)) % 16);
                     Console.ForegroundColor = threadColor;
-                    Console.Write($"[{entry.ThreadId}] ");
+                    Console.Write($"[Thread {entry.ThreadId}] ");
                     Console.ForegroundColor = logColor;
                 }
-
+                
                 if (_showFilename && !string.IsNullOrEmpty(entry.Source))
                 {
                     if (!_cachedFileNames.TryGetValue(entry.Source, out string formattedFileName))

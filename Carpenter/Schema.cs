@@ -127,16 +127,6 @@ namespace Carpenter
         public List<Section> LayoutSections { get; set; } = new();
 
         /// <summary>
-        /// Denotes if the Schema file was loaded from a file correctly
-        /// </summary>
-        private bool _loaded = false;
-
-        /// <summary>
-        /// The directory containing the schema file
-        /// </summary>
-        public string _workingDirectory = string.Empty;
-
-        /// <summary>
         /// Accessors for Token values
         /// </summary>
         public string Location 
@@ -189,11 +179,20 @@ namespace Carpenter
             set { OptionValues.AddOrUpdate(Options.OutputFilename, value); }
         }
 
-        public bool IsLoaded() => _loaded;
         public string WorkingDirectory() => _workingDirectory;
 
-
-        public Schema() => _loaded = true;
+        
+        /// <summary>
+        /// The directory containing the schema file
+        /// </summary>
+        private string _workingDirectory = string.Empty;
+        
+        /// <summary>
+        /// Validation results from the last time the schema was validated
+        /// </summary>
+        private SchemaValidator.ValidationResults _lastRunValidationResults = new();
+        
+        public Schema() { }
         public Schema(string path) => TryLoad(path);
         public Schema(Schema otherSchema)
         {
@@ -202,7 +201,6 @@ namespace Carpenter
                 return;
             }
 
-            _loaded = otherSchema._loaded;
             _workingDirectory = otherSchema._workingDirectory;
 
             TokenValues = new Dictionary<Tokens, string>(otherSchema.TokenValues);
@@ -249,11 +247,11 @@ namespace Carpenter
         /// </summary>
         /// <param name="path"></param>
         /// <exception cref="KeyNotFoundException"></exception>
+        /// <exception cref="IndexOutOfRangeException"></exception>
+        /// <exception cref="SchemaParsingException"></exception>
         /// <returns>If the schema was sucesfully loaded or not</returns>
-        public bool TryLoad(string path)
+        public void TryLoad(string path)
         {
-            _loaded = false;
-
             // Read the file
             string[] schemaFileContents = File.ReadAllLines(path);
             _workingDirectory = Path.GetDirectoryName(path);
@@ -262,14 +260,14 @@ namespace Carpenter
             if (schemaFileContents.Length == 0)
             {
                 Logger.Log(LogLevel.Error, $"Schema file empty!");
-                return false;
+                throw new SchemaParsingException("Attempted to load empty schema file");
             }
 
             // Version check
             if (schemaFileContents[0].Contains(Config.kVersionOption) == false || schemaFileContents[0].Contains('=') == false)
             {
-                Logger.Log(LogLevel.Error, $"Could not read schema file version");
-                return false;
+                Logger.Log(LogLevel.Error, "Could not read schema file version");
+                throw new SchemaParsingException("Could not read schema file version");
             }
             string versionValue = schemaFileContents[0].GetTokenOrOptionValue();
             float version = 0.0f;
@@ -280,12 +278,12 @@ namespace Carpenter
             catch (Exception e) 
             {
                 Logger.Log(LogLevel.Error, $"Could not parse schema version string (\'{versionValue}\') ({e.GetType()} exception occured)");
-                return false;
+                throw new SchemaParsingException($"Could not parse schema version string (\'{versionValue}\')", e);
             }
             if (version != Config.kVersion)
             {
                 Logger.Log(LogLevel.Error, $"Incompabitable schema version, found v{version} but can only parse v{Config.kVersion}. Please update.");
-                return false;
+                throw new SchemaParsingException("Incompabitable schema version");
             }
 
             // Parse tokens in file
@@ -336,7 +334,7 @@ namespace Carpenter
             if (photoSectionStartIndex < 0)
             {
                 Logger.Log(LogLevel.Error, $"Could not find image layout section with tag \"{gridTag}\" while parsing schema. Add it to the schema and try again.");
-                return false;
+                throw new SchemaParsingException("Could not find image layout section in schema");
             }
 
             // Ok lets parse everything to the end of the file and construct our image grid
@@ -379,8 +377,8 @@ namespace Carpenter
                                 break;
 
                             default:
-                                Logger.Log(LogLevel.Error, "Could not parse tag in photo grid");
-                                return false;
+                                Logger.Log(LogLevel.Error, "Could not parse tag in schema layout section");
+                                throw new SchemaParsingException("Could not parse tag in schema layout section");
                         }
 
                         break;
@@ -409,9 +407,8 @@ namespace Carpenter
                                 break;
 
                             default:
-                                // TODO: Stronger identification for bad formatted tags
                                 Logger.Log(LogLevel.Error, $"Could not parse token ({token}) in photo grid");
-                                return false;
+                                throw new SchemaParsingException($"Could not parse token ({token}) in schema layout");
                         }
 
                         if (imageUrl != string.Empty)
@@ -463,15 +460,11 @@ namespace Carpenter
             if (IsValid())
             {
                 Logger.Log(LogLevel.Verbose, $"Schema parsed (\"{path}\")");
-                _loaded = true;
-                return true;
             }
             else
             {
                 Logger.Log(LogLevel.Error, $"Schema failed sanity check");
-                Reset();
-                _loaded = false;
-                return false;
+                // Reset();
             }
 
         }
@@ -482,11 +475,11 @@ namespace Carpenter
         /// <returns>If saving the schema was successfully written to a file or not</returns>
         public bool TrySave(string path)
         {
-            if (!IsValid())
-            {
-                Logger.Log(LogLevel.Error, $"Could not save schema, sanity check failed");
-                return false;
-            }
+            //if (!IsValid())
+            //{
+            //    Logger.Log(LogLevel.Error, $"Could not save schema, sanity check failed");
+            //    return false;
+            //}
 
             // Shorthand to create a schema parameter and it's value. Just means that if we need to modify the format of the schema we can do it in one place.
             string CreateNameValuePair(string name, string value)
@@ -612,19 +605,7 @@ namespace Carpenter
         /// <returns>If the schema is valid or not</returns>
         private bool IsValid()
         {
-            if (!SchemaValidator.Run(this, out SchemaValidator.ValidationResults results))
-            {
-                Logger.Log(LogLevel.Error, "Schema validator failed! Some required tests did not pass.");
-                Logger.Log(LogLevel.Error, results.ToString());
-                return false;
-            }
-            
-            if (results.FailedTests.Count > 0)
-            {
-                Logger.Log(LogLevel.Warning, "Schema is valid but some optional tests did not pass.");
-                Logger.Log(LogLevel.Warning, results.ToString());
-            }
-            return true;
+            return SchemaValidator.Run(this, out _lastRunValidationResults);
         }
         
         /// <summary>
@@ -635,7 +616,6 @@ namespace Carpenter
             TokenValues.Clear();
             OptionValues.Clear();
             LayoutSections.Clear();
-            _loaded = false;
             _workingDirectory = string.Empty;
         }
 

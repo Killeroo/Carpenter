@@ -106,13 +106,18 @@ namespace SiteViewer.Forms
         /// <param name="path">Path to run page designer in, will attempt to open a SCHEMA file in the path if one is available or will create a new one</param>
         public void RunPageDesigner(string path)
         {
+            Cursor currentCursor = Cursor.Current;
+            Cursor = Cursors.WaitCursor;
 #if DEBUG
             PageDesignerForm form = new(path, _site.GetRootDir());
+            Cursor = currentCursor;
             form.ShowDialog();
 #else
             ProcessStartInfo startInfo = new(kPageDesignerAppName);
             startInfo.Arguments = $"\"{path}\" \"{_site.GetRootDir()}\"";
             Process.Start(startInfo);
+            
+            Cursor = currentCursor;
 #endif
         }
 

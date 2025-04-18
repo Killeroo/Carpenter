@@ -302,7 +302,7 @@ namespace PageDesigner.Forms
             CameraTextBox.TextChanged -= FormTextBox_TextChanged;
             DescriptionTextBox.TextChanged -= FormTextBox_TextChanged;
         }
-        
+
         // TODO: Move to utils 
         private string GeneratePreviewWebpage()
         {
@@ -425,10 +425,16 @@ namespace PageDesigner.Forms
                 return false;
             }
 
-            Schema schema = new Schema();
-            if (schema.TryLoad(schemaPath) == false)
+            Schema? schema = null;
+            try
             {
-                // TODO: Raise an error or something
+                schema = new Schema(schemaPath);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(
+                    $"Could not load schema. Exception {e.GetType()}: {e.Message}",
+                    "Error loading schema", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
 
@@ -483,6 +489,18 @@ namespace PageDesigner.Forms
             if (_workingSchema.TrySave(Path.GetDirectoryName(_schemaPath)))
             {
                 statusToolStripStatusLabel.Text = "Schema successfully saved.";
+
+                this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
+
+                // Save whatever values we entered for next time!
+                Settings.Default.ThumbnailLastUsedValue = ThumbnailTextBox.Text;
+                Settings.Default.TitleLastUsedValue = TitleTextBox.Text;
+                Settings.Default.LocationLastUsedValue = LocationTextBox.Text;
+                Settings.Default.MonthLastUsedValue = MonthTextBox.Text;
+                Settings.Default.YearLastUsedValue = YearTextBox.Text;
+                Settings.Default.AuthorLastUsedValue = AuthorTextBox.Text;
+                Settings.Default.CameraLastUsedValue = CameraTextBox.Text;
+                Settings.Default.Save();
             }
             else
             {
@@ -490,17 +508,7 @@ namespace PageDesigner.Forms
                 MessageBox.Show("Could not save schema.", "Error saving schema", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
-            this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
 
-            // Save whatever values we entered for next time!
-            Settings.Default.ThumbnailLastUsedValue = ThumbnailTextBox.Text;
-            Settings.Default.TitleLastUsedValue = TitleTextBox.Text;
-            Settings.Default.LocationLastUsedValue = LocationTextBox.Text;
-            Settings.Default.MonthLastUsedValue = MonthTextBox.Text;
-            Settings.Default.YearLastUsedValue = YearTextBox.Text;
-            Settings.Default.AuthorLastUsedValue = AuthorTextBox.Text;
-            Settings.Default.CameraLastUsedValue = CameraTextBox.Text;
-            Settings.Default.Save();
         }
 
         private void UpdateWorkingSchemaFromForm()
@@ -974,6 +982,8 @@ namespace PageDesigner.Forms
                 // Setup image
                 gridPictureBox.Image = resizedImage;
                 gridPictureBox.SizeMode = PictureBoxSizeMode.AutoSize;
+                //gridPictureBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
 
                 // Save properties for later
                 gridPictureBox.DetailImageFilename = TEMP_CreateDetailedImageName(detailedImageName);
@@ -1523,5 +1533,14 @@ namespace PageDesigner.Forms
                 Process.Start("notepad", _schemaPath);
             }
         }
-    }
+
+        private void PageDesignerForm_Resize(object sender, EventArgs e)
+        {
+            foreach (Control ctrl in GridFlowLayoutPanel.Controls)
+            {
+                // An attempt to make the grid resize
+                //ctrl.Width = GridFlowLayoutPanel.ClientSize.Width / GridFlowLayoutPanel.Controls.Count;
+            }
+        }
+}
 }
