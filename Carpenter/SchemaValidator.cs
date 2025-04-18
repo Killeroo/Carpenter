@@ -210,9 +210,8 @@ namespace Carpenter
             {
                 bool testPassed = validation.Test(schemaToTest);
                 
-                LogLevel level = testPassed ? LogLevel.Verbose : validation.Importance == TestImportance.Optional ? LogLevel.Warning : LogLevel.Error;
                 string passString = testPassed ? "PASSED" : "FAILED";
-                Logger.Log(level, $"Test \"{validation.Name}\" ({validation.Importance}): {passString}");
+                Logger.Log(LogLevel.Verbose, $"Test \"{validation.Name}\" ({validation.Importance}): {passString}");
                 
                 if (!testPassed)
                 {

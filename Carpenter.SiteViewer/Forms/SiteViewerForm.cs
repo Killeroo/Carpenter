@@ -106,7 +106,7 @@ namespace SiteViewer.Forms
         /// <param name="path">Path to run page designer in, will attempt to open a SCHEMA file in the path if one is available or will create a new one</param>
         public void RunPageDesigner(string path)
         {
-#if false
+#if DEBUG
             PageDesignerForm form = new(path, _site.GetRootDir());
             form.ShowDialog();
 #else

@@ -270,6 +270,11 @@ namespace Carpenter
                     string padding = sectionContentsCopy[sectionTags.First().ArrayIndex].Split("<!--").First();
                     foreach (ImageSection innerImageSection in asImageColumnSection.Sections)
                     {
+                        if (string.IsNullOrEmpty(innerImageSection.ImageUrl))
+                        {
+                            continue;
+                        }
+                        
                         List<string> imageSectionCopy = new(imageSection);
                         tokenValues.Clear();
                         
