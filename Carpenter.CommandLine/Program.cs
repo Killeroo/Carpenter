@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using Carpenter;
 
@@ -201,26 +202,23 @@ namespace Carpenter.CommandLine
                     }
                     else
                     {
-                        if (site.ValidateAllSchemas(out List<(string path, SchemaValidator.ValidationResults results)> siteResults))
-                        {
-                            Logger.Log(LogLevel.Info, "Site validated.");
-                        }
+                        bool requiredTestsFailed = site.ValidateAllSchemas(out List<(string path, SchemaValidator.ValidationResults results)> siteResults);
+                        int testsFailed = siteResults.Select(x => x.results.FailedTests.Count != 0).Count();
+                        
+                        LogLevel level = requiredTestsFailed ? LogLevel.Error : testsFailed > 0 ? LogLevel.Warning : LogLevel.Info;
+                        Logger.Log(level,
+                            string.Format("Site validated. {0}{1}",
+                                requiredTestsFailed ? "Required tests failed, please check logs. " : string.Empty,
+                                testsFailed > 0 ? $"{testsFailed} tests failed. " : string.Empty));
 
-                        foreach ((string path, SchemaValidator.ValidationResults results) in siteResults)
-                        {
-                            Console.WriteLine($"Results for {path}");
-                            Console.WriteLine("====================");
-                            Console.WriteLine(results.ToString());
-                            Console.WriteLine("====================");
-                        }
+                        // foreach ((string path, SchemaValidator.ValidationResults results) in siteResults)
+                        // {
+                        //     Console.WriteLine($"[{Path.GetDirectoryName(path)}] {results.ToString()}");
+                        // }
                     }
                     break;
                 }
             }
-
-            //Logger.Flush();
-            // stopwatch.Stop();
-            //Logger.Log(LogLevel.Info, $"Website generation completed. {count} pages created in {stopwatch.ElapsedMilliseconds}ms.");
         }
 
         private static void ErrorAndExit(string message)
