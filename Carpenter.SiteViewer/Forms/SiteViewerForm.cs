@@ -113,7 +113,7 @@ namespace SiteViewer.Forms
             Cursor = currentCursor;
             form.ShowDialog();
 #else
-            ProcessStartInfo startInfo = new(kPageDesignerAppName);
+            ProcessStartInfo startInfo = new(Path.Combine(Environment.CurrentDirectory, kPageDesignerAppName));
             startInfo.Arguments = $"\"{path}\" \"{_site.GetRootDir()}\"";
             Process.Start(startInfo);
             
@@ -605,9 +605,28 @@ namespace SiteViewer.Forms
         [DllImport("user32.dll")]
         private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wp, IntPtr lp);
 
-        private void FileTreeView_AfterLabelEdit(object sender, NodeLabelEditEventArgs e)
+        private void FileTreeView_AfterLabelEdit(object sender, NodeLabelEditEventArgs args)
         {
             // TODO: Update the directory
+            string directoryPath = Path.GetDirectoryName(args.Node.Tag as string);
+            try
+            {
+                Directory.Move(args.Node.Tag as string, Path.Combine(directoryPath, args.Label));
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(
+                    $"Could not rename directory: {e.GetType()}:{e.Message}.",
+                    "Carpenter",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                args.CancelEdit = true;
+                args.Node.Text = Path.GetFileName(args.Node.Tag as string);
+                return;
+            }
+
+            args.Node.Tag = Path.Combine(directoryPath, args.Label);
+            args.Node.Text = args.Label;
         }
 
         private void FileTreeView_BeforeLabelEdit(object sender, NodeLabelEditEventArgs e)

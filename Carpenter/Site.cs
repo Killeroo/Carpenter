@@ -332,7 +332,6 @@ namespace Carpenter
             };
 
             // Order schemas by date
-            List<Schema> schemasOrderedByDate;
             Dictionary<DateTime, Schema> schemasWithDate = new();
             foreach (Schema schema in GetSchemas())
             {
