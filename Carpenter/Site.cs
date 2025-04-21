@@ -332,7 +332,6 @@ namespace Carpenter
             };
 
             // Order schemas by date
-            List<Schema> schemasOrderedByDate;
             Dictionary<DateTime, Schema> schemasWithDate = new();
             foreach (Schema schema in GetSchemas())
             {
@@ -522,7 +521,7 @@ namespace Carpenter
                     }
 
                     // Loop through and find any files that aren't referenced in the schema 
-                    foreach (string imagePath in Directory.GetFiles(path, "*.jpg"))
+                    foreach (string imagePath in Directory.GetFiles(Path.GetDirectoryName(path), "*.jpg"))
                     {
                         string imageName = Path.GetFileName(imagePath);
                         if (referencedImages.Contains(imageName) == false)
@@ -534,7 +533,7 @@ namespace Carpenter
                 }
             }
 
-            Logger.Log(LogLevel.Info, $"Found {unusedImagePaths.Count} unused images");
+            Logger.Log(LogLevel.Verbose, $"Found {unusedImagePaths.Count} unused images");
             return unusedImagePaths;
         }
 

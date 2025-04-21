@@ -35,7 +35,7 @@ namespace Carpenter
         private static bool _showFilename = true;
         private static bool _showCurrentThread = true;
         private static bool _printLogLevel = true;
-        private static LogLevel _currentLogLevel = LogLevel.Info;
+        private static LogLevel _currentLogLevel = LogLevel.Verbose;
         private static Dictionary<string, string> _cachedFileNames = new();
 
         private class LogEntry

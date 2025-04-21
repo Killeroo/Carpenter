@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Carpenter.PageDesigner", "C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JpegMetadataExtractor", "JpegMetadataExtractor\JpegMetadataExtractor.csproj", "{C6AB61EC-CF85-4657-B3D6-AC504E9FC26C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Carpenter.Benchmark", "Carpenter.Benchmark\Carpenter.Benchmark.csproj", "{030AC876-5A2F-460B-BC40-87C041D88C4F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Carpenter.Benchmark", "Carpenter.Benchmark\Carpenter.Benchmark.csproj", "{030AC876-5A2F-460B-BC40-87C041D88C4F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

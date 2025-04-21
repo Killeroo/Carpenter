@@ -140,7 +140,7 @@ namespace Carpenter
             {
                 foreach (Tokens token in Enum.GetValues(typeof(Tokens)))
                 {
-                    if ((token < Tokens.Image) // We shouldn't expect to find grid specific tokens defines in the Token value tables (they are stored in the layout instead)
+                    if ((token < Tokens.SpecialTokenSection) // We shouldn't expect to find grid specific tokens defines in the Token value tables (they are stored in the layout instead)
                         && schema.TokenValues.ContainsKey(token) == false
                         && !Schema.OptionalTokens.Contains(token))
                     {

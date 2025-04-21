@@ -10,20 +10,21 @@ using System.Windows.Forms;
 using System.IO;
 using System.Threading;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 using JpegMetadataExtractor;
 
 using Carpenter;
 using Carpenter.SiteViewer;
+using Carpenter.SiteViewer.Forms;
 
 using SiteViewer;
 using SiteViewer.Controls;
 
 using PageDesigner.Forms;
+
 using static System.Windows.Forms.AxHost;
-using Carpenter.SiteViewer.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-using System.Runtime.InteropServices;
 
 
 namespace SiteViewer.Forms
@@ -113,7 +114,7 @@ namespace SiteViewer.Forms
             Cursor = currentCursor;
             form.ShowDialog();
 #else
-            ProcessStartInfo startInfo = new(kPageDesignerAppName);
+            ProcessStartInfo startInfo = new(Path.Combine(Environment.CurrentDirectory, kPageDesignerAppName));
             startInfo.Arguments = $"\"{path}\" \"{_site.GetRootDir()}\"";
             Process.Start(startInfo);
             
@@ -605,9 +606,37 @@ namespace SiteViewer.Forms
         [DllImport("user32.dll")]
         private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wp, IntPtr lp);
 
-        private void FileTreeView_AfterLabelEdit(object sender, NodeLabelEditEventArgs e)
+        private void FileTreeView_AfterLabelEdit(object sender, NodeLabelEditEventArgs args)
         {
-            // TODO: Update the directory
+            string oldPath = args.Node.Tag as string;
+            string newPath = Path.Combine(Path.GetDirectoryName(oldPath), args.Label);
+            try
+            {
+                Directory.Move(args.Node.Tag as string, newPath);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(
+                    $"Could not rename directory: {e.GetType()}:{e.Message}.",
+                    "Carpenter",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                args.CancelEdit = true;
+                args.Node.Text = Path.GetFileName(args.Node.Tag as string);
+                return;
+            }
+            
+            void UpdateNodeTagString(TreeNode CurrentNode, string old, string @new)
+            {
+                CurrentNode.Tag = (CurrentNode.Tag as string).Replace(oldPath, newPath);
+                foreach (TreeNode Node in CurrentNode.Nodes)
+                {
+                    UpdateNodeTagString(Node, old, @new);
+                }
+            }
+            
+            UpdateNodeTagString(args.Node, oldPath, newPath);
+            args.Node.Text = args.Label;
         }
 
         private void FileTreeView_BeforeLabelEdit(object sender, NodeLabelEditEventArgs e)

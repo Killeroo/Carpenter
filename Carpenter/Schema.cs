@@ -24,7 +24,6 @@ namespace Carpenter
         public enum Tokens
         {
             // Page tokens
-            PageUrl, // Note: Not specified in schema file, generated dynamically in template.cs
             Location,
             Title,
             Month,
@@ -35,13 +34,19 @@ namespace Carpenter
             Description,
             GridTitle,
 
+            // Unused placeholder which denotes where special tokens start in enum
+            SpecialTokenSection,
+
             // Layout specific tokens
             Image,
             AlternateImage,
             
             // Image specific tokens
             ImageWidth,
-            ImageHeight
+            ImageHeight,
+
+            // Dynamically generated tokens
+            PageUrl
         };
 
         private enum ElementTags
@@ -286,17 +291,17 @@ namespace Carpenter
                 throw new SchemaParsingException("Incompabitable schema version");
             }
 
-            // Parse tokens in file
+            // Parse page tokens in file
             for (int i = 0; i < schemaFileContents.Length; i++)
             {
                 string line = schemaFileContents[i];
 
-                foreach (string token in TokenTable.Keys)
+                foreach (KeyValuePair<string, Tokens> token in TokenTable)
                 {
-                    if (line.Contains(token))
+                    if (line.Contains(token.Key) && token.Value < Tokens.SpecialTokenSection)
                     {
-                        TokenValues[TokenTable[token]] = line.GetTokenOrOptionValue();
-                        Logger.Log(LogLevel.Verbose, $"Schema token {TokenTable[token]}={TokenValues[TokenTable[token]]}");
+                        TokenValues[TokenTable[token.Key]] = line.GetTokenOrOptionValue();
+                        Logger.Log(LogLevel.Verbose, $"Page token {TokenTable[token.Key]}={TokenValues[TokenTable[token.Key]]}");
                         break;
                     }
                 }
@@ -429,7 +434,7 @@ namespace Carpenter
                                 standaloneSection.AltImageUrl = imageSectionToAdd.AltImageUrl;
 
                                 Logger.Log(LogLevel.Verbose,
-                                    $"Added single image section to photo grid (image_url={imageUrl} alternate_image_url={imageUrl})");
+                                    $"Added single image section to photo grid (image_url={imageSectionToAdd.ImageUrl} al_image_url={imageSectionToAdd.AltImageUrl})");
                             }
                             else if (LayoutSections[currentSectionIndex].GetType().Equals(typeof(ImageColumnSection)))
                             {
@@ -438,7 +443,7 @@ namespace Carpenter
                                 columnSection.Sections.Add(imageSectionToAdd);
 
                                 Logger.Log(LogLevel.Verbose,
-                                    $"Added image to column section (image_url={imageUrl} alternate_image_url={imageUrl})");
+                                    $"Added image to column section (image_url={imageSectionToAdd.ImageUrl} alt_image_url={imageSectionToAdd.AltImageUrl})");
                             }
                         }
                         else if (imageTitle != string.Empty && LayoutSections[currentSectionIndex].GetType().Equals(typeof(TitleSection)))
@@ -446,7 +451,7 @@ namespace Carpenter
                             var titleSection = LayoutSections[currentSectionIndex] as TitleSection;
                             titleSection.TitleText = imageTitle;
 
-                            Logger.Log(LogLevel.Verbose, $"Added image title section to photo grid (titile={imageTitle})");
+                            Logger.Log(LogLevel.Verbose, $"Added image title section to photo grid (title={imageTitle})");
                         }
 
                         // Blank the urls again
@@ -456,17 +461,8 @@ namespace Carpenter
                     }
                 }
             }
-
-            if (IsValid())
-            {
-                Logger.Log(LogLevel.Verbose, $"Schema parsed (\"{path}\")");
-            }
-            else
-            {
-                Logger.Log(LogLevel.Error, $"Schema failed sanity check");
-                // Reset();
-            }
-
+            
+            Logger.Log(LogLevel.Verbose, $"Schema loaded (\"{path}\")");
         }
 
         /// <summary>
@@ -475,12 +471,6 @@ namespace Carpenter
         /// <returns>If saving the schema was successfully written to a file or not</returns>
         public bool TrySave(string path)
         {
-            //if (!IsValid())
-            //{
-            //    Logger.Log(LogLevel.Error, $"Could not save schema, sanity check failed");
-            //    return false;
-            //}
-
             // Shorthand to create a schema parameter and it's value. Just means that if we need to modify the format of the schema we can do it in one place.
             string CreateNameValuePair(string name, string value)
             {
@@ -555,7 +545,8 @@ namespace Carpenter
 
                     schemaFileContents.Add(standaloneTag);
                     schemaFileContents.Add(CreateNameValuePair(imageUrlTokenName, standaloneImageSection.ImageUrl));
-                    schemaFileContents.Add(CreateNameValuePair(detailedImageUrlTokenName, standaloneImageSection.AltImageUrl));
+                    if (!string.IsNullOrEmpty(standaloneImageSection.AltImageUrl))
+                        schemaFileContents.Add(CreateNameValuePair(detailedImageUrlTokenName, standaloneImageSection.AltImageUrl));
 
                     Logger.Log(LogLevel.Verbose, "Added ImageSection to layout");
                 }
@@ -567,7 +558,8 @@ namespace Carpenter
                     foreach (ImageSection columnItem in columnImageSection.Sections)
                     {
                         schemaFileContents.Add(CreateNameValuePair(imageUrlTokenName, columnItem.ImageUrl));
-                        schemaFileContents.Add(CreateNameValuePair(detailedImageUrlTokenName, columnItem.AltImageUrl));
+                        if (!string.IsNullOrEmpty(columnItem.AltImageUrl))
+                            schemaFileContents.Add(CreateNameValuePair(detailedImageUrlTokenName, columnItem.AltImageUrl));
                     }
 
                     Logger.Log(LogLevel.Verbose, "Added ImageColumnSection to layout");

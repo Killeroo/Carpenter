@@ -547,9 +547,13 @@ namespace PageDesigner.Forms
                     // Create standalone image from GridPictureBox
                     ImageSection currentImageSection = new()
                     {
-                        AltImageUrl = gridPictureBox.DetailImageFilename,
                         ImageUrl = gridPictureBox.ImageFilename
                     };
+                    if (gridPictureBox.DetailImageFilename != string.Empty 
+                        && gridPictureBox.DetailImageFilename != gridPictureBox.ImageFilename)
+                    {
+                        currentImageSection.AltImageUrl = gridPictureBox.DetailImageFilename;
+                    }
 
                     if (gridPictureBox.GetImageType() == GridPictureBox.ImageType.Standalone)
                     {
@@ -672,6 +676,7 @@ namespace PageDesigner.Forms
             AuthorTextBox.Text = GetTokenFromSchema(Schema.Tokens.Author, Settings.Default.AuthorLastUsedValue);
             CameraTextBox.Text = GetTokenFromSchema(Schema.Tokens.Camera, Settings.Default.CameraLastUsedValue);
             ThumbnailTextBox.Text = GetTokenFromSchema(Schema.Tokens.Thumbnail, Settings.Default.ThumbnailLastUsedValue);
+            DescriptionTextBox.Text = GetTokenFromSchema(Schema.Tokens.Description, "");
 
             AddTextboxCallbacks();
         }
@@ -993,7 +998,7 @@ namespace PageDesigner.Forms
 
 
                 // Save properties for later
-                gridPictureBox.DetailImageFilename = TEMP_CreateDetailedImageName(detailedImageName);
+                //gridPictureBox.DetailImageFilename = TEMP_CreateDetailedImageName(detailedImageName);
                 gridPictureBox.ImageFilename = TEMP_CreatePreviewImageName(previewImageName);
                 gridPictureBox.SetImageType(standaloneImage ? GridPictureBox.ImageType.Standalone : GridPictureBox.ImageType.Column);
 
