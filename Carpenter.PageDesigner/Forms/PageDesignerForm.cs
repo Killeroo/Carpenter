@@ -674,6 +674,7 @@ namespace PageDesigner.Forms
             AuthorTextBox.Text = GetTokenFromSchema(Schema.Tokens.Author, Settings.Default.AuthorLastUsedValue);
             CameraTextBox.Text = GetTokenFromSchema(Schema.Tokens.Camera, Settings.Default.CameraLastUsedValue);
             ThumbnailTextBox.Text = GetTokenFromSchema(Schema.Tokens.Thumbnail, Settings.Default.ThumbnailLastUsedValue);
+            DescriptionTextBox.Text = GetTokenFromSchema(Schema.Tokens.Description, "");
 
             AddTextboxCallbacks();
         }

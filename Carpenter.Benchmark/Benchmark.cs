@@ -97,11 +97,7 @@ namespace Carpenter.Tests
             
             stopwatch = Stopwatch.StartNew();
             {
-                if (schema.TryLoad(Path.Combine(schemaDirectory, Config.kSchemaFileName)) == false)
-                {
-                    Console.WriteLine("Failed to read schema");
-                    return;
-                }
+                schema.TryLoad(Path.Combine(schemaDirectory, Config.kSchemaFileName));
             }
             WriteTimerToConsole(stopwatch, "Schema.TryLoad");
 

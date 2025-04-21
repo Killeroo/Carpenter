@@ -10,20 +10,21 @@ using System.Windows.Forms;
 using System.IO;
 using System.Threading;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 using JpegMetadataExtractor;
 
 using Carpenter;
 using Carpenter.SiteViewer;
+using Carpenter.SiteViewer.Forms;
 
 using SiteViewer;
 using SiteViewer.Controls;
 
 using PageDesigner.Forms;
+
 using static System.Windows.Forms.AxHost;
-using Carpenter.SiteViewer.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-using System.Runtime.InteropServices;
 
 
 namespace SiteViewer.Forms
@@ -607,11 +608,11 @@ namespace SiteViewer.Forms
 
         private void FileTreeView_AfterLabelEdit(object sender, NodeLabelEditEventArgs args)
         {
-            // TODO: Update the directory
-            string directoryPath = Path.GetDirectoryName(args.Node.Tag as string);
+            string oldPath = args.Node.Tag as string;
+            string newPath = Path.Combine(Path.GetDirectoryName(oldPath), args.Label);
             try
             {
-                Directory.Move(args.Node.Tag as string, Path.Combine(directoryPath, args.Label));
+                Directory.Move(args.Node.Tag as string, newPath);
             }
             catch (Exception e)
             {
@@ -624,8 +625,17 @@ namespace SiteViewer.Forms
                 args.Node.Text = Path.GetFileName(args.Node.Tag as string);
                 return;
             }
-
-            args.Node.Tag = Path.Combine(directoryPath, args.Label);
+            
+            void UpdateNodeTagString(TreeNode CurrentNode, string old, string @new)
+            {
+                CurrentNode.Tag = (CurrentNode.Tag as string).Replace(oldPath, newPath);
+                foreach (TreeNode Node in CurrentNode.Nodes)
+                {
+                    UpdateNodeTagString(Node, old, @new);
+                }
+            }
+            
+            UpdateNodeTagString(args.Node, oldPath, newPath);
             args.Node.Text = args.Label;
         }
 
