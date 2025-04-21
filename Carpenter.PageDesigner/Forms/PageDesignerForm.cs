@@ -217,6 +217,8 @@ namespace PageDesigner.Forms
             InitializeComponent();
 
             _workingPath = Environment.CurrentDirectory;
+
+            JpegParser.UseInternalCache = true;
         }
         public PageDesignerForm(string path, Site site) : this()
         {
@@ -804,6 +806,9 @@ namespace PageDesigner.Forms
                 return;
             }
 
+            JpegParser.CacheSize = imageFilesAtPath.Count();
+            JpegParser.ClearCache();
+
             _previewImages.Clear();
             foreach (string imagePath in imageFilesAtPath)
             {
@@ -819,6 +824,8 @@ namespace PageDesigner.Forms
                 ////using (Image originalImage = Image.FromFile(imagePath))
                 //using (Image originalImage = Image.FromStream(stream))
 
+                // Load the metadata for the image (this will cache it for later)
+                JpegParser.GetRawMetadata(imagePath);
 
                 using (Image originalImage = ExtractThumbnail(imagePath))
                 {
