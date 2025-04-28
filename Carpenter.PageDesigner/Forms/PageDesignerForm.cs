@@ -305,7 +305,6 @@ namespace PageDesigner.Forms
             DescriptionTextBox.TextChanged -= FormTextBox_TextChanged;
         }
 
-        // TODO: Move to utils 
         private string GeneratePreviewWebpage()
         {
             if (_workingSchema == null)

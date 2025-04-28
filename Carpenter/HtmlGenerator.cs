@@ -198,6 +198,12 @@ namespace Carpenter
                             generatedContents[index] =
                                 generatedContents[index].Replace(token.Key, modifiedSchemaTokens[token.Value]);
                         }
+                        else
+                        {
+                            // Remove the placeholder tag if there was no value for it
+                            generatedContents[index] =
+                                generatedContents[index].Replace(token.Key, string.Empty);
+                        }
                     }
                 }
             } while (tags.Count > 0);
