@@ -5,7 +5,7 @@ namespace Carpenter
 {
     /// <summary>
     /// Abstract representation of an section of content (can be image, text or title) that is used in a 
-    /// SCHEMA page layout.
+    /// page layout.
     /// </summary>
     public abstract class Section : IEquatable<Section>
     {

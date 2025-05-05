@@ -196,16 +196,16 @@ namespace PageDesigner.Forms
         private const string kImageFileFilter = "Image Files(*.JPG;*.JPEG)|*.JPG;*.JPEG|All files (*.*)|*.*";
 
         private string _workingPath;
-        private string _schemaPath;
-        private Schema _workingSchema;
-        private Schema _savedSchema;
+        private string _pagePath;
+        private Page _modifiedPage;
+        private Page _savedPage;
         private Site _site;
         private PreviewImageBox _selectedPreviewImageControl;
         private GridPictureBox _selectedGridImage;
         private PreviewImageBox _pageImagePreviewImageBox;
         private Dictionary<string, Image> _previewImages = new();
         private Queue<GridPictureBox> _pictureBoxBuffer = new();
-        private ChangesStack<Schema> _schemaChanges = new();
+        private ChangesStack<Page> _pageChanges = new();
 
         private LivePreviewForm _livePreviewForm = null;
         private bool _isLivePreviewFormActive = false;
@@ -244,7 +244,7 @@ namespace PageDesigner.Forms
 
             _site = site;
             _workingPath = path;
-            _schemaPath = Path.Combine(_workingPath, Config.kSchemaFileName);
+            _pagePath = Path.Combine(_workingPath, Config.kPageFileName);
             this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
         }
         public PageDesignerForm(string? path, string? siteRootPath) : this()
@@ -278,7 +278,7 @@ namespace PageDesigner.Forms
             }
 
             _workingPath = path;
-            _schemaPath = Path.Combine(_workingPath, Config.kSchemaFileName);
+            _pagePath = Path.Combine(_workingPath, Config.kPageFileName);
         }
 
         private void AddTextboxCallbacks()
@@ -307,19 +307,19 @@ namespace PageDesigner.Forms
 
         private string GeneratePreviewWebpage()
         {
-            if (_workingSchema == null)
+            if (_modifiedPage == null)
             {
                 return string.Empty;
             }
 
-            // TODO: Check if schema has changed before loading
-            UpdateWorkingSchemaFromForm();
+            // TODO: Check if page has changed before loading
+            UpdateModifiedPageFromForm();
 
             // Generate preview page
             Stopwatch stopwatch = Stopwatch.StartNew();
 
             // TODO: Hadle exceptions
-            HtmlGenerator.BuildHtmlForSchema(_workingSchema, _site, true);
+            HtmlGenerator.BuildHtmlForPage(_modifiedPage, _site, true);
             string previewPath = Path.Combine(_workingPath, "index_Preview.html");
 
             stopwatch.Stop();
@@ -345,9 +345,9 @@ namespace PageDesigner.Forms
         private void ResetForm()
         {
             RemoveTextboxCallbacks();
-            _savedSchema = new Schema();
-            _workingSchema = new Schema();
-            _schemaChanges.Reset();
+            _savedPage = new Page();
+            _modifiedPage = new Page();
+            _pageChanges.Reset();
 
             // Do a bit of recon to try and populate some of these fields
             string folderName = Path.GetFileName(_workingPath);
@@ -405,7 +405,7 @@ namespace PageDesigner.Forms
         {
             ResetForm();
             LoadAvailableImagePreviews();
-            SignalSchemaChange();
+            SignalPageChange();
             this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
 
             if (ImagePreviewFlowLayoutPanel.Controls.Count == 0)
@@ -418,39 +418,39 @@ namespace PageDesigner.Forms
             }
         }
 
-        private bool LoadSchemaFromFile(string path)
+        private bool LoadPageFromFile(string path)
         {
-            string schemaPath = Path.Combine(path, Config.kSchemaFileName);
-            if (File.Exists(schemaPath) == false)
+            string pagePath = Path.Combine(path, Config.kPageFileName);
+            if (File.Exists(pagePath) == false)
             {
                 return false;
             }
 
-            Schema? schema = null;
+            Page? loadedPage = null;
             try
             {
-                schema = new Schema(schemaPath);
+                loadedPage = new Page(pagePath);
             }
             catch (Exception e)
             {
                 MessageBox.Show(
-                    $"Could not load schema. Exception {e.GetType()}: {e.Message}",
-                    "Error loading schema", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    $"Could not load page. Exception {e.GetType()}: {e.Message}",
+                    "Error loading page", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
 
             // Clear any old data before continuing
             ResetForm();
 
-            // We are passed the point where loading could fail, setup the page for displaying the schema
+            // We are passed the point where loading could fail, setup the page for displaying the page
             _workingPath = path;
-            _schemaPath = schemaPath;
-            _savedSchema = schema;
-            _workingSchema = new Schema(_savedSchema);
+            _pagePath = pagePath;
+            _savedPage = loadedPage;
+            _modifiedPage = new Page(_savedPage);
 
-            _pageImageName = _workingSchema.Thumbnail;
+            _pageImageName = _modifiedPage.Thumbnail;
 
-            UpdateFormFromWorkingSchema();
+            UpdateFormFromModifiedPage();
             LoadAvailableImagePreviews();
 
             this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
@@ -458,9 +458,9 @@ namespace PageDesigner.Forms
             return true;
         }
 
-        private void SaveSchemaToFile()
+        private void SavePageToFile()
         {
-            if (_savedSchema != null && _workingSchema == _savedSchema)
+            if (_savedPage != null && _modifiedPage == _savedPage)
             {
                 return;
             }
@@ -476,9 +476,9 @@ namespace PageDesigner.Forms
             //    }
             //}
 
-            UpdateWorkingSchemaFromForm();
+            UpdateModifiedPageFromForm();
 
-            //if (File.Exists(_schemaPath))
+            //if (File.Exists(_pagePath))
             //{
             //    if (ShowConfirmSaveDialog() == false)
             //    {
@@ -486,10 +486,10 @@ namespace PageDesigner.Forms
             //    }
             //}
 
-            // TODO: Show an error when schema save fails
-            if (_workingSchema.TrySave(Path.GetDirectoryName(_schemaPath)))
+            // TODO: Show an error when page save fails
+            if (_modifiedPage.TrySave(Path.GetDirectoryName(_pagePath)))
             {
-                statusToolStripStatusLabel.Text = "Schema successfully saved.";
+                statusToolStripStatusLabel.Text = "Page successfully saved.";
 
                 this.Text = string.Format("{0} - {1}", "Carpenter", _workingPath);
 
@@ -506,31 +506,31 @@ namespace PageDesigner.Forms
             else
             {
 
-                MessageBox.Show("Could not save schema.", "Error saving schema", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Could not save page.", "Error saving page", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
 
         }
 
-        private void UpdateWorkingSchemaFromForm()
+        private void UpdateModifiedPageFromForm()
         {
-            if (_workingSchema == null)
+            if (_modifiedPage == null)
             {
                 return;
             }
 
             // Update tokens values from page
-            _workingSchema.Title = TitleTextBox.Text;
-            _workingSchema.Location = LocationTextBox.Text;
-            _workingSchema.Month = MonthTextBox.Text;
-            _workingSchema.Year = YearTextBox.Text;
-            _workingSchema.Author = AuthorTextBox.Text;
-            _workingSchema.Camera = CameraTextBox.Text;
-            _workingSchema.Thumbnail = ThumbnailTextBox.Text;
-            _workingSchema.Description = DescriptionTextBox.Text;
+            _modifiedPage.Title = TitleTextBox.Text;
+            _modifiedPage.Location = LocationTextBox.Text;
+            _modifiedPage.Month = MonthTextBox.Text;
+            _modifiedPage.Year = YearTextBox.Text;
+            _modifiedPage.Author = AuthorTextBox.Text;
+            _modifiedPage.Camera = CameraTextBox.Text;
+            _modifiedPage.Thumbnail = ThumbnailTextBox.Text;
+            _modifiedPage.Description = DescriptionTextBox.Text;
 
             // TODO: Have these set via a form on the main form or have them stored somewhere else
-            _workingSchema.GeneratedFilename = Config.kDefaultGeneratedFilename;
+            _modifiedPage.GeneratedFilename = Config.kDefaultGeneratedFilename;
 
             // Parse grid layout
             List<Section> sections = new();
@@ -583,19 +583,19 @@ namespace PageDesigner.Forms
             }
             TryAddColumnsBuffer(ref columnsBuffer, ref sections);
 
-            _workingSchema.LayoutSections = sections;
+            _modifiedPage.LayoutSections = sections;
         }
 
-        private void UpdateFormFromWorkingSchema()
+        private void UpdateFormFromModifiedPage()
         {
-            PopulateTextboxesFromWorkingSchema();
-            PopulateGridFromWorkingSchema();
+            PopulateTextboxesFromModifiedPage();
+            PopulateGridFromModifiedPage();
         }
 
-        private void PopulateGridFromWorkingSchema()
+        private void PopulateGridFromModifiedPage()
         {
             GridFlowLayoutPanel.Controls.Clear();
-            foreach (Section section in _workingSchema.LayoutSections)
+            foreach (Section section in _modifiedPage.LayoutSections)
             {
                 Type sectionType = section.GetType();
                 if (sectionType == typeof(ImageSection))
@@ -652,43 +652,43 @@ namespace PageDesigner.Forms
             }
         }
 
-        private void PopulateTextboxesFromWorkingSchema()
+        private void PopulateTextboxesFromModifiedPage()
         {
             // We don't want any callbacks triggering when we populate them
             // We only want them to trigger when the user edits them
             RemoveTextboxCallbacks();
 
-            string GetTokenFromSchema(Schema.Tokens token, string defaultValue)
+            string GetTokenFromPage(Page.Tokens token, string defaultValue)
             {
-                if (_workingSchema == null || _workingSchema.TokenValues.ContainsKey(token) == false)
+                if (_modifiedPage == null || _modifiedPage.TokenValues.ContainsKey(token) == false)
                 {
                     return defaultValue;
                 }
 
-                return _workingSchema.TokenValues[token];
+                return _modifiedPage.TokenValues[token];
             }
 
-            TitleTextBox.Text = GetTokenFromSchema(Schema.Tokens.Title, Settings.Default.TitleLastUsedValue);
-            LocationTextBox.Text = GetTokenFromSchema(Schema.Tokens.Location, Settings.Default.LocationLastUsedValue);
-            MonthTextBox.Text = GetTokenFromSchema(Schema.Tokens.Month, Settings.Default.MonthLastUsedValue);
-            YearTextBox.Text = GetTokenFromSchema(Schema.Tokens.Year, Settings.Default.YearLastUsedValue);
-            AuthorTextBox.Text = GetTokenFromSchema(Schema.Tokens.Author, Settings.Default.AuthorLastUsedValue);
-            CameraTextBox.Text = GetTokenFromSchema(Schema.Tokens.Camera, Settings.Default.CameraLastUsedValue);
-            ThumbnailTextBox.Text = GetTokenFromSchema(Schema.Tokens.Thumbnail, Settings.Default.ThumbnailLastUsedValue);
-            DescriptionTextBox.Text = GetTokenFromSchema(Schema.Tokens.Description, "");
+            TitleTextBox.Text = GetTokenFromPage(Page.Tokens.Title, Settings.Default.TitleLastUsedValue);
+            LocationTextBox.Text = GetTokenFromPage(Page.Tokens.Location, Settings.Default.LocationLastUsedValue);
+            MonthTextBox.Text = GetTokenFromPage(Page.Tokens.Month, Settings.Default.MonthLastUsedValue);
+            YearTextBox.Text = GetTokenFromPage(Page.Tokens.Year, Settings.Default.YearLastUsedValue);
+            AuthorTextBox.Text = GetTokenFromPage(Page.Tokens.Author, Settings.Default.AuthorLastUsedValue);
+            CameraTextBox.Text = GetTokenFromPage(Page.Tokens.Camera, Settings.Default.CameraLastUsedValue);
+            ThumbnailTextBox.Text = GetTokenFromPage(Page.Tokens.Thumbnail, Settings.Default.ThumbnailLastUsedValue);
+            DescriptionTextBox.Text = GetTokenFromPage(Page.Tokens.Description, "");
 
             AddTextboxCallbacks();
         }
 
-        private void SignalSchemaChange()
+        private void SignalPageChange()
         {
-            if (_workingSchema == _schemaChanges.GetCurrentChange())
+            if (_modifiedPage == _pageChanges.GetCurrentChange())
             {
                 return;
             }
 
-            UpdateWorkingSchemaFromForm();
-            _schemaChanges.Commit(new Schema(_workingSchema));
+            UpdateModifiedPageFromForm();
+            _pageChanges.Commit(new Page(_modifiedPage));
             if (this.Text.Contains(kUnsavedTitleString) == false)
                 this.Text += kUnsavedTitleString;
 
@@ -719,47 +719,47 @@ namespace PageDesigner.Forms
             LivePreviewGenerateTimer.Stop();
         }
 
-        private void UndoSchemaChanges()
+        private void UndoPageChanges()
         {
-            Schema lastSchemaChange = new Schema(_schemaChanges.Undo());
-            if (lastSchemaChange != _workingSchema)
+            Page lastPageChange = new Page(_pageChanges.Undo());
+            if (lastPageChange != _modifiedPage)
             {
-                _workingSchema = lastSchemaChange;
+                _modifiedPage = lastPageChange;
 
                 // Only re-populate the grid if it has actually changed 
                 // NOTE: Equality check isn't working
-                //if (_workingSchema.ImageSections != lastSchemaChange.ImageSections)
+                //if (_modifiedPage.ImageSections != lastPageChange.ImageSections)
                 //{
-                //    PopulateGridFromWorkingSchema();
+                //    PopulateGridFromModifiedPage();
                 //}
-                PopulateGridFromWorkingSchema();
-                PopulateTextboxesFromWorkingSchema();
+                PopulateGridFromModifiedPage();
+                PopulateTextboxesFromModifiedPage();
 
 
-                // Remove unsaved character from title bar if we are at parity with the last saved schema
-                if (_workingSchema == _savedSchema)
+                // Remove unsaved character from title bar if we are at parity with the last saved page
+                if (_modifiedPage == _savedPage)
                 {
                     this.Text = this.Text.Replace(kUnsavedTitleString, "");
                 }
             }
         }
 
-        private void RedoSchemaChanges()
+        private void RedoPageChanges()
         {
-            Schema schemaChange = new Schema(_schemaChanges.Redo());
-            if (schemaChange != _workingSchema)
+            Page pageChange = new Page(_pageChanges.Redo());
+            if (pageChange != _modifiedPage)
             {
-                _workingSchema = schemaChange;
+                _modifiedPage = pageChange;
 
-                if (_workingSchema.LayoutSections != schemaChange.LayoutSections)
+                if (_modifiedPage.LayoutSections != pageChange.LayoutSections)
                 {
-                    PopulateGridFromWorkingSchema();
+                    PopulateGridFromModifiedPage();
                 }
-                PopulateTextboxesFromWorkingSchema();
+                PopulateTextboxesFromModifiedPage();
 
 
-                // Remove unsaved character from title bar if we are at parity with the last saved schema
-                if (_workingSchema == _savedSchema)
+                // Remove unsaved character from title bar if we are at parity with the last saved page
+                if (_modifiedPage == _savedPage)
                 {
                     this.Text = this.Text.Replace(kUnsavedTitleString, "");
                 }
@@ -1109,7 +1109,7 @@ namespace PageDesigner.Forms
 
         private void PageDesignerForm_Load(object sender, EventArgs e)
         {
-            if (LoadSchemaFromFile(_workingPath) == false)
+            if (LoadPageFromFile(_workingPath) == false)
             {
                 CreateBlankForm();
             }
@@ -1148,7 +1148,7 @@ namespace PageDesigner.Forms
             GridFlowLayoutPanel.Controls.Clear();
             GridFlowLayoutPanel.Controls.AddRange(newControlCollection.ToArray());
 
-            SignalSchemaChange();
+            SignalPageChange();
         }
 
         private void ImagePreviewFlowLayoutPanel_Control_DoubleClicked(object? sender, ImageEventArgs e)
@@ -1159,7 +1159,7 @@ namespace PageDesigner.Forms
             {
                 UpdateSelectedPreviewPictureControl(previewImageControl);
                 AddLocalImageToGridLayout(imageName, imageName, false);
-                SignalSchemaChange();
+                SignalPageChange();
                 //// Load the preview straight into the flow panel
                 //if (_previewImages.ContainsKey(imageName))
                 //{
@@ -1201,7 +1201,7 @@ namespace PageDesigner.Forms
                     TEMP_CreateDetailedImageName(previewImageControl.GetImageName()),
                     _selectedGridImage.GetImageType());
 
-                SignalSchemaChange();
+                SignalPageChange();
             }
         }
 
@@ -1237,7 +1237,7 @@ namespace PageDesigner.Forms
 
         private void GenerateButton_Click(object sender, EventArgs e)
         {
-            SaveSchemaToFile();
+            SavePageToFile();
         }
 
         private void PreviewImageTextBox_TextChanged(object sender, EventArgs e)
@@ -1262,7 +1262,7 @@ namespace PageDesigner.Forms
 
         private void SaveButton_Click(object sender, EventArgs e)
         {
-            SaveSchemaToFile();
+            SavePageToFile();
         }
 
         private void GridPictureBox_SwapMenuItemClicked(object? sender, EventArgs e)
@@ -1291,7 +1291,7 @@ namespace PageDesigner.Forms
                     detailedImageName,
                     imageType);
 
-                SignalSchemaChange();
+                SignalPageChange();
             }
         }
 
@@ -1303,7 +1303,7 @@ namespace PageDesigner.Forms
 
                 UpdateGridPictureBox(gridPictureBox, gridPictureBox.ImageFilename, gridPictureBox.DetailImageFilename, newImageType == GridPictureBox.ImageType.Standalone);
                 gridPictureBox.SetImageType(newImageType);
-                SignalSchemaChange();
+                SignalPageChange();
             }
         }
 
@@ -1312,7 +1312,7 @@ namespace PageDesigner.Forms
             if (sender is GridPictureBox gridPictureBox)
             {
                 GridFlowLayoutPanel.Controls.Remove(gridPictureBox);
-                SignalSchemaChange();
+                SignalPageChange();
             }
         }
 
@@ -1360,7 +1360,7 @@ namespace PageDesigner.Forms
 
         private void FormTextBox_TextChanged(object sender, EventArgs e)
         {
-            SignalSchemaChange();
+            SignalPageChange();
         }
 
         #region Menu Strip Callbacks
@@ -1380,7 +1380,7 @@ namespace PageDesigner.Forms
                     if (File.Exists(Path.Combine(folderDialog.SelectedPath, Config.kDefaultGeneratedFilename)))
                     {
                         MessageBox.Show(
-                            $"Can't create new page in directory, SCHEMA file already exists.",
+                            $"Can't create new page in directory, PAGE file already exists.",
                             "Carpenter",
                             MessageBoxButtons.OK,
                             MessageBoxIcon.Error);
@@ -1395,21 +1395,21 @@ namespace PageDesigner.Forms
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SaveSchemaToFile();
+            SavePageToFile();
         }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
             using (OpenFileDialog fileDialog = new OpenFileDialog())
             {
-                fileDialog.Title = "Load Carpenter SCHEMA file";
+                fileDialog.Title = "Load Carpenter PAGE file";
                 fileDialog.InitialDirectory = Directory.Exists(_workingPath) ? _workingPath : Environment.CurrentDirectory;
                 fileDialog.RestoreDirectory = true;
                 fileDialog.CheckFileExists = true;
                 fileDialog.CheckPathExists = true;
-                fileDialog.Filter = "Carpenter Schema File (SCHEMA)|SCHEMA";
+                fileDialog.Filter = "Carpenter Page File (PAGE)|PAGE";
                 if (fileDialog.ShowDialog(this) == DialogResult.OK)
-                    LoadSchemaFromFile(Path.GetDirectoryName(fileDialog.FileName));
+                    LoadPageFromFile(Path.GetDirectoryName(fileDialog.FileName));
             }
         }
 
@@ -1430,12 +1430,12 @@ namespace PageDesigner.Forms
 
         private void undoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            UndoSchemaChanges();
+            UndoPageChanges();
         }
 
         private void redoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            RedoSchemaChanges();
+            RedoPageChanges();
         }
 
         private void importToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1539,9 +1539,9 @@ namespace PageDesigner.Forms
 
         private void openInNotepadToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (File.Exists(_schemaPath))
+            if (File.Exists(_pagePath))
             {
-                Process.Start("notepad", _schemaPath);
+                Process.Start("notepad", _pagePath);
             }
         }
 

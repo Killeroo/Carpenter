@@ -9,7 +9,7 @@ namespace PageDesigner.Controls
 {
     /// <summary> 
     /// Simple wrapper around picture box, used for displaying image and storing
-    /// info about image in a schema grid layout
+    /// info about image in a page grid layout
     /// </summary>
     internal class GridPictureBox : PictureBox
     {

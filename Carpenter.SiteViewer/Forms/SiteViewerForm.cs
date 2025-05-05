@@ -25,6 +25,7 @@ using PageDesigner.Forms;
 
 using static System.Windows.Forms.AxHost;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using Page = Carpenter.Page;
 
 
 namespace SiteViewer.Forms
@@ -102,9 +103,9 @@ namespace SiteViewer.Forms
         }
 
         /// <summary>
-        /// Opens the PageDesigner form/process in a specific directory with a SCHEMA file
+        /// Opens the PageDesigner form/process in a specific directory with a PAGE file
         /// </summary>
-        /// <param name="path">Path to run page designer in, will attempt to open a SCHEMA file in the path if one is available or will create a new one</param>
+        /// <param name="path">Path to run page designer in, will attempt to open a PAGE file in the path if one is available or will create a new one</param>
         public void RunPageDesigner(string path)
         {
             Cursor currentCursor = Cursor.Current;
@@ -132,7 +133,7 @@ namespace SiteViewer.Forms
         }
 
         /// <summary>
-        /// Loop through each directory in the rootPath and remove jpg files that aren't referenced in a schema
+        /// Loop through each directory in the rootPath and remove jpg files that aren't referenced in a page
         /// </summary>
         private void RemoveUnusedImages()
         {
@@ -191,7 +192,7 @@ namespace SiteViewer.Forms
                     node.SelectedImageIndex = 13;
                     node.Tag = file;
 
-                    if (file.Contains("SCHEMA") || file.Contains(".html") || file.Contains(".jpg"))
+                    if (file.Contains("PAGE") || file.Contains(".html") || file.Contains(".jpg"))
                     {
                         // Add to node
                         CurrentNodes.Add(node);
@@ -255,7 +256,7 @@ namespace SiteViewer.Forms
         {
             _fileSystemWatcher = new FileSystemWatcher();
             _fileSystemWatcher.Path = path;
-            _fileSystemWatcher.Filter = "SCHEMA";
+            _fileSystemWatcher.Filter = "PAGE";
             _fileSystemWatcher.NotifyFilter = NotifyFilters.DirectoryName | NotifyFilters.FileName | NotifyFilters.LastWrite;
             _fileSystemWatcher.EnableRaisingEvents = true;
             _fileSystemWatcher.Created += FileSystemWatcher_Modification;
@@ -270,8 +271,8 @@ namespace SiteViewer.Forms
             List<PageEntryControl> pageEntries = new List<PageEntryControl>();
             foreach (string directory in Directory.GetDirectories(_rootPath))
             {
-                bool schemaPresent = File.Exists(Path.Combine(_rootPath, directory, "SCHEMA"));
-                pageEntries.Add(new PageEntryControl(directory, schemaPresent ? PageEntryControl.ButtonTypes.Edit : PageEntryControl.ButtonTypes.Create, _site));
+                bool pageFilePresent = File.Exists(Path.Combine(_rootPath, directory, "PAGE"));
+                pageEntries.Add(new PageEntryControl(directory, pageFilePresent ? PageEntryControl.ButtonTypes.Edit : PageEntryControl.ButtonTypes.Create, _site));
             }
             pageEntries.Sort((x, y) => x.GetDirectoryName().CompareTo(y.GetDirectoryName()));
 
@@ -320,7 +321,7 @@ namespace SiteViewer.Forms
             GenerateSiteBackgroundWorker.ReportProgress(0, "Generating pages...");
 
             SiteGenerationState state = new();
-            _site.GenerateAllSchemas((bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
+            _site.GenerateAllPages((bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
             {
                 if (success)
                 {
@@ -443,19 +444,19 @@ namespace SiteViewer.Forms
         {
             // Validate
             {
-                PublishSiteBackgroundWorker.ReportProgress(0, "Validating Schemas...");
-                _site.ValidateAllSchemas(out List<(string path, SchemaValidator.ValidationResults results)> siteResults,
+                PublishSiteBackgroundWorker.ReportProgress(0, "Validating Pages...");
+                _site.ValidateAllPages(out List<(string path, PageValidator.ValidationResults results)> siteResults,
                     (bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
                     {
                         PublishSiteBackgroundWorker.ReportProgress((100 * directoriesProcessed) / directoryCount, $"Validated {directoriesProcessed}/{directoryCount}");
                     });
                 string errorMessage = string.Empty;
-                foreach ((string path, SchemaValidator.ValidationResults results) schemaResult in siteResults)
+                foreach ((string path, PageValidator.ValidationResults results) pageResult in siteResults)
                 {
-                    if (schemaResult.results.FailedTests.Count > 0)
+                    if (pageResult.results.FailedTests.Count > 0)
                     {
-                        errorMessage += $"{Environment.NewLine}- {Path.GetFileName(schemaResult.path)}";
-                        schemaResult.results.FailedTests.ForEach(test => errorMessage += $"{Environment.NewLine} -> ({test.Importance}) {test.Name}");
+                        errorMessage += $"{Environment.NewLine}- {Path.GetFileName(pageResult.path)}";
+                        pageResult.results.FailedTests.ForEach(test => errorMessage += $"{Environment.NewLine} -> ({test.Importance}) {test.Name}");
                     }
                 }
 
@@ -477,7 +478,7 @@ namespace SiteViewer.Forms
             {
                 PublishSiteBackgroundWorker.ReportProgress(0, "Generating pages...");
                 SiteGenerationState state = new();
-                _site.GenerateAllSchemas((bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
+                _site.GenerateAllPages((bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
                 {
                     if (success)
                     {
@@ -522,18 +523,18 @@ namespace SiteViewer.Forms
                 return;
             }
 
-            _site.ValidateAllSchemas(out List<(string path, SchemaValidator.ValidationResults results)> siteResults,
+            _site.ValidateAllPages(out List<(string path, PageValidator.ValidationResults results)> siteResults,
                 (bool success, string directoryPath, int directoriesProcessed, int directoryCount) =>
                 {
                     ToolStripProgressBar.Value = (100 * directoriesProcessed) / directoryCount;
                 });
             string errorMessage = string.Empty;
-            foreach ((string path, SchemaValidator.ValidationResults results) schemaResult in siteResults)
+            foreach ((string path, PageValidator.ValidationResults results) pageResult in siteResults)
             {
-                if (schemaResult.results.FailedTests.Count > 0)
+                if (pageResult.results.FailedTests.Count > 0)
                 {
-                    errorMessage += $"{Environment.NewLine}- {Path.GetFileName(schemaResult.path)}";
-                    schemaResult.results.FailedTests.ForEach(test => errorMessage += $"{Environment.NewLine} -> ({test.Importance}) {test.Name}");
+                    errorMessage += $"{Environment.NewLine}- {Path.GetFileName(pageResult.path)}";
+                    pageResult.results.FailedTests.ForEach(test => errorMessage += $"{Environment.NewLine} -> ({test.Importance}) {test.Name}");
                 }
             }
 
@@ -551,7 +552,7 @@ namespace SiteViewer.Forms
 
         private void FileTreeView_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-            if (Path.GetFileName(e.Node.Tag as string) == "SCHEMA")
+            if (Path.GetFileName(e.Node.Tag as string) == "PAGE")
             {
                 RunPageDesigner(Path.GetDirectoryName(e.Node.Tag as string));
             }
@@ -569,14 +570,14 @@ namespace SiteViewer.Forms
         {
             if (e.Button == MouseButtons.Right)
             {
-                if (Path.GetFileName(e.Node.Tag as string) == "SCHEMA")
+                if (Path.GetFileName(e.Node.Tag as string) == "PAGE")
                 {
                     ContextMenuStrip contextMenu = new();
                     contextMenu.Items.Add("Edit", null, (sender, args) => RunPageDesigner(Path.GetDirectoryName(e.Node.Tag as string)));
                     contextMenu.Items.Add("Open in Notepad", null, (sender, args) => Process.Start("notepad.exe", e.Node.Tag as string));
                     contextMenu.Items.Add(new ToolStripSeparator());
-                    contextMenu.Items.Add("Build", null, (sender, args) => HtmlGenerator.BuildHtmlForSchema(new Schema(e.Node.Tag as string), _site));
-                    contextMenu.Items.Add("Build Preview", null, (sender, args) => HtmlGenerator.BuildHtmlForSchema(new Schema(e.Node.Tag as string), _site, false));
+                    contextMenu.Items.Add("Build", null, (sender, args) => HtmlGenerator.BuildHtmlForPage(new Page(e.Node.Tag as string), _site));
+                    contextMenu.Items.Add("Build Preview", null, (sender, args) => HtmlGenerator.BuildHtmlForPage(new Page(e.Node.Tag as string), _site, false));
                     contextMenu.Show(this, e.Location, ToolStripDropDownDirection.Right);
                 }
                 else if (Directory.Exists(e.Node.Tag as string))

@@ -9,7 +9,7 @@ namespace Carpenter
     {
         public const float kVersion = 3.0f;
         public const string kVersionOption = "carpenter_version";
-        public const string kSchemaFileName = "SCHEMA";
+        public const string kPageFileName = "PAGE";
         public const string kSiteFileName = "SITE";
         public const string kTemplateFilename = "template.html";
         public const string kGeneratedPreviewPostfix = "_preview";

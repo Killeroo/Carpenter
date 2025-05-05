@@ -5,11 +5,11 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using static Carpenter.Schema;
+using static Carpenter.Page;
 
 namespace Carpenter
 {
-    public static class SchemaValidator
+    public static class PageValidator
     {
         public enum TestImportance
         {
@@ -21,9 +21,9 @@ namespace Carpenter
         {
             public string Name;
             public TestImportance Importance;
-            public Func<Schema, bool> Test;
+            public Func<Page, bool> Test;
 
-            public ValidationTest(string _name, TestImportance _importance, Func<Schema, bool> _test)
+            public ValidationTest(string _name, TestImportance _importance, Func<Page, bool> _test)
             {
                 Name = _name;
                 Test = _test;
@@ -71,26 +71,26 @@ namespace Carpenter
 
         private static List<ValidationTest> Tests = new()
         {
-            new ValidationTest("TestAllImagePathsExist", TestImportance.Required, (Schema schema) =>
+            new ValidationTest("TestAllImagePathsExist", TestImportance.Required, (Page page) =>
             {
                 Func<ImageSection, bool> DoImageSectionPathsExist = (ImageSection section) =>
                 {
                     bool bExists = true;
                     if (!string.IsNullOrEmpty(section.ImageUrl))
                     {
-                        bExists &= File.Exists(Path.Combine(schema.WorkingDirectory(), section.ImageUrl));
+                        bExists &= File.Exists(Path.Combine(page.WorkingDirectory(), section.ImageUrl));
                     }
                     if (!string.IsNullOrEmpty(section.AltImageUrl))
                     {
-                        bExists &= File.Exists(Path.Combine(schema.WorkingDirectory(), section.AltImageUrl));
+                        bExists &= File.Exists(Path.Combine(page.WorkingDirectory(), section.AltImageUrl));
                     }
                     return bExists;
                 };
 
-                if (!Directory.Exists(schema.WorkingDirectory()))
+                if (!Directory.Exists(page.WorkingDirectory()))
                     return false;
 
-                foreach (Section section in schema.LayoutSections)
+                foreach (Section section in page.LayoutSections)
                 {
                     if (section is ImageSection)
                     {
@@ -113,18 +113,17 @@ namespace Carpenter
                 }
                 return true;
             }),
-            new ValidationTest("TestSchemaHasThumbnailSet", TestImportance.Optional, (Schema schema) =>
+            new ValidationTest("TestPageHasThumbnailSet", TestImportance.Optional, (Page page) =>
             {
-                return schema.Thumbnail != string.Empty;
+                return page.Thumbnail != string.Empty;
             }),
-            new ValidationTest("TestForEmptySectionsInColumns", TestImportance.Optional, (Schema schema) =>
+            new ValidationTest("TestForEmptySectionsInColumns", TestImportance.Optional, (Page page) =>
             {
                 // This actually doesn't matter because we silently strip out these spaces..
-                foreach (Section section in schema.LayoutSections)
+                foreach (Section section in page.LayoutSections)
                 {
-                    if (section is ImageColumnSection)
+                    if (section is ImageColumnSection columnSection)
                     {
-                        ImageColumnSection columnSection = section as ImageColumnSection;
                         foreach (ImageSection image in columnSection.Sections)
                         {
                             if (string.IsNullOrWhiteSpace(image.ImageUrl) && string.IsNullOrWhiteSpace(image.AltImageUrl))
@@ -136,59 +135,59 @@ namespace Carpenter
                 }
                 return true;
             }),
-            new ValidationTest("TestAllTokensArePresent",  TestImportance.Required, (Schema schema) =>
+            new ValidationTest("TestAllTokensArePresent",  TestImportance.Required, (Page page) =>
             {
                 foreach (Tokens token in Enum.GetValues(typeof(Tokens)))
                 {
                     if ((token < Tokens.SpecialTokenSection) // We shouldn't expect to find grid specific tokens defines in the Token value tables (they are stored in the layout instead)
-                        && schema.TokenValues.ContainsKey(token) == false
-                        && !Schema.OptionalTokens.Contains(token))
+                        && page.TokenValues.ContainsKey(token) == false
+                        && !Page.OptionalTokens.Contains(token))
                     {
                         return false;
                     }
                 }
                 return true;
             }),
-            new ValidationTest("TestAllOptionsArePresent", TestImportance.Required, (Schema schema) =>
+            new ValidationTest("TestAllOptionsArePresent", TestImportance.Required, (Page page) =>
             {
                 foreach (Options option in Enum.GetValues(typeof(Options)))
                 {
-                    if (schema.OptionValues.ContainsKey(option) == false)
+                    if (page.OptionValues.ContainsKey(option) == false)
                     {
                         return false;
                     }
                 }
                 return true;
             }),
-            new ValidationTest("TestAllTokensHaveValues", TestImportance.Optional, (Schema schema) =>
+            new ValidationTest("TestAllTokensHaveValues", TestImportance.Optional, (Page page) =>
             {
                 bool testPassed = true;
                 foreach (Tokens token in Enum.GetValues(typeof(Tokens)))
                 {
                     if (token < Tokens.Image 
-                        && !Schema.OptionalTokens.Contains(token) 
-                        && schema.TokenValues.ContainsKey(token))
+                        && !Page.OptionalTokens.Contains(token) 
+                        && page.TokenValues.ContainsKey(token))
                     {
-                        testPassed &= schema.TokenValues[token] != string.Empty;
+                        testPassed &= page.TokenValues[token] != string.Empty;
                     }
                 }
                 return testPassed;
             }),
-            new ValidationTest("TestAllOptionsHaveValues", TestImportance.Optional, (Schema schema) =>
+            new ValidationTest("TestAllOptionsHaveValues", TestImportance.Optional, (Page page) =>
             {
                 bool testPassed = true;
                 foreach (Options option in Enum.GetValues(typeof(Options)))
                 {
-                    if (schema.OptionValues.ContainsKey(option))
+                    if (page.OptionValues.ContainsKey(option))
                     {
-                        testPassed &= schema.OptionValues[option] != string.Empty;
+                        testPassed &= page.OptionValues[option] != string.Empty;
                     }
                 }
                 return testPassed;
             }),
-            new ValidationTest("SchemaContainsLayoutSection", TestImportance.Required, (Schema schema) =>
+            new ValidationTest("PageContainsLayoutSection", TestImportance.Required, (Page page) =>
             {
-                if (schema.LayoutSections.Count == 0)
+                if (page.LayoutSections.Count == 0)
                     return false;
                 
                 // TODO: Could expand this to check if there are any images present in the layout
@@ -196,20 +195,20 @@ namespace Carpenter
             })
         };
 
-        public static bool Run(Schema? schemaToTest, out ValidationResults results)
+        public static bool Run(Page? pageToTest, out ValidationResults results)
         {
             results = new();
-            if (schemaToTest == null)
+            if (pageToTest == null)
             {
                 return false;
             }
 
-            Logger.Log(LogLevel.Verbose, $"Running Validation Tests for Schema \"{schemaToTest.Title}\"...");
+            Logger.Log(LogLevel.Verbose, $"Running Validation Tests for Page \"{pageToTest.Title}\"...");
             bool bValidationsPassed = true;
             bool bTestsFailed = false;
             foreach (ValidationTest validation in Tests)
             {
-                bool testPassed = validation.Test(schemaToTest);
+                bool testPassed = validation.Test(pageToTest);
                 string passString = testPassed ? "PASSED" : "FAILED";
                 Logger.Log(LogLevel.Verbose, $"Test \"{validation.Name}\" ({validation.Importance}): {passString}");
                 
@@ -228,7 +227,7 @@ namespace Carpenter
                 }
             }
             Logger.Log(!bValidationsPassed ? LogLevel.Error : bTestsFailed ? LogLevel.Warning : LogLevel.Info,
-                $"Validation completed for \"{schemaToTest.Title}\": {results.ToString()}");
+                $"Validation completed for \"{pageToTest.Title}\": {results.ToString()}");
 
             return bValidationsPassed;
         }

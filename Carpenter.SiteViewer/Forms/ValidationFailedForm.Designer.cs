@@ -42,7 +42,7 @@
             label1.Name = "label1";
             label1.Size = new Size(232, 15);
             label1.TabIndex = 0;
-            label1.Text = "Validation failed for the following Schemas";
+            label1.Text = "Validation failed for the following Pages";
             // 
             // ErrorTextBox
             // 

@@ -23,7 +23,7 @@ namespace Carpenter.CommandLine
             public static readonly Dictionary<string, Type> ArgToType = new()
             {
                 { typeof(Site).Name.ToLower(), typeof(Site) },
-                { typeof(Schema).Name.ToLower(), typeof(Schema) }
+                { typeof(Page).Name.ToLower(), typeof(Page) }
             };
 
             public List<object> FoundObjects;
@@ -154,26 +154,26 @@ namespace Carpenter.CommandLine
             {
                 case Operation.Preview:
                 {
-                    if (context.TryFetchObject(out Schema schema))
+                    if (context.TryFetchObject(out Page page))
                     {
-                        HtmlGenerator.BuildHtmlForSchema(schema, site, true);
+                        HtmlGenerator.BuildHtmlForPage(page, site, true);
                     }
                     else
                     {
-                        ErrorAndExit("Cannot generate preview without a schema. Please specify one with '--schema <path>' and try again.");
+                        ErrorAndExit("Cannot generate preview without a PAGE file. Please specify one with '--page <path>' and try again.");
                     }
                     
                     break;
                 }
                 case Operation.Build:
                 {
-                    if (context.TryFetchObject(out Schema schema))
+                    if (context.TryFetchObject(out Page page))
                     {
-                        HtmlGenerator.BuildHtmlForSchema(schema, site);
+                        HtmlGenerator.BuildHtmlForPage(page, site);
                     }
                     else
                     {
-                        site.GenerateAllSchemas();
+                        site.GenerateAllPages();
                     }
                     break;
                 }
@@ -191,14 +191,14 @@ namespace Carpenter.CommandLine
                 }
                 case Operation.Validate:
                 {
-                    if (context.TryFetchObject(out Schema schema))
+                    if (context.TryFetchObject(out Page page))
                     {
-                        SchemaValidator.Run(schema, out SchemaValidator.ValidationResults results);
+                        PageValidator.Run(page, out PageValidator.ValidationResults results);
                         Logger.Log(LogLevel.Info, $"Validation results:\n{results.ToString()}");
                     }
                     else
                     {
-                        bool requiredTestsFailed = site.ValidateAllSchemas(out List<(string path, SchemaValidator.ValidationResults results)> siteResults);
+                        bool requiredTestsFailed = site.ValidateAllPages(out List<(string path, PageValidator.ValidationResults results)> siteResults);
                         int testsFailed = siteResults.Select(x => x.results.FailedTests.Count != 0).Count();
                         
                         LogLevel level = requiredTestsFailed ? LogLevel.Error : testsFailed > 0 ? LogLevel.Warning : LogLevel.Info;

@@ -41,9 +41,9 @@ namespace Carpenter
         private class LogEntry
         {
             public LogLevel LogLevel;
-            public string Message;
-            public string Source;
-            public string Timestamp;
+            public string? Message;
+            public string? Source;
+            public string? Timestamp;
             public int ThreadId;
         }
 

@@ -56,10 +56,8 @@ namespace Carpenter.Tests
         static void Main(string[] args)
         {
             //// TODO: Point at example project
-            //string rootDirectory = @"C:\Users\Kelpie\Desktop\WebsiteConversion\photos";
-            //string schemaDirectory = @"C:\Users\Kelpie\Desktop\WebsiteConversion\photos\donegal-3";
-            string rootDirectory = @"G:\My Drive\Website\photos.matthewcarney.net\";
-            string schemaDirectory = @"G:\My Drive\Website\photos.matthewcarney.net\other\archive\donegal-3";
+            string rootDir = @"G:\My Drive\Website\photos.matthewcarney.net\";
+            string pageDir = @"G:\My Drive\Website\photos.matthewcarney.net\other\archive\donegal-3";
             string tempPath = Path.Combine(Path.GetTempPath(), "Carpenter", "Benchmark");
             if (Directory.Exists(tempPath) == false)
             {
@@ -71,11 +69,11 @@ namespace Carpenter.Tests
             Logger.SetLogLevel(LogLevel.Info);
 
             Site site = new();
-            Schema schema = new();
+            Page page = new();
 
             Stopwatch stopwatch = Stopwatch.StartNew();
             {
-                if (site.TryLoad(rootDirectory) == false)
+                if (site.TryLoad(rootDir) == false)
                 {
                     Console.WriteLine("Failed to read site");
                     return;
@@ -91,44 +89,44 @@ namespace Carpenter.Tests
             
             stopwatch = Stopwatch.StartNew();
             {
-                site.GenerateAllSchemas((_, _, processed, total) => {Console.Write("Generating pages... [{0}/{1}]\r", processed, total);});
+                site.GenerateAllPages((_, _, processed, total) => {Console.Write("Generating pages... [{0}/{1}]\r", processed, total);});
             }
             WriteTimerToConsole(stopwatch, "Site.GenerateAllPagesInSite");
             
             stopwatch = Stopwatch.StartNew();
             {
-                schema.TryLoad(Path.Combine(schemaDirectory, Config.kSchemaFileName));
+                page.TryLoad(Path.Combine(pageDir, Config.kPageFileName));
             }
-            WriteTimerToConsole(stopwatch, "Schema.TryLoad");
+            WriteTimerToConsole(stopwatch, "Page.TryLoad");
 
             JpegParser.UseInternalCache = true;
             JpegParser.CacheSize = 100;
             JpegParser.ClearCache();
             stopwatch = Stopwatch.StartNew();
             {
-                HtmlGenerator.BuildHtmlForSchema(schema, site);
+                HtmlGenerator.BuildHtmlForPage(page, site);
             }
             WriteTimerToConsole(stopwatch, "Template.GeneratePage");
             
             stopwatch = Stopwatch.StartNew();
             {
-                HtmlGenerator.BuildHtmlForSchema(schema, site);
+                HtmlGenerator.BuildHtmlForPage(page, site);
             }
             WriteTimerToConsole(stopwatch, "Template.GeneratePage (w/ cached image data)");
             
             stopwatch = Stopwatch.StartNew();
             {
-                if (schema.TrySave(tempPath) == false)
+                if (page.TrySave(tempPath) == false)
                 {
-                    Console.WriteLine("Failed to save schema");
+                    Console.WriteLine("Failed to save page");
                     return;
                 }
             }
-            WriteTimerToConsole(stopwatch, "Schema.TrySave");
+            WriteTimerToConsole(stopwatch, "Page.TrySave");
 
             stopwatch = Stopwatch.StartNew();
             {
-                if (SchemaValidator.Run(schema, out SchemaValidator.ValidationResults results) == false)
+                if (PageValidator.Run(page, out PageValidator.ValidationResults results) == false)
                 {
                     Console.WriteLine("Validation failed!");
                 }
@@ -137,7 +135,7 @@ namespace Carpenter.Tests
                 //    Console.WriteLine(results);
                 //}
             }
-            WriteTimerToConsole(stopwatch, "SchemaValidator.Run");
+            WriteTimerToConsole(stopwatch, "PageValidator.Run");
         }
 
         static List<Tuple<int, ConsoleColor>> TimeRanges = new()

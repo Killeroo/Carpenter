@@ -10,7 +10,7 @@ using JpegMetadataExtractor;
 namespace Carpenter
 {
     /// <summary>
-    /// Defines a website or part of a website, stores common options that all SCHEMAs in the child directories of the Site's root directory (Aka Site file location) will use during page generation
+    /// Defines a website or part of a website, stores common options that all PAGEs in the child directories of the Site's root directory (Aka Site file location) will use during page generation
     /// </summary>
     public class Site
     {
@@ -59,7 +59,7 @@ namespace Carpenter
         /// Accessors for Site options
         /// </summary>
         public string Url {
-            get { return OptionValues.TryGetValue(Options.Url, out string value) ? value : string.Empty; }
+            get { return OptionValues.TryGetValue(Options.Url, out string? value) ? value : string.Empty; }
             set { OptionValues.AddOrUpdate(Options.Url, value); }
         }
         public string TemplatePath {
@@ -103,16 +103,16 @@ namespace Carpenter
         }
 
         /// <summary>
-        /// Returns the path to the schema file relative to the root directory of the site.
+        /// Returns the path to the page file relative to the root directory of the site.
         /// </summary>
-        public string GetSchemaRelativePath(Schema schema)
+        public string GetPageRelativePath(Page page)
         {
             if (_loaded == false || _configFilePath == string.Empty)
             {
                 return string.Empty;
             }
 
-            return schema.WorkingDirectory().Replace(Path.GetDirectoryName(_configFilePath), String.Empty);
+            return page.WorkingDirectory().Replace(Path.GetDirectoryName(_configFilePath), String.Empty);
         }
 
         /// <summary>
@@ -240,30 +240,30 @@ namespace Carpenter
         }
 
         /// <summary>
-        /// Returns a list of all schemas in the child directories of this site
+        /// Returns a list of all pages in the child directories of this site
         /// </summary>
         /// <returns></returns>
-        public List<Schema> GetSchemas()
+        public List<Page> GetPages()
         {
             string siteRootPath = GetRootDir();
             if (!_loaded || !Directory.Exists(siteRootPath))
             {
-                return new List<Schema>();
+                return new List<Page>();
             }
 
-            List<Schema> foundSchemas = new();
-            foreach (string path in GetPathsToSchemas())
+            List<Page> foundPages = new();
+            foreach (string path in GetPathsToPages())
             {
-                foundSchemas.Add(new Schema(path));
+                foundPages.Add(new Page(path));
             }
 
-            return foundSchemas;
+            return foundPages;
         }
 
         /// <summary>
         /// Returns a list of all directory paths that contain files in the site
         /// </summary>
-        public List<string> GetPathsToSchemas()
+        public List<string> GetPathsToPages()
         {
             string siteRootPath = GetRootDir();
             if (!_loaded || !Directory.Exists(siteRootPath))
@@ -275,10 +275,10 @@ namespace Carpenter
             string[] dirs = Directory.GetDirectories(siteRootPath, "*", SearchOption.AllDirectories);
             foreach (string subDir in dirs)
             {
-                string pathToSchema = Path.Combine(subDir, Config.kSchemaFileName);
-                if (File.Exists(pathToSchema))
+                string pathToPage = Path.Combine(subDir, Config.kPageFileName);
+                if (File.Exists(pathToPage))
                 {
-                    paths.Add(pathToSchema);
+                    paths.Add(pathToPage);
                 }
             }
             
@@ -286,10 +286,10 @@ namespace Carpenter
         }
 
         /// <summary>
-        /// Returns a list of all schemas in the child directories of this site, ordered by the date specified in the schema file
+        /// Returns a list of all pages in the child directories of this site, ordered by the date specified in the page file
         /// </summary>
         /// <returns></returns>
-        public List<Schema> GetSchemasOrderedByDate()
+        public List<Page> GetPagesOrderedByDate()
         {
             Dictionary<string, int> MonthStringToInt = new()
             {
@@ -307,69 +307,69 @@ namespace Carpenter
                 { "december", 12 }
             };
 
-            // Order schemas by date
-            Dictionary<DateTime, Schema> schemasWithDate = new();
-            foreach (Schema schema in GetSchemas())
+            // Order pages by date
+            Dictionary<DateTime, Page> pagesWithDate = new();
+            foreach (Page page in GetPages())
             {
                 DateTime date = new(
-                    Convert.ToInt32(schema.TokenValues[Schema.Tokens.Year]),
-                    MonthStringToInt[schema.TokenValues[Schema.Tokens.Month].ToLower()],
+                    Convert.ToInt32(page.TokenValues[Page.Tokens.Year]),
+                    MonthStringToInt[page.TokenValues[Page.Tokens.Month].ToLower()],
                     1);
 
-                while (schemasWithDate.ContainsKey(date))
+                while (pagesWithDate.ContainsKey(date))
                 {
                     date = date.AddDays(1);
                 }
-                schemasWithDate.Add(date, schema);
+                pagesWithDate.Add(date, page);
             }
-            return schemasWithDate.OrderByDescending(x => x.Key).Select(y => y.Value).ToList();
+            return pagesWithDate.OrderByDescending(x => x.Key).Select(y => y.Value).ToList();
         }
         
         public bool Publish()
         {
-            if (!ValidateAllSchemas(out List<(string path, SchemaValidator.ValidationResults results)> _)) {
+            if (!ValidateAllPages(out List<(string path, PageValidator.ValidationResults results)> _)) {
                 return false;
             }
-            GenerateAllSchemas();
+            GenerateAllPages();
             GenerateIndexPages();
             RemoveAllUnusedImages();
             return true;
         }
         
         /// <summary>
-        /// Validates all Schemes found at the given path (searches for schemas inside each sub directory) returning the results for each found schema.
+        /// Validates all Schemes found at the given path (searches for pages inside each sub directory) returning the results for each found page.
         /// </summary>
-        /// <param name="path">The root path that contains all schemas, schemas are searched for in directories within this root path.</param>
-        /// <param name="results">The validation results for each found schema, ordered by the path to the schema and it's results</param>
-        public bool ValidateAllSchemas(
-            out List<(string path, SchemaValidator.ValidationResults results)> results,
-            Action<bool /** Valid */, string /** Directory Name */, int /** NumProcessed */, int /** Total */>? onSchemaValidation = null)
+        /// <param name="path">The root path that contains all pages, pages are searched for in directories within this root path.</param>
+        /// <param name="results">The validation results for each found page, ordered by the path to the page and it's results</param>
+        public bool ValidateAllPages(
+            out List<(string path, PageValidator.ValidationResults results)> results,
+            Action<bool /** Valid */, string /** Directory Name */, int /** NumProcessed */, int /** Total */>? onPageValidation = null)
         {
-            results = new List<(string path, SchemaValidator.ValidationResults results)>();
-            List<Schema> schemasToValidate = GetSchemas();
-            if (!_loaded || schemasToValidate.Count == 0)
+            results = new List<(string path, PageValidator.ValidationResults results)>();
+            List<Page> pageToValidate = GetPages();
+            if (!_loaded || pageToValidate.Count == 0)
             {
                 return false;
             }
             
             int index = 0;
             bool passed = true;
-            foreach (Schema schema in GetSchemas())
+            foreach (Page page in GetPages())
             {
-                passed &= SchemaValidator.Run(schema, out SchemaValidator.ValidationResults schemaResults);
-                onSchemaValidation?.Invoke(schemaResults.FailedTests.Count == 0, Path.GetFileName(schema.WorkingDirectory()), index++, schemasToValidate.Count);
-                results.Add((schema.WorkingDirectory(), schemaResults));
+                passed &= PageValidator.Run(page, out PageValidator.ValidationResults pageResults);
+                onPageValidation?.Invoke(pageResults.FailedTests.Count == 0, Path.GetFileName(page.WorkingDirectory()), index++, pageToValidate.Count);
+                results.Add((page.WorkingDirectory(), pageResults));
             }
 
             return passed;
         }
 
         /// <summary>
-        /// Generates html pages for all schemas found in the root path.
+        /// Generates html pages for all pages found in the root path.
         /// </summary>
         /// <param name="rootPath">Path to site file </param>
-        /// <param name="onDirectoryGenerated">Called each a schema is processed (sucessfully or not)</param>
-        public void GenerateAllSchemas(
+        /// <param name="onDirectoryGenerated">Called each a page is processed (sucessfully or not)</param>
+        public void GenerateAllPages(
             Action<bool /** Successfully Generated */, string /** Directory Name */, int /** NumProcessed */, int /** Total */>? onDirectoryGenerated = null)
         {
             if (!_loaded)
@@ -383,14 +383,14 @@ namespace Carpenter
             const int kMaxThreadCount = 10;
             Thread[] threads = new Thread[kMaxThreadCount];
             Object lockObject = new();
-            List<string> schemaPaths = GetPathsToSchemas();
+            List<string> pagePaths = GetPathsToPages();
             int processed = 0;
-            Logger.Log(LogLevel.Info, $"Generating HTML for {schemaPaths.Count} Schemas with {kMaxThreadCount} threads...");
-            foreach (string schemaPath in schemaPaths)
+            Logger.Log(LogLevel.Info, $"Generating HTML for {pagePaths.Count} Pages with {kMaxThreadCount} threads...");
+            foreach (string pagePath in pagePaths)
             {
-                bool schemaProcessed = false;
-                Logger.Log(LogLevel.Verbose, $"Processing \"{schemaPath}\"...");
-                while (!schemaProcessed)
+                bool pageProcessed = false;
+                Logger.Log(LogLevel.Verbose, $"Processing \"{pagePath}\"...");
+                while (!pageProcessed)
                 {
                     for (int index = 0; index < kMaxThreadCount; index++)
                     {
@@ -398,9 +398,9 @@ namespace Carpenter
                         {
                             threads[index] = new (() =>
                             {
-                                string currentDirectoryPath = Path.GetDirectoryName(schemaPath);
-                                using Schema localSchema = new(schemaPath);
-                                HtmlGenerator.BuildHtmlForSchema(localSchema, this);
+                                string currentDirectoryPath = Path.GetDirectoryName(pagePath);
+                                using Page localPage = new(pagePath);
+                                HtmlGenerator.BuildHtmlForPage(localPage, this);
 
                                 lock (lockObject)
                                 {
@@ -408,20 +408,20 @@ namespace Carpenter
                                         true, // TODO: Lol Nah 
                                         currentDirectoryPath,
                                         processed++,
-                                        schemaPaths.Count);
+                                        pagePaths.Count);
                                 }
                                 
-                                Logger.Log(LogLevel.Verbose, $"Thread finished for path: {schemaPath}");
+                                Logger.Log(LogLevel.Verbose, $"Thread finished for path: {pagePath}");
                             });
                             threads[index].IsBackground = true;
                             threads[index].Start();
-                            schemaProcessed = true;
+                            pageProcessed = true;
                             Logger.Log(LogLevel.Verbose, "Starting generator thread...");
                             break;
                         }
                     }
 
-                    if (!schemaProcessed)
+                    if (!pageProcessed)
                     {
                         Logger.Log(LogLevel.Verbose, "All threads in used. Waiting for one to become available...");
                         Thread.Sleep(100);
@@ -444,11 +444,11 @@ namespace Carpenter
                 Thread.Sleep(200);
             }
             
-            Logger.Log(LogLevel.Info, "Finished generating HTML for all Schemas.");
+            Logger.Log(LogLevel.Info, "Finished generating HTML for all Pages.");
         }
 
         /// <summary>
-        /// Returns the paths to all images in the given path that are not referenced by any schemas
+        /// Returns the paths to all images in the given path that are not referenced by any pages
         /// </summary>
         /// <param name="path">Path to root of site</param>
         public List<string> GetAllUnusedImages()
@@ -461,17 +461,17 @@ namespace Carpenter
             }
 
             string[] localDirectories = Directory.GetDirectories(siteRootPath);
-            foreach (string path in GetPathsToSchemas())
+            foreach (string path in GetPathsToPages())
             {
                 if (File.Exists(path))
                 {
-                    // try and load the schema in the directory
-                    using Schema localSchema = new(path);
+                    // try and load the page in the directory
+                    using Page localPage = new(path);
 
-                    // Construct a list of all referenced images in the schema so we can
+                    // Construct a list of all referenced images in the page so we can
                     // work out what files aren't referenced
                     List<string> referencedImages = new List<string>();
-                    foreach (Section section in localSchema.LayoutSections)
+                    foreach (Section section in localPage.LayoutSections)
                     {
                         if (section is ImageColumnSection)
                         {
@@ -496,7 +496,7 @@ namespace Carpenter
                         }
                     }
 
-                    // Loop through and find any files that aren't referenced in the schema 
+                    // Loop through and find any files that aren't referenced in the page 
                     foreach (string imagePath in Directory.GetFiles(Path.GetDirectoryName(path), "*.jpg"))
                     {
                         string imageName = Path.GetFileName(imagePath);
@@ -514,7 +514,7 @@ namespace Carpenter
         }
 
         /// <summary>
-        /// Remove all images that are not referenced by schemas in the site
+        /// Remove all images that are not referenced by pages in the site
         /// </summary>
         /// <param name="rootPath">Root path of site</param>
         /// <returns>Number of images that were removed</returns>
@@ -541,7 +541,7 @@ namespace Carpenter
         }
 
         /// <summary>
-        /// Generates index pages for all directories that contains schemas in child directories
+        /// Generates index pages for all directories that contains pages in child directories
         /// </summary>
         public void GenerateIndexPages()
         {
@@ -551,24 +551,24 @@ namespace Carpenter
                 return;
             }
             
-            // An index file is basically any path that contains multiple schemas in it's child directories
-            Dictionary<string, List<Schema>> foundIndexDirectories = new();
-            foreach (Schema schema in GetSchemasOrderedByDate())
+            // An index file is basically any path that contains multiple pages in it's child directories
+            Dictionary<string, List<Page>> foundIndexDirectories = new();
+            foreach (Page page in GetPagesOrderedByDate())
             {
-                if (schema != null)
+                if (page != null)
                 {
-                    string schemaParentDir = Path.GetDirectoryName(schema.WorkingDirectory()).Replace(siteRootPath, "");
-                    if (foundIndexDirectories.ContainsKey(schemaParentDir)) {
-                        foundIndexDirectories[schemaParentDir].Add(schema);
+                    string pageParentDir = Path.GetDirectoryName(page.WorkingDirectory()).Replace(siteRootPath, "");
+                    if (foundIndexDirectories.ContainsKey(pageParentDir)) {
+                        foundIndexDirectories[pageParentDir].Add(page);
                     } else {
-                        foundIndexDirectories.Add(schemaParentDir, new List<Schema> { schema });
+                        foundIndexDirectories.Add(pageParentDir, new List<Page> { page });
                     }
                 }
             }
 
-            foreach (KeyValuePair<string, List<Schema>> indexDir in foundIndexDirectories)
+            foreach (KeyValuePair<string, List<Page>> indexDir in foundIndexDirectories)
             {
-                HtmlGenerator.BuildHtmlForIndexDirectory(indexDir.Key, indexDir.Value, this);
+                HtmlGenerator.BuildHtmlForPageDirectory(indexDir.Key, indexDir.Value, this);
             }
         }
     }

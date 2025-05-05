@@ -149,17 +149,17 @@ namespace SiteViewer.Controls
         // TODO: Move to main form
         private void PreviewButton_Click(object sender, EventArgs e)
         {
-            string schemaPath = Path.Combine(_directoryPath, Config.kSchemaFileName);
-            if (File.Exists(schemaPath) == false)
+            string pathPath = Path.Combine(_directoryPath, Config.kPageFileName);
+            if (File.Exists(pathPath) == false)
             {
                 return;
             }
 
             string temp = Path.GetTempPath();
-            using (Schema pageSchema = new(schemaPath))
+            using (Page pagePage = new(pathPath))
             {
                 // Generate preview page
-                HtmlGenerator.BuildHtmlForSchema(pageSchema, _site, true);
+                HtmlGenerator.BuildHtmlForPage(pagePage, _site, true);
                 string previewPath = Path.Combine(_directoryPath, "index_Preview.html");
                 if (File.Exists(previewPath))
                 {

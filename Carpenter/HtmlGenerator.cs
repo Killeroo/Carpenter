@@ -7,7 +7,7 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using JpegMetadataExtractor;
 
-using static Carpenter.Schema;
+using static Carpenter.Page;
 
 namespace Carpenter
 {
@@ -18,7 +18,7 @@ namespace Carpenter
     /// TODO: - General performance and allocations
     
     /// <summary>
-    /// Generates html for a different parts of the end site (schema and the index files that list them all
+    /// Generates html for pages (config files that represent pages in a website) and directory pages (link to other pages that share a common parent directory)
     /// </summary>
     public static class HtmlGenerator
     {
@@ -65,26 +65,26 @@ namespace Carpenter
         private const int kNumImagesWithoutLazyLoading = 4;
         
         /// <summary>
-        /// Generates HTML code for a site index file. An index file is basically a page that links to other pages which are
-        /// contained in child directories of the index file.
-        /// Unlike page files, index files have no configuration and are generated at runtime if the option is enabled in the SITE file.
+        /// Generates HTML code for a page directory file. A directory file is basically a page that links to other pages which are
+        /// contained in child directories.
+        /// Unlike page files, directory files have no configuration and are generated at runtime if the option is enabled in the SITE file.
         /// </summary>
-        public static void BuildHtmlForIndexDirectory(string relativePathToDir, List<Schema>? schemas, Site? site)
+        public static void BuildHtmlForPageDirectory(string relativePathToDir, List<Page>? pages, Site? site)
         {
-            if (site == null || schemas == null)
+            if (site == null || pages == null)
             {
                 throw new ArgumentNullException();
             }
 
-            if (schemas.Count == 0)
+            if (pages.Count == 0)
             {
-                throw new ArgumentException("List of provided schemas is empty.");
+                throw new ArgumentException("List of provided pages is empty.");
             }
             
             List<Tag> tags = new();
             List<string> generatedContent = new(File.ReadAllLines(site.TemplatePath));
-            Dictionary<Tokens, string> tokenValues = new(schemas.First().TokenValues); // Use the token values from the first page to fill in the index fields
-            Logger.Log(LogLevel.Verbose, $"Generating Index for \"{relativePathToDir}\"...");
+            Dictionary<Tokens, string> tokenValues = new(pages.First().TokenValues); // Use the token values from the first page to fill in the index fields
+            Logger.Log(LogLevel.Verbose, $"Generating Directory for \"{relativePathToDir}\"...");
             do
             {
                 // Find all tags
@@ -102,10 +102,10 @@ namespace Carpenter
                     if (tag.Id.Contains("foreach:"))
                     {
                         List<string> generateSections = new();
-                        foreach (Schema schema in schemas)
+                        foreach (Page page in pages)
                         {
-                            Logger.Log(LogLevel.Verbose, $"Adding \"{schema.Title}\"...");
-                            generateSections.AddRange(GenerateSchemaSection(schema, site, relativePathToDir, tagSection));
+                            Logger.Log(LogLevel.Verbose, $"Adding \"{page.Title}\"...");
+                            generateSections.AddRange(GeneratePagePreviewSection(page, site, relativePathToDir, tagSection));
                         }
                         tagSection = generateSections;
                     }
@@ -126,7 +126,7 @@ namespace Carpenter
                 // Populate all tokens
                 for (int index = 0; index < generatedContent.Count; index++)
                 {
-                    foreach (KeyValuePair<string, Tokens> token in Schema.TokenTable)
+                    foreach (KeyValuePair<string, Tokens> token in Page.TokenTable)
                     {
                         if (tokenValues.Keys.Contains(token.Value))
                         {
@@ -139,23 +139,24 @@ namespace Carpenter
 
             
             generatedContent.Insert(0, string.Format(Config.kGeneratedComment, DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)));
-            Logger.Log(LogLevel.Info, $"Generated Index Page for {schemas.Count} schemas @ \"{relativePathToDir}\"");
+            Logger.Log(LogLevel.Info, $"Generated Directory for {pages.Count} pages @ \"{relativePathToDir}\"");
             File.WriteAllLines(Path.Combine(site.GetRootDir() + relativePathToDir, "index.html"), generatedContent);
         }
 
         /// <summary>
-        /// Generates the html for a schema file. Schema files represent a page in a website.
+        /// Generates the html for a page file. A Page files is a config file that contains contents and info that will be
+        /// generated into a final output html file which can then be uploaded and used on a site.
         /// </summary>
-        public static void BuildHtmlForSchema(Schema? schema, Site? site, bool isLocalPreview = false)
+        public static void BuildHtmlForPage(Page? page, Site? site, bool isLocalPreview = false)
         {
-            if (site == null || schema == null)
+            if (site == null || page == null)
             {
                 throw new ArgumentNullException();
             }
             
             List<Tag> tags = new();
-            Dictionary<Tokens, string> modifiedSchemaTokens = new(schema.TokenValues);
-            modifiedSchemaTokens.AddOrUpdate(Tokens.PageUrl, string.Format("{0}{1}", site.Url, site.GetSchemaRelativePath(schema).Replace("\\", "/")));
+            Dictionary<Tokens, string> modifiedPageTokens = new(page.TokenValues);
+            modifiedPageTokens.AddOrUpdate(Tokens.PageUrl, string.Format("{0}{1}", site.Url, site.GetPageRelativePath(page).Replace("\\", "/")));
             List<string> generatedContent = new(File.ReadAllLines(site.TemplatePath));
             do
             {
@@ -176,7 +177,7 @@ namespace Carpenter
                     string padding = generatedContent[tag.ArrayIndex].Split("<!--").First();
                     if (tag.Id == "page:layout")
                     {
-                        tagContents = GenerateLayoutSection(schema, site);
+                        tagContents = GenerateLayoutSection(page, site);
                     }
                     
                     tag.Length = padding.Length;
@@ -198,12 +199,12 @@ namespace Carpenter
                 // Populate all tokens
                 for (int index = 0; index < generatedContent.Count; index++)
                 {
-                    foreach (KeyValuePair<string, Tokens> token in Schema.TokenTable)
+                    foreach (KeyValuePair<string, Tokens> token in Page.TokenTable)
                     {
-                        if (modifiedSchemaTokens.Keys.Contains(token.Value))
+                        if (modifiedPageTokens.Keys.Contains(token.Value))
                         {
                             generatedContent[index] =
-                                generatedContent[index].Replace(token.Key, modifiedSchemaTokens[token.Value]);
+                                generatedContent[index].Replace(token.Key, modifiedPageTokens[token.Value]);
                         }
                         else
                         {
@@ -218,7 +219,7 @@ namespace Carpenter
             // For local previews we go through and remove any page urls so that things can be viewed locally
             if (isLocalPreview)
             {
-                string pageUrl = modifiedSchemaTokens[Tokens.PageUrl] + "/"; // This is a bit of a hack to also remove any trailing slashes in the address
+                string pageUrl = modifiedPageTokens[Tokens.PageUrl] + "/"; // This is a bit of a hack to also remove any trailing slashes in the address
                 for (int index = 0; index < generatedContent.Count; index++)
                 {
                     string line = generatedContent[index];
@@ -234,23 +235,23 @@ namespace Carpenter
             }
             
             generatedContent.Insert(0, string.Format(Config.kGeneratedComment, DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)));
-            Logger.Log(LogLevel.Info, $"Generated HTML for schema \"{schema.Title}\"");
-            File.WriteAllLines(Path.Combine(schema.WorkingDirectory(), string.Format("index{0}.html", isLocalPreview ? "_Preview" : "")), generatedContent);
+            Logger.Log(LogLevel.Info, $"Generated HTML for page \"{page.Title}\"");
+            File.WriteAllLines(Path.Combine(page.WorkingDirectory(), string.Format("index{0}.html", isLocalPreview ? "_Preview" : "")), generatedContent);
         }
 
         /// <summary>
-        /// Generates HTML for the layout section of a schema file. The layout section is the thing that contains the actual content of the page.
+        /// Generates HTML for the layout section of a page file. The layout section is the thing that contains the actual content of the page.
         /// </summary>
-        /// <param name="schema"></param>
+        /// <param name="page"></param>
         /// <param name="site"></param>
         /// <returns></returns>
-        private static List<string> GenerateLayoutSection(Schema schema, Site site)
+        private static List<string> GenerateLayoutSection(Page page, Site site)
         {
             // Generate the layout section!
             List<string> output = new();
             Dictionary<Tokens, string> tokenValues = new();
             RawImageMetadata rawData = new();
-            foreach (Section section in schema.LayoutSections)
+            foreach (Section section in page.LayoutSections)
             {
                 if (!site.Tags.TryGetValue(LayoutTypeToTagName[section.GetType()], out List<string> sectionContents))
                 {
@@ -267,7 +268,7 @@ namespace Carpenter
                 }
                 else if (section is ImageSection asImageSection)
                 {
-                    rawData = JpegParser.GetRawMetadata(Path.Combine(schema.WorkingDirectory(), asImageSection.ImageUrl));
+                    rawData = JpegParser.GetRawMetadata(Path.Combine(page.WorkingDirectory(), asImageSection.ImageUrl));
                     tokenValues.Add(Tokens.ImageWidth, rawData.FrameData.Width.ToString());
                     tokenValues.Add(Tokens.ImageHeight, rawData.FrameData.Height.ToString());
                     tokenValues.Add(Tokens.Image, asImageSection.ImageUrl);
@@ -299,7 +300,7 @@ namespace Carpenter
                         tokenValues.Clear();
                         
                         // Populate the generated contents with image data
-                        rawData = JpegParser.GetRawMetadata(Path.Combine(schema.WorkingDirectory(), innerImageSection.ImageUrl));
+                        rawData = JpegParser.GetRawMetadata(Path.Combine(page.WorkingDirectory(), innerImageSection.ImageUrl));
                         tokenValues.Add(Tokens.ImageWidth, rawData.FrameData.Width.ToString());
                         tokenValues.Add(Tokens.ImageHeight, rawData.FrameData.Height.ToString());
                         tokenValues.Add(Tokens.Image, innerImageSection.ImageUrl);
@@ -325,13 +326,13 @@ namespace Carpenter
         
         /// <summary>
         /// This method replaces placeholder token strings with their equivalent token values in a block of HTML.
-        /// Tokens are a way of each schema can specify different values that can be used in a page.
+        /// Tokens are a way of each page can specify different values that can be used in a page.
         /// </summary>
         private static void ResolveTokens(Dictionary<Tokens, string> tokenValues, ref List<string> section)
         {
             for (int index = 0; index < section.Count; index++)
             {
-                foreach (KeyValuePair<string, Tokens> token in Schema.TokenTable)
+                foreach (KeyValuePair<string, Tokens> token in Page.TokenTable)
                 {
                     if (tokenValues.TryGetValue(token.Value, out string? value))
                     {
@@ -367,29 +368,29 @@ namespace Carpenter
         }
 
         /// <summary>
-        /// Generates html which previews a given Schema. Used when generating an index page which links to multiple child pages.
+        /// Generates html which previews a given Page. Used when generating an index page which links to multiple child pages.
         /// </summary>
-        private static List<string> GenerateSchemaSection(Schema schema, Site site, string relativePath, List<string> contents)
+        private static List<string> GeneratePagePreviewSection(Page page, Site site, string relativePath, List<string> contents)
         {
             List<string> generatedContents = new();
-            if (schema == null || site == null || contents == null || contents.Count == 0)
+            if (page == null || site == null || contents == null || contents.Count == 0)
             {
                 return generatedContents;
             }
 
-            // Patch in the correct path to the schema based on it's local path relative to where the site file is
-            Dictionary<Schema.Tokens, string> modifiedSchemaTokens = new(schema.TokenValues);
-            modifiedSchemaTokens[Schema.Tokens.PageUrl] = string.Format("{0}{1}/{2}",
+            // Patch in the correct path to the page based on it's local path relative to where the site file is
+            Dictionary<Page.Tokens, string> modifiedPageTokens = new(page.TokenValues);
+            modifiedPageTokens[Page.Tokens.PageUrl] = string.Format("{0}{1}/{2}",
                 site.Url,
                 relativePath.Replace(Path.DirectorySeparatorChar, '/'),
-                Path.GetFileName(schema.WorkingDirectory()));
+                Path.GetFileName(page.WorkingDirectory()));
 
             // Get the dimensions for the thumbnail image
             (int width, int height) thumbnailDimensions = new(0, 0);
-            if (schema.Thumbnail != string.Empty)
+            if (page.Thumbnail != string.Empty)
             {
-                string thumbnailFilename = schema.Thumbnail;
-                foreach (string imageFile in Directory.EnumerateFiles(schema.WorkingDirectory(),
+                string thumbnailFilename = page.Thumbnail;
+                foreach (string imageFile in Directory.EnumerateFiles(page.WorkingDirectory(),
                              "*" + Path.GetExtension(thumbnailFilename),
                              SearchOption.AllDirectories))
                 {
@@ -417,14 +418,14 @@ namespace Carpenter
                         thumbnailDimensions.height.ToString());
                 }
 
-                // Process each line and replace them with values from the schema
-                foreach (KeyValuePair<string, Schema.Tokens> tokenEntry in Schema.TokenTable)
+                // Process each line and replace them with values from the page
+                foreach (KeyValuePair<string, Page.Tokens> tokenEntry in Page.TokenTable)
                 {
-                    if (modifiedSchemaTokens.ContainsKey(tokenEntry.Value) &&
-                        !Schema.OptionalTokens.Contains(tokenEntry.Value))
+                    if (modifiedPageTokens.ContainsKey(tokenEntry.Value) &&
+                        !Page.OptionalTokens.Contains(tokenEntry.Value))
                     {
                         processedLine = processedLine.Replace(tokenEntry.Key,
-                            modifiedSchemaTokens[tokenEntry.Value]);
+                            modifiedPageTokens[tokenEntry.Value]);
                     }
                 }
 

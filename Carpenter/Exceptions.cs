@@ -2,27 +2,27 @@ using System;
 
 namespace Carpenter
 {
-    public class SchemaParsingException : Exception
+    public class PageParsingException : Exception
     {
-        public SchemaParsingException() { }
-        public SchemaParsingException(string message) : base(message) { }
-        public SchemaParsingException(string message, Exception inner) : base(message, inner) { }
+        public PageParsingException() { }
+        public PageParsingException(string message) : base(message) { }
+        public PageParsingException(string message, Exception inner) : base(message, inner) { }
     }
 
-    public class SchemaValidationException : Exception
+    public class PageValidationException : Exception
     {
-        public SchemaValidator.ValidationResults ValidationResults { get; set; }
+        public PageValidator.ValidationResults ValidationResults { get; set; }
 
-        public SchemaValidationException(SchemaValidator.ValidationResults results)
+        public PageValidationException(PageValidator.ValidationResults results)
         {
             ValidationResults = results;
         }
 
-        public SchemaValidationException(SchemaValidator.ValidationResults results, string message) : base(message)
+        public PageValidationException(PageValidator.ValidationResults results, string message) : base(message)
         {
             ValidationResults = results;
         }
         
-        public SchemaValidationException(string message, Exception inner) : base(message, inner) { }
+        public PageValidationException(string message, Exception inner) : base(message, inner) { }
     }
 }

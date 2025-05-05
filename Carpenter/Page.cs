@@ -10,9 +10,9 @@ namespace Carpenter
     /// <summary>
     /// Defines a page in a site, contains values that, when used with a template, are used to generate a finished webpage
     /// </summary>
-    public class Schema : IDisposable, IEquatable<Schema>
+    public class Page : IDisposable, IEquatable<Page>
     {
-        // Some cosmetic tags used in the schema file 
+        // Some cosmetic tags used in the page file 
         private const string kTokensTag = "[TAGS]";
         private const string kOptionsTag = "[OPTIONS]";
 
@@ -58,8 +58,8 @@ namespace Carpenter
         }
 
         /// <summary>
-        /// A table containing all possible tokens that can be found in a SCHEMA along with
-        /// their corresponding string that is actually used to store their value in the SCHEMA file
+        /// A table containing all possible tokens that can be found in a PAGE file along with
+        /// their corresponding string that is actually used to store their value in the PAGE file
         /// </summary>
         public static readonly Dictionary<string, Tokens> TokenTable = new()
         {
@@ -79,8 +79,8 @@ namespace Carpenter
         };
 
         /// <summary>
-        /// A table containing all possible options that can be found in a SCHEMA along with
-        /// their corresponding string that is actually used to store their value in the SCHEMA file
+        /// A table containing all possible options that can be found in a PAGE file along with
+        /// their corresponding string that is actually used to store their value in the PAGE file
         /// </summary>
         public static readonly Dictionary<string, Options> OptionsTable = new()
         {
@@ -88,7 +88,7 @@ namespace Carpenter
         };
 
         /// <summary>
-        /// Table that contains all the tokens that can be used in the layout portion of the SCHEMA file
+        /// Table that contains all the tokens that can be used in the layout portion of the PAGE file
         /// </summary>
         public static readonly Dictionary<string, Tokens> LayoutTokenTable = new()
         {
@@ -98,7 +98,7 @@ namespace Carpenter
         };
 
         /// <summary>
-        /// List of tags that are optional and don't have to be explictly specified in the schema 
+        /// List of tags that are optional and don't have to be explictly specified in the page 
         /// </summary>
         public static readonly HashSet<Tokens> OptionalTokens = new()
         {
@@ -108,7 +108,7 @@ namespace Carpenter
         };
 
         /// <summary>
-        /// Table containing all the tags that are used to represent different layout sections in the SCHEMA file
+        /// Table containing all the tags that are used to represent different layout sections in the PAGE file
         /// </summary>
         private static readonly Dictionary<string, ElementTags> _layoutTagTable = new()
         {
@@ -119,15 +119,15 @@ namespace Carpenter
         };
 
         /// <summary>
-        /// All the tokens and their values that can have been found in the SCHEMA
+        /// All the tokens and their values that can have been found in the PAGE
         /// </summary>
         public Dictionary<Tokens, string> TokenValues { get; private set; } = new();
         /// <summary>
-        /// All the options and their values that have been found in the SCHEMA
+        /// All the options and their values that have been found in the PAGE
         /// </summary>
         public Dictionary<Options, string> OptionValues { get; private set; } = new();
         /// <summary>
-        /// The sections found in the layout portion of the SCHEMA
+        /// The sections found in the layout portion of the PAGE
         /// </summary>
         public List<Section> LayoutSections { get; set; } = new();
 
@@ -136,42 +136,42 @@ namespace Carpenter
         /// </summary>
         public string Location 
         {
-            get { return TokenValues.TryGetValue(Tokens.Location, out string value) ? value : string.Empty; }
+            get { return TokenValues.TryGetValue(Tokens.Location, out string? value) ? value : string.Empty; }
             set { TokenValues.AddOrUpdate(Tokens.Location, value); }
         }
         public string Title 
         {
-            get { return TokenValues.TryGetValue(Tokens.Title, out string value) ? value : string.Empty; }
+            get { return TokenValues.TryGetValue(Tokens.Title, out string? value) ? value : string.Empty; }
             set { TokenValues.AddOrUpdate(Tokens.Title, value); }
         }
         public string Month 
         {
-            get { return TokenValues.TryGetValue(Tokens.Month, out string value) ? value : string.Empty; }
+            get { return TokenValues.TryGetValue(Tokens.Month, out string? value) ? value : string.Empty; }
             set { TokenValues.AddOrUpdate(Tokens.Month, value); }
         }
         public string Year 
         {
-            get { return TokenValues.TryGetValue(Tokens.Year, out string value) ? value : string.Empty; }
+            get { return TokenValues.TryGetValue(Tokens.Year, out string? value) ? value : string.Empty; }
             set { TokenValues.AddOrUpdate(Tokens.Year, value); }
         }
         public string Author 
         {
-            get { return TokenValues.TryGetValue(Tokens.Author, out string value) ? value : string.Empty; }
+            get { return TokenValues.TryGetValue(Tokens.Author, out string? value) ? value : string.Empty; }
             set { TokenValues.AddOrUpdate(Tokens.Author, value); }
         }
         public string Camera 
         {
-            get { return TokenValues.TryGetValue(Tokens.Camera, out string value) ? value : string.Empty; }
+            get { return TokenValues.TryGetValue(Tokens.Camera, out string? value) ? value : string.Empty; }
             set { TokenValues.AddOrUpdate(Tokens.Camera, value); }
         }
         public string Thumbnail 
         {
-            get { return TokenValues.TryGetValue(Tokens.Thumbnail, out string value) ? value : string.Empty; }
+            get { return TokenValues.TryGetValue(Tokens.Thumbnail, out string? value) ? value : string.Empty; }
             set { TokenValues.AddOrUpdate(Tokens.Thumbnail, value); }
         }
         public string Description 
         {
-            get { return TokenValues.TryGetValue(Tokens.Description, out string value) ? value : string.Empty; }
+            get { return TokenValues.TryGetValue(Tokens.Description, out string? value) ? value : string.Empty; }
             set { TokenValues.AddOrUpdate(Tokens.Description, value); }
         }
 
@@ -180,7 +180,7 @@ namespace Carpenter
         /// </summary>
         public string GeneratedFilename
         {
-            get { return OptionValues.TryGetValue(Options.OutputFilename, out string value) ? value : string.Empty; }
+            get { return OptionValues.TryGetValue(Options.OutputFilename, out string? value) ? value : string.Empty; }
             set { OptionValues.AddOrUpdate(Options.OutputFilename, value); }
         }
 
@@ -188,32 +188,32 @@ namespace Carpenter
 
         
         /// <summary>
-        /// The directory containing the schema file
+        /// The directory containing the page file
         /// </summary>
         private string _workingDirectory = string.Empty;
         
         /// <summary>
-        /// Validation results from the last time the schema was validated
+        /// Validation results from the last time the page was validated
         /// </summary>
-        private SchemaValidator.ValidationResults _lastRunValidationResults = new();
+        private PageValidator.ValidationResults _lastRunValidationResults = new();
         
-        public Schema() { }
-        public Schema(string path) => TryLoad(path);
-        public Schema(Schema otherSchema)
+        public Page() { }
+        public Page(string path) => TryLoad(path);
+        public Page(Page otherPage)
         {
-            if (otherSchema == null)
+            if (otherPage == null)
             {
                 return;
             }
 
-            _workingDirectory = otherSchema._workingDirectory;
+            _workingDirectory = otherPage._workingDirectory;
 
-            TokenValues = new Dictionary<Tokens, string>(otherSchema.TokenValues);
-            OptionValues = new Dictionary<Options, string>(otherSchema.OptionValues);
+            TokenValues = new Dictionary<Tokens, string>(otherPage.TokenValues);
+            OptionValues = new Dictionary<Options, string>(otherPage.OptionValues);
             LayoutSections = new List<Section>();
             
             // Need to actually populate the ImageSections manually to avoid copying a reference
-            foreach (Section section in otherSchema.LayoutSections)
+            foreach (Section section in otherPage.LayoutSections)
             {
                 if (section is ImageSection standaloneSection)
                 {
@@ -248,33 +248,33 @@ namespace Carpenter
         }
 
         /// <summary>
-        /// Attempts to load the schema from a file in the given path.
+        /// Attempts to load the page from a file in the given path.
         /// </summary>
         /// <param name="path"></param>
         /// <exception cref="KeyNotFoundException"></exception>
         /// <exception cref="IndexOutOfRangeException"></exception>
-        /// <exception cref="SchemaParsingException"></exception>
-        /// <returns>If the schema was sucesfully loaded or not</returns>
+        /// <exception cref="PageParsingException"></exception>
+        /// <returns>If the page was sucesfully loaded or not</returns>
         public void TryLoad(string path)
         {
             // Read the file
-            string[] schemaFileContents = File.ReadAllLines(path);
+            string[] pageFileContents = File.ReadAllLines(path);
             _workingDirectory = Path.GetDirectoryName(path);
 
             // Sanity check size
-            if (schemaFileContents.Length == 0)
+            if (pageFileContents.Length == 0)
             {
-                Logger.Log(LogLevel.Error, $"Schema file empty!");
-                throw new SchemaParsingException("Attempted to load empty schema file");
+                Logger.Log(LogLevel.Error, $"Page file empty!");
+                throw new PageParsingException("Attempted to load empty page file");
             }
 
             // Version check
-            if (schemaFileContents[0].Contains(Config.kVersionOption) == false || schemaFileContents[0].Contains('=') == false)
+            if (pageFileContents[0].Contains(Config.kVersionOption) == false || pageFileContents[0].Contains('=') == false)
             {
-                Logger.Log(LogLevel.Error, "Could not read schema file version");
-                throw new SchemaParsingException("Could not read schema file version");
+                Logger.Log(LogLevel.Error, "Could not read page file version");
+                throw new PageParsingException("Could not read page file version");
             }
-            string versionValue = schemaFileContents[0].GetTokenOrOptionValue();
+            string versionValue = pageFileContents[0].GetTokenOrOptionValue();
             float version = 0.0f;
             try
             {
@@ -282,19 +282,19 @@ namespace Carpenter
             }
             catch (Exception e) 
             {
-                Logger.Log(LogLevel.Error, $"Could not parse schema version string (\'{versionValue}\') ({e.GetType()} exception occured)");
-                throw new SchemaParsingException($"Could not parse schema version string (\'{versionValue}\')", e);
+                Logger.Log(LogLevel.Error, $"Could not parse page version string (\'{versionValue}\') ({e.GetType()} exception occured)");
+                throw new PageParsingException($"Could not parse page version string (\'{versionValue}\')", e);
             }
             if (version != Config.kVersion)
             {
-                Logger.Log(LogLevel.Error, $"Incompabitable schema version, found v{version} but can only parse v{Config.kVersion}. Please update.");
-                throw new SchemaParsingException("Incompabitable schema version");
+                Logger.Log(LogLevel.Error, $"Incompabitable page version, found v{version} but can only parse v{Config.kVersion}. Please update.");
+                throw new PageParsingException("Incompabitable page version");
             }
 
             // Parse page tokens in file
-            for (int i = 0; i < schemaFileContents.Length; i++)
+            for (int i = 0; i < pageFileContents.Length; i++)
             {
-                string line = schemaFileContents[i];
+                string line = pageFileContents[i];
 
                 foreach (KeyValuePair<string, Tokens> token in TokenTable)
                 {
@@ -308,16 +308,16 @@ namespace Carpenter
             }
 
             // Parse options in file
-            for (int i = 0; i < schemaFileContents.Length; i++)
+            for (int i = 0; i < pageFileContents.Length; i++)
             {
-                string line = schemaFileContents[i];
+                string line = pageFileContents[i];
 
                 foreach (string option in OptionsTable.Keys)
                 {
                     if (line.Contains(option))
                     {
                         OptionValues[OptionsTable[option]] = line.GetTokenOrOptionValue();
-                        Logger.Log(LogLevel.Verbose, $"Schema option {OptionsTable[option]}={OptionValues[OptionsTable[option]]}");
+                        Logger.Log(LogLevel.Verbose, $"Page option {OptionsTable[option]}={OptionValues[OptionsTable[option]]}");
                         break;
                     }
                 }
@@ -335,11 +335,11 @@ namespace Carpenter
             Debug.Assert(gridTag != string.Empty);
 
             // First find where the photo section starts
-            int photoSectionStartIndex = schemaFileContents.FindIndexWhichContainsValue(gridTag);
+            int photoSectionStartIndex = pageFileContents.FindIndexWhichContainsValue(gridTag);
             if (photoSectionStartIndex < 0)
             {
-                Logger.Log(LogLevel.Error, $"Could not find image layout section with tag \"{gridTag}\" while parsing schema. Add it to the schema and try again.");
-                throw new SchemaParsingException("Could not find image layout section in schema");
+                Logger.Log(LogLevel.Error, $"Could not find image layout section with tag \"{gridTag}\" while parsing page. Add it to the page and try again.");
+                throw new PageParsingException("Could not find image layout section in page");
             }
 
             // Ok lets parse everything to the end of the file and construct our image grid
@@ -347,9 +347,9 @@ namespace Carpenter
             string imageUrl = string.Empty;
             string altImageUrl = string.Empty;
             string imageTitle = string.Empty;
-            for (int i = photoSectionStartIndex; i < schemaFileContents.Length; i++)
+            for (int i = photoSectionStartIndex; i < pageFileContents.Length; i++)
             {
-                string line = schemaFileContents[i];
+                string line = pageFileContents[i];
 
                 // If the line contains a tag
                 foreach (string tag in _layoutTagTable.Keys)
@@ -382,8 +382,8 @@ namespace Carpenter
                                 break;
 
                             default:
-                                Logger.Log(LogLevel.Error, "Could not parse tag in schema layout section");
-                                throw new SchemaParsingException("Could not parse tag in schema layout section");
+                                Logger.Log(LogLevel.Error, "Could not parse tag in page layout section");
+                                throw new PageParsingException("Could not parse tag in page layout section");
                         }
 
                         break;
@@ -413,7 +413,7 @@ namespace Carpenter
 
                             default:
                                 Logger.Log(LogLevel.Error, $"Could not parse token ({token}) in photo grid");
-                                throw new SchemaParsingException($"Could not parse token ({token}) in schema layout");
+                                throw new PageParsingException($"Could not parse token ({token}) in page layout");
                         }
 
                         if (imageUrl != string.Empty)
@@ -422,9 +422,9 @@ namespace Carpenter
                             imageSectionToAdd.ImageUrl = imageUrl;
                             
                             // See if the next line contains an alt image definition.
-                            if (i != schemaFileContents.Length - 1 && schemaFileContents[i + 1].Contains(LayoutTokenTable.GetKeyOfValue(Tokens.AlternateImage)))
+                            if (i != pageFileContents.Length - 1 && pageFileContents[i + 1].Contains(LayoutTokenTable.GetKeyOfValue(Tokens.AlternateImage)))
                             {
-                                imageSectionToAdd.AltImageUrl = schemaFileContents[i++].Split('=').Last();
+                                imageSectionToAdd.AltImageUrl = pageFileContents[i++].Split('=').Last();
                             }
                             
                             if (LayoutSections[currentSectionIndex].GetType().Equals(typeof(ImageSection)))
@@ -462,30 +462,30 @@ namespace Carpenter
                 }
             }
             
-            Logger.Log(LogLevel.Verbose, $"Schema loaded (\"{path}\")");
+            Logger.Log(LogLevel.Verbose, $"Page loaded (\"{path}\")");
         }
 
         /// <summary>
-        /// Attempts to save the schema to a file at the given path
+        /// Attempts to save the page to a file at the given path
         /// </summary>
-        /// <returns>If saving the schema was successfully written to a file or not</returns>
+        /// <returns>If saving the page was successfully written to a file or not</returns>
         public bool TrySave(string path)
         {
-            // Shorthand to create a schema parameter and it's value. Just means that if we need to modify the format of the schema we can do it in one place.
+            // Shorthand to create a page parameter and it's value. Just means that if we need to modify the format of the page we can do it in one place.
             string CreateNameValuePair(string name, string value)
             {
                 return string.Format("{0}={1}", name, value);
             }
 
-            // Contents of our schema file
-            List<string> schemaFileContents = new List<string>();
+            // Contents of our page file
+            List<string> pageFileContent = new List<string>();
 
             // First add the version
-            schemaFileContents.Add(CreateNameValuePair(Config.kVersionOption, Config.kVersion.ToString("0.0")));
-            schemaFileContents.Add(Environment.NewLine);
+            pageFileContent.Add(CreateNameValuePair(Config.kVersionOption, Config.kVersion.ToString("0.0")));
+            pageFileContent.Add(Environment.NewLine);
 
             // Next add the tokens (Except the class ids)
-            schemaFileContents.Add(kTokensTag);
+            pageFileContent.Add(kTokensTag);
             foreach (KeyValuePair<Tokens, string> tokenPair in TokenValues)
             {
                 // This tag is generated so don't bother saving it a file
@@ -500,13 +500,13 @@ namespace Carpenter
                     Logger.Log(LogLevel.Error, $"Couldn't find token name for {tokenPair.Key.ToString()}. This isn't great...");
                     continue;
                 }
-                schemaFileContents.Add(CreateNameValuePair(tokenName, tokenPair.Value));
-                Logger.Log(LogLevel.Verbose, $"Adding {tokenName} to schema file");
+                pageFileContent.Add(CreateNameValuePair(tokenName, tokenPair.Value));
+                Logger.Log(LogLevel.Verbose, $"Adding {tokenName} to page file");
             }
-            schemaFileContents.Add(Environment.NewLine);
+            pageFileContent.Add(Environment.NewLine);
 
             // Then the options section
-            schemaFileContents.Add(kOptionsTag);
+            pageFileContent.Add(kOptionsTag);
             foreach (KeyValuePair<Options, string> optionPair in OptionValues)
             {
                 string optionName = OptionsTable.GetKeyOfValue(optionPair.Key);
@@ -515,14 +515,14 @@ namespace Carpenter
                     Logger.Log(LogLevel.Error, $"Couldn't find option name for {optionPair.Key.ToString()}. This isn't great...");
                     continue;
                 }
-                schemaFileContents.Add(CreateNameValuePair(optionName, optionPair.Value));
+                pageFileContent.Add(CreateNameValuePair(optionName, optionPair.Value));
             }
-            schemaFileContents.Add(Environment.NewLine);
+            pageFileContent.Add(Environment.NewLine);
 
             // Finally we print out the grid
-            schemaFileContents.Add(_layoutTagTable.GetKeyOfValue(ElementTags.Grid));
-            schemaFileContents.Add(Environment.NewLine);
-            Logger.Log(LogLevel.Verbose, $"Generating schema layout grid");
+            pageFileContent.Add(_layoutTagTable.GetKeyOfValue(ElementTags.Grid));
+            pageFileContent.Add(Environment.NewLine);
+            Logger.Log(LogLevel.Verbose, $"Generating page layout grid");
 
             // Just to save some lookups
             string imageUrlTokenName = LayoutTokenTable.GetKeyOfValue(Tokens.Image);
@@ -543,10 +543,10 @@ namespace Carpenter
                 {
                     ImageSection standaloneImageSection = (ImageSection)section;
 
-                    schemaFileContents.Add(standaloneTag);
-                    schemaFileContents.Add(CreateNameValuePair(imageUrlTokenName, standaloneImageSection.ImageUrl));
+                    pageFileContent.Add(standaloneTag);
+                    pageFileContent.Add(CreateNameValuePair(imageUrlTokenName, standaloneImageSection.ImageUrl));
                     if (!string.IsNullOrEmpty(standaloneImageSection.AltImageUrl))
-                        schemaFileContents.Add(CreateNameValuePair(detailedImageUrlTokenName, standaloneImageSection.AltImageUrl));
+                        pageFileContent.Add(CreateNameValuePair(detailedImageUrlTokenName, standaloneImageSection.AltImageUrl));
 
                     Logger.Log(LogLevel.Verbose, "Added ImageSection to layout");
                 }
@@ -554,12 +554,12 @@ namespace Carpenter
                 {
                     ImageColumnSection columnImageSection = (ImageColumnSection) section;
 
-                    schemaFileContents.Add(columnTag);
+                    pageFileContent.Add(columnTag);
                     foreach (ImageSection columnItem in columnImageSection.Sections)
                     {
-                        schemaFileContents.Add(CreateNameValuePair(imageUrlTokenName, columnItem.ImageUrl));
+                        pageFileContent.Add(CreateNameValuePair(imageUrlTokenName, columnItem.ImageUrl));
                         if (!string.IsNullOrEmpty(columnItem.AltImageUrl))
-                            schemaFileContents.Add(CreateNameValuePair(detailedImageUrlTokenName, columnItem.AltImageUrl));
+                            pageFileContent.Add(CreateNameValuePair(detailedImageUrlTokenName, columnItem.AltImageUrl));
                     }
 
                     Logger.Log(LogLevel.Verbose, "Added ImageColumnSection to layout");
@@ -568,40 +568,40 @@ namespace Carpenter
                 {
                     TitleSection titleImageSection = (TitleSection)section;
 
-                    schemaFileContents.Add(titleTag);
-                    schemaFileContents.Add(CreateNameValuePair(titleTokenName, titleImageSection.TitleText));
+                    pageFileContent.Add(titleTag);
+                    pageFileContent.Add(CreateNameValuePair(titleTokenName, titleImageSection.TitleText));
                 }
 
-                schemaFileContents.Add(Environment.NewLine);
+                pageFileContent.Add(Environment.NewLine);
                 Logger.Log(LogLevel.Verbose, "Added TitleSection to layout");
             }
 
             // Now we try and write it all to a file
-            string schemaPath = Path.Combine(path, Config.kSchemaFileName);
+            string pagePath = Path.Combine(path, Config.kPageFileName);
             try
             {
-                File.WriteAllLines(schemaPath, schemaFileContents);
-                Logger.Log(LogLevel.Info, $"Schema generated: {schemaPath}");
+                File.WriteAllLines(pagePath, pageFileContent);
+                Logger.Log(LogLevel.Info, $"Page generated: {pagePath}");
                 return true;
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"Could not save schema file ({ex.GetType()} exception occured)");
+                Logger.Log(LogLevel.Error, $"Could not save page file ({ex.GetType()} exception occured)");
                 return false;
             }
         }
 
         /// <summary>
-        /// Performs some basic tests to make sure that all values that should be present in the schema are present
+        /// Performs some basic tests to make sure that all values that should be present in the page are present
         /// </summary>
-        /// <returns>If the schema is valid or not</returns>
+        /// <returns>If the page is valid or not</returns>
         private bool IsValid()
         {
-            return SchemaValidator.Run(this, out _lastRunValidationResults);
+            return PageValidator.Run(this, out _lastRunValidationResults);
         }
         
         /// <summary>
-        /// Clears the contents and values of the schema
+        /// Clears the contents and values of the page
         /// </summary>
         private void Reset()
         {
@@ -611,7 +611,7 @@ namespace Carpenter
             _workingDirectory = string.Empty;
         }
 
-        public bool Equals(Schema? other)
+        public bool Equals(Page? other)
         {
             if (other == null)
             {
