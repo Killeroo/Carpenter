@@ -1,27 +1,24 @@
-﻿// TODO: Add link previews
-// https://andrejgajdos.com/how-to-create-a-link-preview/
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+
 using Carpenter;
 
 namespace Carpenter.CommandLine
 {
     class Program
     {
-
-        enum Operation
+        private enum Operation
         {
             Preview,
             Build,
             Publish,
             Validate
         }
-        struct CommandLineContext
+        
+        private struct CommandLineContext
         {
             public static readonly Dictionary<string, Type> ArgToType = new()
             {
@@ -67,6 +64,26 @@ namespace Carpenter.CommandLine
                 return false;
             }
         }
+        
+        private static readonly string kHelpText = "Carpenter (Static Site Generator) - Commandline Tool\n" +
+                                            "\n" +
+                                            "Usage: Carpenter [options]\n" +
+                                            "Usage: Carpenter [options] [path-to-site]\n" +
+                                            "Usage: Carpenter [options] [path-to-page]\n" +
+                                            "\n" +
+                                            "Options:\n" +
+                                            "\t--help".PadRight(14) + "Displays this help message.\n" + 
+                                            "\t--publish".PadRight(14) +
+                                            "Validates config files, Generates HTML for all site pages and performs any cleanup.\n" +
+                                            "\t--build".PadRight(14) + "Generates HTML files for the inputted file.\n" +
+                                            "\t--validate".PadRight(14) + "Validates inputted file.\n" +
+                                            "\t--preview".PadRight(14) +
+                                            "Generates preview file for the inputted file.\n" +
+                                            "\n" +
+                                            "path-to-page:\n" +
+                                            "\tThe path path containing a SITE file to perform options on. When using the site root, options will be run against the whole site.\n" +
+                                            "path-to-site:\n" +
+                                            "\tThe path containing to the SITE file";
 
         static void Main(string[] args)
         {
@@ -104,6 +121,11 @@ namespace Carpenter.CommandLine
                         {
                             context.Operation = outOp;
                         }
+                        else
+                        {
+                            Console.WriteLine(kHelpText);
+                            Environment.Exit(0);
+                        }
                     }
                     else if (string.IsNullOrEmpty(context.FoundPath) && Directory.Exists(args[index]))
                     {
@@ -116,32 +138,6 @@ namespace Carpenter.CommandLine
                 Console.WriteLine(e);
                 throw;
             }
-
-            // switch (currArg.Substring(2, currArg.Length))
-            // {
-            //     case "site":
-            //         if (index + 1 < args.Length && Directory.Exists(args[index + 1]))
-            //         {
-            //             context.FoundSite = new Site(args[index + 1]);
-            //         }
-            //         else
-            //         {
-            //             throw new ArgumentException("Could not find argument with Site path");
-            //         }
-            //         break;
-            //     case "schema":
-            //         if (index + 1 < args.Length && Directory.Exists(args[index + 1]))
-            //         {
-            //             context.FoundSchema = new Schema(args[index + 1]);
-            //         }
-            //         else
-            //         {
-            //             throw new ArgumentException("Could not find argument with Schema path");
-            //         }
-            //         break;
-            // }
-            //     }
-            // }
             
             if (!context.ContainsObject<Site>())
             {
@@ -210,11 +206,6 @@ namespace Carpenter.CommandLine
                             string.Format("Site validated. {0}{1}",
                                 requiredTestsFailed ? "Required tests failed, please check logs. " : string.Empty,
                                 testsFailed > 0 ? $"{testsFailed} tests failed. " : string.Empty));
-
-                        // foreach ((string path, SchemaValidator.ValidationResults results) in siteResults)
-                        // {
-                        //     Console.WriteLine($"[{Path.GetDirectoryName(path)}] {results.ToString()}");
-                        // }
                     }
                     break;
                 }
