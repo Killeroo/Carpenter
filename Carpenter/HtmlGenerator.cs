@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
 using System.IO;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using JpegMetadataExtractor;
+
 using static Carpenter.Schema;
 
 namespace Carpenter
 {
     /// [Matthew Carney]
     /// Things I'd like to improve
-    /// TODO: - Better naming and comments
     /// TODO: - Proper recursion (so we can deal properly with nested tag)
     /// TODO: - Removing duplicate code between GenerateIndex and GeneratePage
     /// TODO: - General performance and allocations
@@ -83,13 +82,13 @@ namespace Carpenter
             }
             
             List<Tag> tags = new();
-            List<string> generatedContents = new(File.ReadAllLines(site.TemplatePath));
+            List<string> generatedContent = new(File.ReadAllLines(site.TemplatePath));
             Dictionary<Tokens, string> tokenValues = new(schemas.First().TokenValues); // Use the token values from the first page to fill in the index fields
             Logger.Log(LogLevel.Verbose, $"Generating Index for \"{relativePathToDir}\"...");
             do
             {
                 // Find all tags
-                tags = FindTags(generatedContents);
+                tags = FindTags(generatedContent);
                 
                 foreach (Tag tag in tags.Where(x => x.Type == "index").OrderByDescending(x => x.ArrayIndex))
                 {
@@ -99,7 +98,7 @@ namespace Carpenter
                     }
 
                     int offset = tag.ArrayIndex + 1;
-                    string padding = generatedContents[tag.ArrayIndex].Split("<!--").First();
+                    string padding = generatedContent[tag.ArrayIndex].Split("<!--").First();
                     if (tag.Id.Contains("foreach:"))
                     {
                         List<string> generateSections = new();
@@ -113,7 +112,7 @@ namespace Carpenter
 
                     foreach (string line in tagSection)
                     {
-                        generatedContents.Insert(offset, padding + line);
+                        generatedContent.Insert(offset, padding + line);
                         offset++;
                     }
                 }
@@ -121,25 +120,27 @@ namespace Carpenter
                 // Clear all tag placeholders
                 foreach (Tag tag in tags.OrderByDescending(x => x.ArrayIndex))
                 {
-                    generatedContents.RemoveAt(tag.ArrayIndex);
+                    generatedContent.RemoveAt(tag.ArrayIndex);
                 }
 
                 // Populate all tokens
-                for (int index = 0; index < generatedContents.Count; index++)
+                for (int index = 0; index < generatedContent.Count; index++)
                 {
                     foreach (KeyValuePair<string, Tokens> token in Schema.TokenTable)
                     {
                         if (tokenValues.Keys.Contains(token.Value))
                         {
-                            generatedContents[index] =
-                                generatedContents[index].Replace(token.Key, tokenValues[token.Value]);
+                            generatedContent[index] =
+                                generatedContent[index].Replace(token.Key, tokenValues[token.Value]);
                         }
                     }
                 }
             } while (tags.Count > 0);
 
+            
+            generatedContent.Insert(0, string.Format(Config.kGeneratedComment, DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)));
             Logger.Log(LogLevel.Info, $"Generated Index Page for {schemas.Count} schemas @ \"{relativePathToDir}\"");
-            File.WriteAllLines(Path.Combine(site.GetRootDir() + relativePathToDir, "index.html"), generatedContents);
+            File.WriteAllLines(Path.Combine(site.GetRootDir() + relativePathToDir, "index.html"), generatedContent);
         }
 
         /// <summary>

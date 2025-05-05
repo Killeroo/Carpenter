@@ -24,10 +24,6 @@ namespace Carpenter
         {
             Url,
             TemplatePath,
-            GridClass,
-            ColumnClass,
-            ImageClass,
-            TitleClass
         }
 
         /// <summary>
@@ -36,11 +32,7 @@ namespace Carpenter
         public static readonly Dictionary<string, Options> OptionsTable = new()
         {
             { "site_url", Options.Url },
-            { "template_path", Options.TemplatePath },
-            { "grid_class", Options.GridClass },
-            { "column_class", Options.ColumnClass },
-            { "image_class", Options.ImageClass },
-            { "title_class", Options.TitleClass }
+            { "template_path", Options.TemplatePath }
         };
 
         /// <summary>
@@ -89,22 +81,6 @@ namespace Carpenter
                 }
             }
             set { OptionValues.AddOrUpdate(Options.TemplatePath, value); }
-        }
-        public string GridClass {
-            get { return OptionValues.TryGetValue(Options.GridClass, out string value) ? value : string.Empty; }
-            set { OptionValues.AddOrUpdate(Options.GridClass, value); }
-        }
-        public string ColumnClass {
-            get { return OptionValues.TryGetValue(Options.ColumnClass, out string value) ? value : string.Empty; }
-            set { OptionValues.AddOrUpdate(Options.ColumnClass, value); }
-        }
-        public string ImageClass {
-            get { return OptionValues.TryGetValue(Options.ImageClass, out string value) ? value : string.Empty; }
-            set { OptionValues.AddOrUpdate(Options.ImageClass, value); }
-        }
-        public string TitleClass {
-            get { return OptionValues.TryGetValue(Options.TitleClass, out string value) ? value : string.Empty; }
-            set { OptionValues.AddOrUpdate(Options.TitleClass, value); }
         }
 
 
