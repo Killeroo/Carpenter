@@ -1,43 +1,38 @@
-
-<!-- Very basic example template-->
-<!-- At the moment Carpenter really needs to the body of the file to be laid out very closely to this-->
-
 <!DOCTYPE html>
 <html lang="en-us">
 <header>
-  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-	<meta charset="utf-8">
-	<title>%LOCATION %YEAR - %AUTHOR</title>
-	<meta name="author" content="%AUTHOR">
+	<title>%AUTHOR &mdash; %TITLE</title>
+
+	<link rel="image_src" href="%PAGE_URL/%THUMBNAIL" /> 
+  
+	<!-- TAG:page:inline-css -->
 
 </header>
 
 <body>
-  <!-- Header -->
-  <div class="header">
-      <p style="text-align: right;"><a href="https://example.com/photos/">More photos</a> - <a href="https://www.instagram.com/aninstagram/">Instagram</a> - <a href="https://example.com">home</a></p>
-    <h1>%TITLE</h1>
-    <h3 style="float:left;text-align:left;">%CAMERA</h3>
-    <h3 style="float:right;text-align: right;">%MONTH %YEAR</h3>
-  </div>
+	<div id="desktop-header" class="padded">
+		<a href="">
+			<div id="header-logo">
+				<p><span style="word-spacing: initial;">Test site</span> <span id="header-logo-postfix">PHOTOGRAPHY</span></p>
+			</div>
+		</a>
 
-  <!-- Photo Grid -->
-  <div class="photos">
-      <a class="image" href="%BASE_URL/%PAGE_URL/%DETAILED_IMAGE_URL" target="_blank" rel="noopener noreferrer">
-          <img src="%BASE_URL/%PAGE_URL/%IMAGE_URL" loading="lazy" width="%WIDTH" height="%HEIGHT">
-      </a>
+		<div id="header-links">
+			<a class="hover-fade" href="">HOME</a>
+			<button class="dropdown-button">PLACES</button>
+			<button class="dropdown-button">OTHER</button>
+			<a class="hover-fade" href="">ABOUT</a>
+		</div>
+	</div>
 
-      <div class="column">
+	<!-- TAG:page:gallery-header -->
 
-      </div>
-
-      <h1 class="title">%IMAGE_TITLE</h1>
-
-  </div>
-
-  <!-- Footer -->
-  <div class="footer">
-    <p style="text-align: right;"><a href="https://example.com/photos/">More photos</a> - <a href="https://www.instagram.com/aninstagram/">Instagram</a> - <a href="https://example.com">home</a></p>
-  </div>
+  	<!-- Photo Grid -->
+	<div id="grid-element" class="grid padded mobile-expand">
+		<!-- TAG:page:layout -->
+		<!-- TAG:index:foreach:page-entry -->
+	</div>
+  
+	<!-- TAG:page:gallery-setup -->
 </body>
 </html>

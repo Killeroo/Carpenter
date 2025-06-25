@@ -137,7 +137,6 @@ namespace Carpenter
                 }
             } while (tags.Count > 0);
 
-            
             generatedContent.Insert(0, string.Format(Config.kGeneratedComment, DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)));
             Logger.Log(LogLevel.Info, $"Generated Directory for {pages.Count} pages @ \"{relativePathToDir}\"");
             File.WriteAllLines(Path.Combine(site.GetRootDir() + relativePathToDir, "index.html"), generatedContent);

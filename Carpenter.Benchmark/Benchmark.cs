@@ -56,8 +56,8 @@ namespace Carpenter.Tests
         static void Main(string[] args)
         {
             //// TODO: Point at example project
-            string rootDir = @"G:\My Drive\Website\photos.matthewcarney.net\";
-            string pageDir = @"G:\My Drive\Website\photos.matthewcarney.net\other\archive\donegal-3";
+            string rootDir = @"C:\Projects\Carpenter\example-site\";
+            string pageDir = @"C:\Projects\Carpenter\example-site\places\ireland\sheephaven-bay-1";
             string tempPath = Path.Combine(Path.GetTempPath(), "Carpenter", "Benchmark");
             if (Directory.Exists(tempPath) == false)
             {
@@ -65,7 +65,6 @@ namespace Carpenter.Tests
             }
 
             Console.WriteLine($"Carpenter v{Config.kVersion} - Static photo webpage generator");
-
             Logger.SetLogLevel(LogLevel.Info);
 
             Site site = new();
@@ -80,6 +79,20 @@ namespace Carpenter.Tests
                 }
             }
             WriteTimerToConsole(stopwatch, "Site.TryLoad");
+            
+            // Copy over a placeholder images for each image in the site.
+            // We don't store these locally because they are a lot of data but we can't process the site without them..
+            const string kPlaceholderImageName = "placeholder_image.jpg";
+            string placeholderImagePath = Path.Combine(rootDir, kPlaceholderImageName);
+            if (File.Exists(placeholderImagePath))
+            {
+                var something = GetSiteImagePaths(site);
+                foreach (string path in something)
+                {
+                    File.Copy(placeholderImagePath, path, true);
+                }
+            }
+            Console.WriteLine("Placeholder images copied.");
             
             stopwatch = Stopwatch.StartNew();
             {
@@ -136,6 +149,13 @@ namespace Carpenter.Tests
                 //}
             }
             WriteTimerToConsole(stopwatch, "PageValidator.Run");
+            
+            // Remove the placeholder images when we are done
+            foreach (string path in GetSiteImagePaths(site))
+            {
+                File.Delete(path);
+            }
+            Console.WriteLine("Placeholder images removed.");
         }
 
         static List<Tuple<int, ConsoleColor>> TimeRanges = new()
@@ -175,6 +195,40 @@ namespace Carpenter.Tests
             ConsoleWrite(color, text + Environment.NewLine);
         }
 
+        static List<string> GetSiteImagePaths(Site site)
+        {
+            List<string> imagePaths = new();
+
+            void StoreImagePath(string pagePath, ImageSection section)
+            {
+                imagePaths.Add(Path.Combine(pagePath, section.ImageUrl));
+                if (!string.IsNullOrEmpty(section.AltImageUrl) && section.ImageUrl != section.AltImageUrl)
+                {
+                    imagePaths.Add(Path.Combine(pagePath, section.AltImageUrl));
+                }
+            }
+            
+            foreach (Page page in site.GetPages())
+            {
+                foreach (Section section in page.LayoutSections)
+                {
+                    if (section is ImageColumnSection asColumnSection)
+                    {
+                        foreach (ImageSection imageSection in asColumnSection.Sections)
+                        {
+                            StoreImagePath(page.WorkingDirectory(), imageSection);
+                        }
+                    }
+                    else if (section is ImageSection asImageSection)
+                    {
+                        StoreImagePath(page.WorkingDirectory(), asImageSection);
+                    }
+                }
+            }
+
+            return imagePaths;
+        }
+        
     }
 }
 
