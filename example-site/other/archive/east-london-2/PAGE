@@ -1,0 +1,41 @@
+carpenter_version=3.0
+
+
+[TAGS]
+%PAGE_URL=east-london-2
+%LOCATION=England
+%TITLE=East London (Vol. 2)
+%MONTH=October
+%YEAR=2021
+%AUTHOR=Matthew Carney
+%CAMERA=Canon EOS 600D
+%THUMBNAIL=IMG_3847_Preview.jpg
+
+
+[OPTIONS]
+output_file=index.html
+
+
+[LAYOUT]
+
+
+[IMAGE_COLUMN]
+%IMAGE=IMG_3883_Preview.jpg
+%IMAGE=IMG_3974_Preview.jpg
+%IMAGE=IMG_3931_Preview.jpg
+%IMAGE=IMG_3871_Preview.jpg
+%IMAGE=IMG_3835_Preview.jpg
+
+
+[IMAGE_COLUMN]
+%IMAGE=IMG_3907_Preview.jpg
+%IMAGE=IMG_3851_Preview.jpg
+%IMAGE=IMG_3946_Preview.jpg
+%IMAGE=IMG_3866_Preview.jpg
+%IMAGE=IMG_3803_Preview.jpg
+
+
+[IMAGE_STANDALONE]
+%IMAGE=IMG_3847_Preview.jpg
+
+

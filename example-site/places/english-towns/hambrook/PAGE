@@ -1,0 +1,31 @@
+carpenter_version=3.0
+
+
+[TAGS]
+%TITLE=Hambrook
+%LOCATION=Havant, England
+%MONTH=June
+%YEAR=2023
+%AUTHOR=Matthew Carney
+%CAMERA=Sony A7R IV
+%THUMBNAIL=DSC05683-Enhanced-NR_Preview.jpg
+%DESCRIPTION=
+
+
+[OPTIONS]
+output_file=index.html
+
+
+[LAYOUT]
+
+
+[IMAGE_COLUMN]
+%IMAGE=DSC05681_Preview.jpg
+%IMAGE=DSC05689_Preview.jpg
+
+
+[IMAGE_COLUMN]
+%IMAGE=DSC05683-Enhanced-NR_Preview.jpg
+%IMAGE=DSC05733_Preview.jpg
+
+

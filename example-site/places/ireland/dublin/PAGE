@@ -1,0 +1,35 @@
+carpenter_version=3.0
+
+
+[TAGS]
+%PAGE_URL=dublin
+%LOCATION=Ireland
+%TITLE=Dublin
+%MONTH=November
+%YEAR=2022
+%AUTHOR=Matthew Carney
+%CAMERA=Canon EOS 600D
+%THUMBNAIL=IMG_4853_Preview.jpg
+
+
+[OPTIONS]
+output_file=index.html
+
+
+[LAYOUT]
+
+
+[IMAGE_COLUMN]
+%IMAGE=IMG_4930_Preview.jpg
+%IMAGE=IMG_4853_Preview.jpg
+%IMAGE=IMG_4833_Preview.jpg
+%IMAGE=IMG_4786_Preview.jpg
+
+
+[IMAGE_COLUMN]
+%IMAGE=IMG_4783_Preview.jpg
+%IMAGE=IMG_4852_Preview.jpg
+%IMAGE=IMG_4847_Preview.jpg
+%IMAGE=IMG_4775_Preview.jpg
+
+

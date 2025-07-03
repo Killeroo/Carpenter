@@ -1,0 +1,71 @@
+carpenter_version=3.0
+
+[OPTIONS]
+site_url=https://test.net/
+template_path=G:\My Drive\Website\photos.matthewcarney.net\template.html
+generate-indexes=true
+
+[TAG:page:gallery-header]
+<!-- Grid header -->
+<div id="collection-header" class="padded">
+    <h1 style="margin-left: 2rem;">%TITLE</h1>
+    
+    <div id="collection-header-left">
+        <h3 style="margin-top: 1rem;">%LOCATION</h3>
+        <h3>%MONTH %YEAR</h3>
+        <h3>%CAMERA</h3>
+    </div>
+    
+    <div id="collection-header-right" class="mobile-expand">
+        <p style="font-style: italic;">%DESCRIPTION</p>
+    </div>
+</div>
+
+[TAG:page:gallery-setup]
+<script src="https://photos.matthewcarney.net/glightbox.min.js"></script>
+<script>
+    var lightbox = GLightbox();
+</script>
+
+[TAG:page:inline-css]
+<style>
+    h1 { 
+        font-size: 4rem;
+        font-weight: bold;
+    }
+
+    h3 {
+        font-size: 2rem;
+        font-weight: normal;
+        margin-left: 2rem;
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+</style>
+
+[TAG:page:layout]
+
+[TAG:layout:image-standalone]
+<a id="grid-image" class="glightbox" href="%PAGE_URL/%IMAGE">
+    <img class="base-image" src="%PAGE_URL/%IMAGE" height="%HEIGHT" width="%WIDTH" loading="lazy"> 
+</a>
+
+[TAG:layout:image-column]
+<div id="grid-column" class="column mobile-expand">
+    <!-- TAG:foreach:layout:image-standalone -->
+</div>
+
+[TAG:layout:title]
+<h3 id="grid-title">%GRID_TITLE</h3>
+
+[TAG:index:foreach:page-entry]
+<div class="page-preview hover-fade mobile-expand">
+    <a href="%PAGE_URL/">
+        <img class="page-thumbnail" src="%PAGE_URL/%THUMBNAIL" width="%WIDTH" height="%HEIGHT" style="width:100%" loading="lazy">
+
+        <div style="margin-left: 1em;">
+            <h3 style="margin-top: 0; margin-bottom: 0;">%TITLE</h3>
+            <p>%MONTH %YEAR - %CAMERA</p>
+        </div>
+    </a>
+</div>

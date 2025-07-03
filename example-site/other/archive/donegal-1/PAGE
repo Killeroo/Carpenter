@@ -1,0 +1,39 @@
+carpenter_version=3.0
+
+
+[TAGS]
+%PAGE_URL=donegal-1
+%LOCATION=Ireland
+%TITLE=Donegal (Vol. 1)
+%MONTH=September
+%YEAR=2016
+%AUTHOR=Matthew Carney
+%CAMERA=Canon EOS 600D
+%THUMBNAIL=IMG_9830_Preview.jpg
+
+
+[OPTIONS]
+output_file=index.html
+
+
+[LAYOUT]
+
+
+[IMAGE_STANDALONE]
+%IMAGE=IMG_9830_Preview.jpg
+
+
+[IMAGE_COLUMN]
+%IMAGE=IMG_9827_Preview.jpg
+%IMAGE=IMG_9669_Preview.jpg
+
+
+[IMAGE_COLUMN]
+%IMAGE=IMG_9730_Preview.jpg
+%IMAGE=IMG_9594_Preview.jpg
+
+
+[IMAGE_STANDALONE]
+%IMAGE=IMG_9693_Preview.jpg
+
+

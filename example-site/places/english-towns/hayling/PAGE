@@ -1,0 +1,41 @@
+carpenter_version=3.0
+
+
+[TAGS]
+%PAGE_URL=hayling
+%TITLE=Hayling Island
+%LOCATION=Havant, England
+%MONTH=April
+%YEAR=2023
+%AUTHOR=Matthew Carney
+%CAMERA=Sony A7R IV
+%THUMBNAIL=DSC04355_Preview.jpg
+
+
+[OPTIONS]
+output_file=index.html
+
+
+[LAYOUT]
+
+
+[IMAGE_STANDALONE]
+%IMAGE=DSC04343_Preview.jpg
+
+
+[IMAGE_STANDALONE]
+%IMAGE=DSC04342_Preview.jpg
+
+
+[IMAGE_STANDALONE]
+%IMAGE=DSC04373_Preview.jpg
+
+
+[IMAGE_COLUMN]
+%IMAGE=DSC04355_Preview.jpg
+
+
+[IMAGE_COLUMN]
+%IMAGE=DSC04380_Preview.jpg
+
+

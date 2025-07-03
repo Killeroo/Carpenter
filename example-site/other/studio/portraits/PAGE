@@ -1,0 +1,41 @@
+carpenter_version=3.0
+
+
+[TAGS]
+%TITLE=Portrait Shoot
+%LOCATION=England
+%MONTH=January
+%YEAR=2023
+%AUTHOR=Matthew Carney
+%CAMERA=Sony A7R IV
+%THUMBNAIL=DSC01499_Preview.jpg
+%DESCRIPTION=I was invited to do some behind the scenes for an open shoot by a professional portrait company. I had never done anything like it before but knew it would be good to try something new outside of my comfort zone.
+
+
+[OPTIONS]
+output_file=index.html
+
+
+[LAYOUT]
+
+
+[IMAGE_STANDALONE]
+%IMAGE=DSC01313_Preview.jpg
+
+
+[IMAGE_COLUMN]
+%IMAGE=DSC01491_Preview.jpg
+%IMAGE=DSC01430_Preview.jpg
+%IMAGE=DSC01406_Preview.jpg
+
+
+[IMAGE_COLUMN]
+%IMAGE=DSC01373_Preview.jpg
+%IMAGE=DSC01462_Preview.jpg
+%IMAGE=DSC01487_Preview.jpg
+
+
+[IMAGE_STANDALONE]
+%IMAGE=DSC01499_Preview.jpg
+
+

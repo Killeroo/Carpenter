@@ -1,0 +1,33 @@
+carpenter_version=3.0
+
+
+[TAGS]
+%PAGE_URL=south-london-1
+%LOCATION=England
+%TITLE=South London (Vol. 1)
+%MONTH=February
+%YEAR=2022
+%AUTHOR=Matthew Carney
+%CAMERA=Canon EOS 600D
+%THUMBNAIL=IMG_4536_Preview.jpg
+
+
+[OPTIONS]
+output_file=index.html
+
+
+[LAYOUT]
+
+
+[IMAGE_COLUMN]
+%IMAGE=IMG_4547_Preview.jpg
+%IMAGE=IMG_4527_Preview.jpg
+%IMAGE=IMG_4550_Preview.jpg
+
+
+[IMAGE_COLUMN]
+%IMAGE=IMG_4536_Preview.jpg
+%IMAGE=IMG_4533_Preview.jpg
+%IMAGE=IMG_4492_Preview.jpg
+
+

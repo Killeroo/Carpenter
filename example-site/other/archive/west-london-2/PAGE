@@ -1,0 +1,37 @@
+carpenter_version=3.0
+
+
+[TAGS]
+%PAGE_URL=west-london-2
+%LOCATION=England
+%TITLE=West London (Vol. 2)
+%MONTH=September
+%YEAR=2019
+%AUTHOR=Matthew Carney
+%CAMERA=Canon EOS 600D
+%THUMBNAIL=IMG_0996_Preview.jpg
+
+
+[OPTIONS]
+output_file=index.html
+
+
+[LAYOUT]
+
+
+[IMAGE_STANDALONE]
+%IMAGE=IMG_0996_Preview.jpg
+
+
+[IMAGE_COLUMN]
+%IMAGE=IMG_0993_Preview.jpg
+%IMAGE=IMG_3114_Preview.jpg
+%IMAGE=IMG_3152_Preview.jpg
+
+
+[IMAGE_COLUMN]
+%IMAGE=IMG_1004_Preview.jpg
+%IMAGE=IMG_2948_Preview.jpg
+%IMAGE=IMG_2952_Preview.jpg
+
+
