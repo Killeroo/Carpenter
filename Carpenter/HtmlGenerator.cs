@@ -14,8 +14,9 @@ namespace Carpenter
     /// [Matthew Carney]
     /// Things I'd like to improve
     /// TODO: - Proper recursion (so we can deal properly with nested tag)
-    /// TODO: - Removing duplicate code between GenerateIndex and GeneratePage
-    /// TODO: - General performance and allocations
+    /// TODO: - General performance/allocations/readability improvements
+    /// TODO: - Removing duplicate code between GenerateIndex and GeneratePage (this is causing annoying bugs and regressions)
+    /// TODO: - Tags can be specified and used adhoc if they are defined in a PAGE file (instead of them being hardcoded)
     
     /// <summary>
     /// Generates html for pages (config files that represent pages in a website) and directory pages (link to other pages that share a common parent directory)
@@ -84,6 +85,46 @@ namespace Carpenter
             List<Tag> tags = new();
             List<string> generatedContent = new(File.ReadAllLines(site.TemplatePath));
             Dictionary<Tokens, string> tokenValues = new(pages.First().TokenValues); // Use the token values from the first page to fill in the index fields
+
+            // Works out the title of the directory page by converting it's folder name to something more human readable 
+            // (capitalize first letters of any words and insert spaces)
+            var getTitleFromPath = (string path) =>
+            {
+                string directoryName = path;
+                if (path.Contains(Path.DirectorySeparatorChar))
+                {
+                    directoryName = path.Split(Path.DirectorySeparatorChar).Last();
+                }
+
+                string title = string.Empty;
+                if (!directoryName.ContainsLetters())
+                {
+                    // If the folder name is just numbers then display as is
+                    title = directoryName;
+                }
+                else
+                {
+                    // Capitalize any words in the directory name and convert dashes to spaces)
+                    string[] words = directoryName.Split("-");
+                    if (words.Length > 0)
+                    {
+                        foreach (string word in words)
+                        {
+                            title += word.Capitalize() + " ";
+                        }
+                    }
+                    else
+                    {
+                        title = directoryName.Capitalize();
+                    }
+                }
+
+                return title;
+            };
+
+            // Add a title for the directory page that can be displayed in the generated html
+            tokenValues[Tokens.Title] = getTitleFromPath(relativePathToDir);
+            
             Logger.Log(LogLevel.Verbose, $"Generating Directory for \"{relativePathToDir}\"...");
             do
             {
@@ -92,7 +133,7 @@ namespace Carpenter
                 
                 foreach (Tag tag in tags.Where(x => x.Type == "index").OrderByDescending(x => x.ArrayIndex))
                 {
-                    if (!site.Tags.TryGetValue(tag.Id, out List<string> tagSection))
+                    if (!site.Tags.TryGetValue(tag.Id, out List<string> tagContents))
                     {
                         continue;
                     }
@@ -105,17 +146,22 @@ namespace Carpenter
                         foreach (Page page in pages)
                         {
                             Logger.Log(LogLevel.Verbose, $"Adding \"{page.Title}\"...");
-                            generateSections.AddRange(GeneratePagePreviewSection(page, site, relativePathToDir, tagSection));
+                            generateSections.AddRange(GeneratePagePreviewSection(page, site, relativePathToDir, tagContents));
                         }
-                        tagSection = generateSections;
+                        tagContents = generateSections;
                     }
 
-                    foreach (string line in tagSection)
+                    foreach (string line in tagContents)
                     {
                         generatedContent.Insert(offset, padding + line);
                         offset++;
                     }
                 }
+                
+                // So after injecting each tag's contents the indexes of the tag's placeholders can shift around a bit.
+                // we _should_ track and alter each of these indexes when adding content but instead we just brute force
+                // find all the tags again.
+                tags = FindTags(generatedContent);
                 
                 // Clear all tag placeholders
                 foreach (Tag tag in tags.OrderByDescending(x => x.ArrayIndex))
@@ -153,6 +199,31 @@ namespace Carpenter
                 throw new ArgumentNullException();
             }
             
+            // Call back used to insert tags after other tags (dear god forgive me)
+            Dictionary<string, List<string>> tagContentsToInsertLater = new();
+            Func<string, List<string>>? onTagInserted = insertedTag =>
+            {
+                List<string> additionalContent = new();
+
+                string keyToRemove = string.Empty;
+                foreach (string key in tagContentsToInsertLater.Keys)
+                {
+                    if (insertedTag.Contains(key))
+                    {
+                        additionalContent.AddRange(tagContentsToInsertLater[key]);
+                        keyToRemove = key;
+                        break;
+                    }
+                }
+
+                if (keyToRemove != string.Empty)
+                {
+                    tagContentsToInsertLater.Remove(keyToRemove);
+                }
+
+                return additionalContent;
+            };
+            
             List<Tag> tags = new();
             Dictionary<Tokens, string> modifiedPageTokens = new(page.TokenValues);
             modifiedPageTokens.AddOrUpdate(Tokens.PageUrl, string.Format("{0}{1}", site.Url, site.GetPageRelativePath(page).Replace("\\", "/")));
@@ -161,13 +232,26 @@ namespace Carpenter
             {
                 // Find all tags
                 tags = FindTags(generatedContent);
+
+                // HACK: We need to check for tags that will be inserted later before anything else
+                // This is not performant iterating through the tags twice like this :P
+                List<string> delayedInsertTags = new();
+                foreach (Tag tag in tags)
+                {
+                    string[] splitTag = tag.Id.Split("insert-after-tag");
+                    if (splitTag.Length > 1 && site.Tags.ContainsKey(tag.Id))
+                    {
+                        tagContentsToInsertLater.Add(splitTag[^1], site.Tags[tag.Id]);
+                        delayedInsertTags.Add(tag.Id);
+                    }
+                }
+                tags.RemoveAll(x => delayedInsertTags.Contains(x.Id));
                 
                 List<Tag> tagsOrderedByIndex = tags.Where(x => x.Type == "page").OrderByDescending(x => x.ArrayIndex).ToList();
                 for (int index = 0; index < tagsOrderedByIndex.Count; index++)
                 {
                     Tag tag = tagsOrderedByIndex[index];
-                    if (!site.Tags.TryGetValue(tag.Id, out List<string> tagContents)
-                        && tag.Id != "page:layout")
+                    if (!site.Tags.TryGetValue(tag.Id, out List<string> tagContents))
                     {
                         continue;
                     }
@@ -176,7 +260,16 @@ namespace Carpenter
                     string padding = generatedContent[tag.ArrayIndex].Split("<!--").First();
                     if (tag.Id == "page:layout")
                     {
-                        tagContents = GenerateLayoutSection(page, site);
+                        if (tagContentsToInsertLater.Count > 0)
+                            tagContents = GenerateLayoutSection(page, site, onTagInserted);
+                        else
+                            tagContents = GenerateLayoutSection(page, site);
+                    }
+                    
+                    if (tagContentsToInsertLater.Count > 0)
+                    {
+                        // Try and add any tag contents that were waiting on a tag to be inserted
+                        generatedContent.AddRange(onTagInserted.Invoke(tag.Id));
                     }
                     
                     tag.Length = padding.Length;
@@ -241,10 +334,11 @@ namespace Carpenter
         /// <summary>
         /// Generates HTML for the layout section of a page file. The layout section is the thing that contains the actual content of the page.
         /// </summary>
-        /// <param name="page"></param>
-        /// <param name="site"></param>
         /// <returns></returns>
-        private static List<string> GenerateLayoutSection(Page page, Site site)
+        private static List<string> GenerateLayoutSection(
+            Page page, 
+            Site site, 
+            Func<string /** Tag name */, List<string> /* Contents to add */>? onTagInserted = null)
         {
             // Generate the layout section!
             List<string> output = new();
@@ -254,7 +348,7 @@ namespace Carpenter
             {
                 if (!site.Tags.TryGetValue(LayoutTypeToTagName[section.GetType()], out List<string> sectionContents))
                 {
-                    Debug.Assert(false); // We want to know when this fails;
+                    Debug.Assert(false); // We want to know when this fails
                     continue;
                 }
                 
@@ -315,6 +409,13 @@ namespace Carpenter
                         // Technically we should remove any tags here but because we aren't doing this using proper recursion
                         // we just leave it and let the main look in GeneratePage clean up the unused tags
                     }
+                }
+
+                // This gives different parts of the code the option to hook into when a tag is added
+                if (onTagInserted != null)
+                {
+                    // TODO: Boo boo, what if this returns nothing? Wasteful
+                    sectionContentsCopy.AddRange(onTagInserted(LayoutTypeToTagName[section.GetType()]));
                 }
                 
                 output.AddRange(sectionContentsCopy);

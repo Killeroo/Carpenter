@@ -195,7 +195,7 @@ namespace Carpenter
             })
         };
 
-        public static bool Run(Page? pageToTest, out ValidationResults results)
+        public static bool Run(Page? pageToTest, out ValidationResults results) 
         {
             results = new();
             if (pageToTest == null)

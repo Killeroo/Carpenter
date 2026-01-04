@@ -380,7 +380,9 @@ namespace Carpenter
             // The cache for the JpegParser is not threadsafe, so we have to turn it off
             JpegParser.UseInternalCache = false;
 
+            const bool kUseMultipleThreads = true;
             const int kMaxThreadCount = 10;
+            
             Thread[] threads = new Thread[kMaxThreadCount];
             Object lockObject = new();
             List<string> pagePaths = GetPathsToPages();
@@ -388,60 +390,73 @@ namespace Carpenter
             Logger.Log(LogLevel.Info, $"Generating HTML for {pagePaths.Count} Pages with {kMaxThreadCount} threads...");
             foreach (string pagePath in pagePaths)
             {
-                bool pageProcessed = false;
-                Logger.Log(LogLevel.Verbose, $"Processing \"{pagePath}\"...");
-                while (!pageProcessed)
+                if (kUseMultipleThreads)
                 {
-                    for (int index = 0; index < kMaxThreadCount; index++)
+                    bool pageProcessed = false;
+                    Logger.Log(LogLevel.Verbose, $"Processing \"{pagePath}\"...");
+                    while (!pageProcessed)
                     {
-                        if (threads[index] == null || !threads[index].IsAlive)
+                        for (int index = 0; index < kMaxThreadCount; index++)
                         {
-                            threads[index] = new (() =>
+                            if (threads[index] == null || !threads[index].IsAlive)
                             {
-                                string currentDirectoryPath = Path.GetDirectoryName(pagePath);
-                                using Page localPage = new(pagePath);
-                                HtmlGenerator.BuildHtmlForPage(localPage, this);
-
-                                lock (lockObject)
+                                threads[index] = new (() =>
                                 {
-                                    onDirectoryGenerated?.Invoke(
-                                        true, // TODO: Lol Nah 
-                                        currentDirectoryPath,
-                                        processed++,
-                                        pagePaths.Count);
-                                }
+                                    string currentDirectoryPath = Path.GetDirectoryName(pagePath);
+                                    using Page localPage = new(pagePath);
+                                    HtmlGenerator.BuildHtmlForPage(localPage, this);
+
+                                    lock (lockObject)
+                                    {
+                                        onDirectoryGenerated?.Invoke(
+                                            true, // TODO: Lol Nah 
+                                            currentDirectoryPath,
+                                            processed++,
+                                            pagePaths.Count);
+                                    }
                                 
-                                Logger.Log(LogLevel.Verbose, $"Thread finished for path: {pagePath}");
-                            });
-                            threads[index].IsBackground = true;
-                            threads[index].Start();
-                            pageProcessed = true;
-                            Logger.Log(LogLevel.Verbose, "Starting generator thread...");
-                            break;
+                                    Logger.Log(LogLevel.Verbose, $"Thread finished for path: {pagePath}");
+                                });
+                                threads[index].IsBackground = true;
+                                threads[index].Start();
+                                pageProcessed = true;
+                                Logger.Log(LogLevel.Verbose, "Starting generator thread...");
+                                break;
+                            }
+                        }
+
+                        if (!pageProcessed)
+                        {
+                            Logger.Log(LogLevel.Verbose, "All threads in used. Waiting for one to become available...");
+                            Thread.Sleep(100);
                         }
                     }
-
-                    if (!pageProcessed)
-                    {
-                        Logger.Log(LogLevel.Verbose, "All threads in used. Waiting for one to become available...");
-                        Thread.Sleep(100);
-                    }
                 }
+                else
+                {
+                    string currentDirectoryPath = Path.GetDirectoryName(pagePath);
+                    using Page localPage = new(pagePath);
+                    HtmlGenerator.BuildHtmlForPage(localPage, this);
+                }
+
             }
 
-            // Wait for threads to finish
-            bool threadStillRunning = true;
-            while (threadStillRunning)
+            if (kUseMultipleThreads)
             {
-                Logger.Log(LogLevel.Verbose, "=============================");
-                threadStillRunning = false;
-                int index = 0;
-                foreach (Thread thread in threads)
+                // Wait for threads to finish
+                bool threadStillRunning = true;
+                while (threadStillRunning)
                 {
-                    threadStillRunning |= thread != null && thread.IsAlive;
-                    Logger.Log(LogLevel.Verbose, $"Thread {index++} running: {threadStillRunning} (null={thread == null} alive={thread.IsAlive})");
+                    Logger.Log(LogLevel.Verbose, "=============================");
+                    threadStillRunning = false;
+                    int index = 0;
+                    foreach (Thread thread in threads)
+                    {
+                        threadStillRunning |= thread != null && thread.IsAlive;
+                        Logger.Log(LogLevel.Verbose, $"Thread {index++} running: {threadStillRunning} (null={thread == null} alive={thread.IsAlive})");
+                    }
+                    Thread.Sleep(200);
                 }
-                Thread.Sleep(200);
             }
             
             Logger.Log(LogLevel.Info, "Finished generating HTML for all Pages.");

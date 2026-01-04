@@ -153,5 +153,29 @@ namespace Carpenter
             return -1;
         }
 
+        /// <summary>
+        /// Checks if a string contains any letters
+        /// </summary>
+        public static bool ContainsLetters(this string str)
+        {
+            foreach (char character in str)
+            {
+                if (char.IsLetter(character))
+                    return true;
+            }
+            
+            return false;
+        }
+
+        /// <summary>
+        /// Capitalizes the first letter of the string
+        /// </summary>
+        public static string Capitalize(this string str)
+        {
+            if (!string.IsNullOrEmpty(str)) 
+                return str.Substring(0, 1).ToUpper() + str.Substring(1);
+            else
+                return str;
+        }
     }
 }
