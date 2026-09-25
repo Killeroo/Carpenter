@@ -140,10 +140,22 @@ namespace RoslynScriptRunner
         }
     }
 
+    public class PageData
+    {
+        public string Name = "Something";
+        public int Pics;
+    }
+
     class Program
     {
         static async Task Main(string[] args)
         {
+
+            //Console.WriteLine(HtmlTemplateUtils.ConvertTemplateFileToCode("TestTemplate.html"));
+            var template = HtmlTemplateUtils.Create<PageData>("TestTemplate.html");
+            Console.WriteLine(await template.EvaluateAsync(new PageData() { Name = "Hello", Pics = 2 }));
+            return;
+
             // 2. Define the script as a string
             // Properties and methods of the globals object are directly accessible in the script
             string scriptCode = @"

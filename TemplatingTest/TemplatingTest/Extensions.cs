@@ -1,5 +1,8 @@
 
-namespace TemplatingTest;
+using Microsoft.CodeAnalysis.CSharp;
+
+//namespace TemplatingTest;
+namespace RoslynScriptRunner;
 
 public static class Extensions
 {
@@ -14,6 +17,16 @@ public static class Extensions
         }
 
         return indexes;
+    }
+
+    public static string ToLiteral(this string str)
+    {
+        return SymbolDisplay.FormatLiteral(str, true);
+    }
+
+    public static bool IsEmptyOrNull(this string str)
+    {
+        return string.IsNullOrEmpty(str);
     }
 }
 
