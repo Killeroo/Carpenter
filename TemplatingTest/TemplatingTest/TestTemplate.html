@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <p>Something something</p>
+    <? float test = 3f; ?>
+    <? string testString = "Hello"; ?>
+    <? string testString2 = "Another"; ?>
+    
+    
+    <?= $"test values = {test}"; ?>
+
+    <a src="google.com/<?= test ?>">a test link</a>
+    <p><?= testString ?> <b><?= testString2 ?></b></p>
+
+    <? if (false) { ?>
+    <p>This should not be visible</p>
+    <? } ?>
+
+    <? for (int index = 0; index < 10; index++) { ?>
+        <p><?= index ?></p>
+    <? } ?>
+
+</body>
+</html>
