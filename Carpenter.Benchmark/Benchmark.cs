@@ -56,7 +56,7 @@ namespace Carpenter.Tests
         static void Main(string[] args)
         {
             //// TODO: Point at example project
-            string rootDir = @"C:\Projects\Carpenter\example-site\";
+            string rootDir = @"C:\Users\Burganak\Desktop\testsite";// C:\Projects\Carpenter\example-site\";
             string pageDir = @"C:\Projects\Carpenter\example-site\places\ireland\sheephaven-bay-1";
             string tempPath = Path.Combine(Path.GetTempPath(), "Carpenter", "Benchmark");
             if (Directory.Exists(tempPath) == false)
@@ -65,7 +65,7 @@ namespace Carpenter.Tests
             }
 
             Console.WriteLine($"Carpenter v{Config.kVersion} - Static photo webpage generator");
-            Logger.SetLogLevel(LogLevel.Info);
+            Logger.SetLogLevel(LogLevel.Verbose);
 
             Site site = new();
             Page page = new();
