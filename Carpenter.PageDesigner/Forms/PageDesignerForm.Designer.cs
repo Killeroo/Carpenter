@@ -31,6 +31,7 @@
             components = new System.ComponentModel.Container();
             ImagePreviewFlowLayoutPanel = new FlowLayoutPanel();
             groupBox1 = new GroupBox();
+            FillButton = new Button();
             imageList1 = new ImageList(components);
             groupBox2 = new GroupBox();
             tableLayoutPanel3 = new TableLayoutPanel();
@@ -116,12 +117,13 @@
             ImagePreviewFlowLayoutPanel.Location = new Point(5, 20);
             ImagePreviewFlowLayoutPanel.Margin = new Padding(3, 2, 3, 2);
             ImagePreviewFlowLayoutPanel.Name = "ImagePreviewFlowLayoutPanel";
-            ImagePreviewFlowLayoutPanel.Size = new Size(434, 193);
+            ImagePreviewFlowLayoutPanel.Size = new Size(434, 164);
             ImagePreviewFlowLayoutPanel.TabIndex = 0;
             // 
             // groupBox1
             // 
             groupBox1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            groupBox1.Controls.Add(FillButton);
             groupBox1.Controls.Add(ImagePreviewFlowLayoutPanel);
             groupBox1.Location = new Point(549, 317);
             groupBox1.Margin = new Padding(3, 2, 3, 2);
@@ -131,6 +133,17 @@
             groupBox1.TabIndex = 5;
             groupBox1.TabStop = false;
             groupBox1.Text = "Available Images";
+            // 
+            // FillButton
+            // 
+            FillButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            FillButton.Location = new Point(363, 189);
+            FillButton.Name = "FillButton";
+            FillButton.Size = new Size(75, 23);
+            FillButton.TabIndex = 17;
+            FillButton.Text = "Add All";
+            FillButton.UseVisualStyleBackColor = true;
+            FillButton.Click += FillButton_Click;
             // 
             // imageList1
             // 
@@ -615,26 +628,26 @@
             // 
             toolsToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { livePreviewToolStripMenuItem, toolStripSeparator7, addDetailedPrefixToolStripMenuItem });
             toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            toolsToolStripMenuItem.Size = new Size(46, 20);
+            toolsToolStripMenuItem.Size = new Size(47, 20);
             toolsToolStripMenuItem.Text = "Tools";
             // 
             // livePreviewToolStripMenuItem
             // 
             livePreviewToolStripMenuItem.Name = "livePreviewToolStripMenuItem";
-            livePreviewToolStripMenuItem.Size = new Size(184, 22);
+            livePreviewToolStripMenuItem.Size = new Size(183, 22);
             livePreviewToolStripMenuItem.Text = "Live Preview";
             livePreviewToolStripMenuItem.Click += livePreviewToolStripMenuItem_Click;
             // 
             // toolStripSeparator7
             // 
             toolStripSeparator7.Name = "toolStripSeparator7";
-            toolStripSeparator7.Size = new Size(181, 6);
+            toolStripSeparator7.Size = new Size(180, 6);
             // 
             // addDetailedPrefixToolStripMenuItem
             // 
             addDetailedPrefixToolStripMenuItem.Enabled = false;
             addDetailedPrefixToolStripMenuItem.Name = "addDetailedPrefixToolStripMenuItem";
-            addDetailedPrefixToolStripMenuItem.Size = new Size(184, 22);
+            addDetailedPrefixToolStripMenuItem.Size = new Size(183, 22);
             addDetailedPrefixToolStripMenuItem.Text = "Add prefix to images";
             addDetailedPrefixToolStripMenuItem.Click += adddetailedPrefixToolStripMenuItem_Click;
             // 
@@ -835,5 +848,6 @@
         private TableLayoutPanel tableLayoutPanel1;
         private TableLayoutPanel tableLayoutPanel2;
         private TableLayoutPanel tableLayoutPanel3;
+        private Button FillButton;
     }
 }
