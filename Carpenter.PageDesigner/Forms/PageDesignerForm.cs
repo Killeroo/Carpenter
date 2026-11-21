@@ -548,7 +548,7 @@ namespace PageDesigner.Forms
                     {
                         ImageUrl = gridPictureBox.ImageFilename
                     };
-                    if (gridPictureBox.DetailImageFilename != string.Empty 
+                    if (gridPictureBox.DetailImageFilename != string.Empty
                         && gridPictureBox.DetailImageFilename != gridPictureBox.ImageFilename)
                     {
                         currentImageSection.AltImageUrl = gridPictureBox.DetailImageFilename;
@@ -1265,6 +1265,21 @@ namespace PageDesigner.Forms
             SavePageToFile();
         }
 
+        private void FillButton_Click(object sender, EventArgs e)
+        {
+            string[] imageFilesAtPath = Directory.GetFiles(_workingPath, "*.jpg");
+            if (imageFilesAtPath.Length == 0)
+            {
+                return;
+            }
+
+            foreach (string imagePath in imageFilesAtPath)
+            {
+                AddLocalImageToGridLayout(Path.GetFileName(imagePath), Path.GetFileName(imagePath), true);
+                SignalPageChange();
+            }
+        }
+
         private void GridPictureBox_SwapMenuItemClicked(object? sender, EventArgs e)
         {
             if (sender is GridPictureBox currentGridPictureBox)
@@ -1553,5 +1568,5 @@ namespace PageDesigner.Forms
                 //ctrl.Width = GridFlowLayoutPanel.ClientSize.Width / GridFlowLayoutPanel.Controls.Count;
             }
         }
-}
+    }
 }
